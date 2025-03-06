@@ -1,0 +1,5 @@
+make
+
+./project
+
+make clean
