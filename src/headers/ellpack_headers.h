@@ -3,7 +3,7 @@
 
 #include "../data_structures/ellpack_matrix.h"
 
-ellpack_matrix *read_csr_matrix(char *filename);
+ellpack_matrix *read_ellpack_matrix(char *filename);
 void print_ellpack_matrix(ellpack_matrix *matrix);
 void destroy_ellpack_matrix(ellpack_matrix *matrix);
 

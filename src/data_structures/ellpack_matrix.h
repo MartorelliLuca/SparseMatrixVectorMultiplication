@@ -3,11 +3,13 @@
 
 typedef struct
 {
-    int M;     // Number of rows
-    int N;     // Number of columns
-    int MAXNZ; // Max number of nonzero values for every raws;
-    int **JA;  // 2D array of column's indexes;
-    int **AS;  // 2D array of coefficients
+    int M;                // Number of rows
+    int N;                // Number of columns
+    int MAXNZ;            // Max number of nonzero values for every raws;
+    int *raw_indexes;     // Raw indexes
+    int *columns_indexes; // Columns indexes
+    int **JA;             // 2D array of column's indexes;
+    double **AS;          // 2D array of coefficients
 
 } ellpack_matrix;
 
