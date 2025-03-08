@@ -3,6 +3,7 @@
         "stdlib.h": "c",
         "omp.h": "c",
         "csr_matix.h": "c",
-        "csr_headers.h": "c"
+        "csr_headers.h": "c",
+        "initialization.h": "c"
     }
 }
