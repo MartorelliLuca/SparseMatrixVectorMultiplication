@@ -13,6 +13,7 @@
 // First attempt to do matrix-vector dot product in CSR format
 void matvec_csr(CSR_matrix *csr_matrix, double *x, double *y)
 {
+#pragma omp parallel for
     for (int i = 0; i < csr_matrix->M; i++)
     {
         for (int j = csr_matrix->IRP[i]; j < csr_matrix->IRP[i + 1]; j++)

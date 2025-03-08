@@ -65,61 +65,69 @@ int main()
         x = initialize_x_vector(csr_matrix.N);
         y = initialize_y_vector(csr_matrix.M);
 
-        // Get statistics for the dot-product
-        clock_gettime(CLOCK_MONOTONIC, &start);
-
-        // Start dot-product
-        matvec_csr(&csr_matrix, x, y);
-
-        // Get the time used for the dot-product
-        clock_gettime(CLOCK_MONOTONIC, &end);
-
-        time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-
-        flops = 2.0 * csr_matrix.NZ / time_used;
-        mflops = flops / 1e6;
-        gflops = flops / 1e9;
-
-        node = (struct performance *)calloc(1, sizeof(struct performance));
-        if (node == NULL)
+        for (int num_threads = 1; num_threads <= 40; num_threads++)
         {
-            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-        }
+            omp_set_num_threads(num_threads);
+            // Get statistics for the dot-product
+            clock_gettime(CLOCK_MONOTONIC, &start);
 
-        strcpy(node->matrix, matrix_filename);
-        node->number_of_threads_used = 1;
-        node->flops = flops;
-        node->mflops = mflops;
-        node->gflops = gflops;
-        node->time_used = time_used;
+            // Start dot-product
+            matvec_csr(&csr_matrix, x, y);
 
-        printf("Performance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
-        printf("Time used for dot-product:      %.16lf\n", node->time_used);
-        printf("FLOPS:                          %.16lf\n", node->flops);
-        printf("MFLOPS:                         %.16lf\n", node->mflops);
-        printf("GFLOPS:                         %.16lf\n", node->gflops);
+            // Get the time used for the dot-product
+            clock_gettime(CLOCK_MONOTONIC, &end);
+            time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
-        if (head == NULL)
-        {
-            head = (struct performance *)calloc(1, sizeof(struct performance));
+            flops = 2.0 * csr_matrix.NZ / time_used;
+            mflops = flops / 1e6;
+            gflops = flops / 1e9;
+
+            node = (struct performance *)calloc(1, sizeof(struct performance));
+            if (node == NULL)
+            {
+                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            }
+
+            strcpy(node->matrix, matrix_filename);
+            node->number_of_threads_used = num_threads;
+            node->flops = flops;
+            node->mflops = mflops;
+            node->gflops = gflops;
+            node->time_used = time_used;
+
             if (head == NULL)
             {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
-            tail = (struct performance *)calloc(1, sizeof(struct performance));
-            if (tail == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
+                head = (struct performance *)calloc(1, sizeof(struct performance));
+                if (head == NULL)
+                {
+                    printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+                }
+                tail = (struct performance *)calloc(1, sizeof(struct performance));
+                if (tail == NULL)
+                {
+                    printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+                }
 
-            head = node;
-            tail = node;
+                head = node;
+                tail = node;
+            }
+            else
+            {
+                tail->next_node = node;
+                node->prev_node = tail;
+                tail = node;
+            }
         }
-        else
+
+        while (head != NULL)
         {
-            tail->next_node = node;
-            node->prev_node = tail;
-            tail = node;
+            node = head;
+            printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+            printf("Time used for dot-product:      %.16lf\n", node->time_used);
+            printf("FLOPS:                          %.16lf\n", node->flops);
+            printf("MFLOPS:                         %.16lf\n", node->mflops);
+            printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+            head = head->next_node;
         }
 
         fclose(matrix_file);
