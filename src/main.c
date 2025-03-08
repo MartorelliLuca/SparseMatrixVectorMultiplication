@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 
 #include "utils_header/mmio.h"
 #include "data_structures/ellpack_matrix.h"
@@ -23,7 +24,18 @@ int main()
     DIR *dir;
     struct dirent *entry;
 
-    csr_matrix matrix;
+    CSR_matrix csr_matrix;
+    ELLPACK_matrix ellpack_matrix;
+
+    // Inizialize the psudo-random number generator with time-based seed
+    srand(time(NULL));
+    double *x;
+    double *y;
+
+    // Variables to collect statistics
+    struct timespec start, end;
+    double time_used;
+    double flops, mflops, gflops;
 
     // Open dir matrix to take the tests matrix
     dir = opendir(dir_name);
@@ -71,7 +83,7 @@ int main()
         }
 
         // Read matrix dimension and convert in csr format
-        if (mm_read_mtx_crd_size(matrix_file, &matrix.M, &matrix.N, &matrix.NZ) != 0)
+        if (mm_read_mtx_crd_size(matrix_file, &csr_matrix.M, &csr_matrix.N, &csr_matrix.NZ) != 0)
         {
             printf("Error occour while try to read matrix dimension!\nError code: %d\n", errno);
             fclose(matrix_file);
@@ -79,62 +91,110 @@ int main()
         }
 
         puts("");
-        printf("Matrix number of columns:           %d\n", matrix.M);
-        printf("Matrix number of raws:              %d\n", matrix.N);
-        printf("matrix number of non-zero values:   %d\n", matrix.NZ);
+        printf("Matrix number of columns:           %d\n", csr_matrix.M);
+        printf("Matrix number of raws:              %d\n", csr_matrix.N);
+        printf("matrix number of non-zero values:   %d\n", csr_matrix.NZ);
         puts("");
 
         // Allocate arrays to read values from the matrix file
-        matrix.raw_indexes = (int *)malloc(matrix.NZ * sizeof(int));
-        if (matrix.raw_indexes == NULL)
+        csr_matrix.row_indices = (int *)malloc(csr_matrix.NZ * sizeof(int));
+        if (csr_matrix.row_indices == NULL)
         {
             printf("Error in malloc for rax indexes array!\nError code: %d\n", errno);
             exit(EXIT_FAILURE);
         }
 
-        matrix.columns_indexes = (int *)malloc(matrix.NZ * sizeof(int));
-        if (matrix.columns_indexes == NULL)
+        csr_matrix.columns_indices = (int *)malloc(csr_matrix.NZ * sizeof(int));
+        if (csr_matrix.columns_indices == NULL)
         {
             printf("Error in malloc for columns indexes array!\nError code: %d\n", errno);
             exit(EXIT_FAILURE);
         }
-        matrix.readed_values = (double *)malloc(matrix.NZ * sizeof(double));
-        if (matrix.readed_values == NULL)
+        csr_matrix.readed_values = (double *)malloc(csr_matrix.NZ * sizeof(double));
+        if (csr_matrix.readed_values == NULL)
         {
             printf("Error in malloc for non-zero values array!\nError code: %d\n", errno);
             exit(EXIT_FAILURE);
         }
 
-        for (int i = 0; i < matrix.NZ; i++)
+        for (int i = 0; i < csr_matrix.NZ; i++)
         {
-            if (fscanf(matrix_file, "%d %d %lf", &matrix.raw_indexes[i], &matrix.columns_indexes[i], &matrix.readed_values[i]) != 3)
+            if (fscanf(matrix_file, "%d %d %lf", &csr_matrix.row_indices[i], &csr_matrix.columns_indices[i], &csr_matrix.readed_values[i]) != 3)
             {
-                if (fscanf(matrix_file, "%d %d", &matrix.raw_indexes[i], &matrix.columns_indexes[i]) == 2)
+                if (fscanf(matrix_file, "%d %d", &csr_matrix.row_indices[i], &csr_matrix.columns_indices[i]) == 2)
                 {
-                    matrix.readed_values[i] = 1.0;
+                    csr_matrix.readed_values[i] = 1.0;
                 }
                 else
                 {
                     printf("Error occour while trying to read matrix elements!\nError code: %d\n", errno);
-                    free(matrix.raw_indexes);
-                    free(matrix.columns_indexes);
-                    free(matrix.readed_values);
+                    free(csr_matrix.row_indices);
+                    free(csr_matrix.columns_indices);
+                    free(csr_matrix.readed_values);
                     exit(EXIT_FAILURE);
                 }
             }
             // Back to index matrix to 0
-            matrix.raw_indexes[i]--;
-            matrix.columns_indexes[i]--;
+            csr_matrix.row_indices[i]--;
+            csr_matrix.columns_indices[i]--;
 
-            // printf("matrix.raw_indexes[%d] = %d.\n", i, matrix.raw_indexes[i]);
-            // printf("matrix.columns_indexes[%d] = %d.\n", i, matrix.columns_indexes[i]);
-            // printf("mtrix.readed_values[%d] = %.16lf\n", i, matrix.AS[i]);
-
-            sleep(1);
+            // printf("matrix.row_indices[%d] = %d\n", i, csr_matrix.row_indices[i]);
+            // printf("matrix.columns_indices[%d] = %d\n", i, csr_matrix.columns_indices[i]);
+            // printf("mtrix.readed_values[%d] = %.16lf\n", i, csr_matrix.readed_values[i]);
         }
-        fclose(matrix_file);
 
-        sleep(1);
+        convert_to_csr(&csr_matrix);
+
+        // Create x vector
+        x = (double *)malloc(csr_matrix.N * sizeof(double));
+        if (x == NULL)
+        {
+            printf("Error occur in malloc for the x vector!\nError code: %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
+        y = (double *)malloc(csr_matrix.M * sizeof(double));
+        if (y == NULL)
+        {
+            printf("Error occour in malloc for the y vector!\n Error code: %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
+        // Inizialize x vector to presudo-random double values
+        for (int i = 0; i < csr_matrix.M; i++)
+            x[i] = (rand() % 5) + 1;
+
+        // for (int i = 0; i < csr_matrix.M; i++)
+        //     printf("x[%d] = %lf\n", i, x[i]);
+
+        // Inizialize y vector
+        for (int i = 0; i < csr_matrix.M; i++)
+            y[i] = 0.0;
+
+        printf("\nBefore dot product!\n");
+        // Get statistics for the dot-product
+        clock_gettime(CLOCK_MONOTONIC, &start);
+
+        // Start dot-product
+        matvec_csr(&csr_matrix, x, y);
+
+        // Get the time used for the dot-product
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        printf("After dot product!\n\n\n");
+
+        time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+
+        flops = 2.0 * csr_matrix.NZ / time_used;
+        mflops = flops / 1e6;
+        gflops = flops / 1e9;
+
+        printf("Time used for dot-product:      %.16lf\n", time_used);
+        printf("Performance\n");
+        printf("FLOPS:                          %.16lf\n", flops);
+        printf("MFLOPS:                         %.16lf\n", mflops);
+        printf("GFLOPS:                         %.16lf\n", gflops);
+
+        fclose(matrix_file);
     }
 
     closedir(dir);

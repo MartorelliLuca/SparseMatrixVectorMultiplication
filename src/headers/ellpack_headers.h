@@ -3,8 +3,8 @@
 
 #include "../data_structures/ellpack_matrix.h"
 
-ellpack_matrix *read_ellpack_matrix(char *filename);
-void print_ellpack_matrix(ellpack_matrix *matrix);
-void destroy_ellpack_matrix(ellpack_matrix *matrix);
+ELLPACK_matrix *read_ELLPACK_matrix(char *filename);
+void print_ELLPACK_matrix(ELLPACK_matrix *matrix);
+void destroy_ELLPACK_matrix(ELLPACK_matrix *matrix);
 
 #endif

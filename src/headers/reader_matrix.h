@@ -4,9 +4,12 @@
 #include "../data_structures/csr_matix.h"
 #include "../data_structures/ellpack_matrix.h"
 
-void convert_to_ellpack(int M, int N, int nz, int *row_indices, int *col_indices, double *values, int **JA, double **AS, int *MAXNZ);
-void convert_to_csr(int M, int N, int nz, int *row_indices, int *col_indices, double *values, int **IRP, int **JA, double **AS);
-void matvec_csr(int M, int *IRP, int *JA, double *AS, double *x, double *y);
-void matvec_csr(int M, int *IRP, int *JA, double *AS, double *x, double *y);
+void convert_to_ellpack(ELLPACK_matrix *ellpack_matrix);
+void convert_to_csr(CSR_matrix *CSR_matrix);
+
+void matvec_csr(CSR_matrix *csr_matrix, double *x, double *y);
+void matvec_ellpack(ELLPACK_matrix *ellpack_matrix, double *x, double *y);
+
+void print_matrix(CSR_matrix *csr_matrix);
 
 #endif

@@ -8,10 +8,10 @@ typedef struct
     int *IRP;              // Pointer to the start of each row in JA and AS
     int *JA;               // Column indices
     int NZ;                // Number of non-zero values
-    int *raw_indexes;      // Raw indexes
-    int *columns_indexes;  // Columns indexes
+    int *row_indices;      // Raw indices
+    int *columns_indices;  // Columns indices
     double *readed_values; // Readed values
     double *AS;            // Nonzero values
-} csr_matrix;
+} CSR_matrix;
 
 #endif

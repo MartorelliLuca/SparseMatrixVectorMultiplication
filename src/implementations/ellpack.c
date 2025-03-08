@@ -4,20 +4,20 @@
 #include "../data_structures/ellpack_matrix.h"
 #include "../headers/ellpack_headers.h"
 
-// Function to read matrix stored in csr format
-ellpack_matrix *read_ellpack_matrix(char *filename)
+// Function to read ellpack_matrix stored in csr format
+ELLPACK_matrix *read_ELLPACK_matrix(char *filename)
 {
-    ellpack_matrix *matrix = (ellpack_matrix *)malloc(sizeof(ellpack_matrix));
-    if (matrix == NULL)
+    ELLPACK_matrix *ellpack_matrix = (ELLPACK_matrix *)malloc(sizeof(ELLPACK_matrix));
+    if (ellpack_matrix == NULL)
     {
-        printf("Error in malloc for ellpack matrix!\n");
+        printf("Error in malloc for ellpack ellpack_matrix!\n");
         exit(-1);
     }
-    return matrix;
+    return ellpack_matrix;
 }
 
-// Function to print matrix
-void print_ellpack_matrix(ellpack_matrix *matrix) {}
+// Function to print ellpack_matrix
+void print_ELLPACK_matrix(ELLPACK_matrix *ellpack_matrix) {}
 
-// Function to destroy matrix
-void destroy_ellpack_matrix(ellpack_matrix *matrix) {}
+// Function to destroy ellpack_matrix
+void destroy_ELLPACK_matrix(ELLPACK_matrix *ellpack_matrix) {}
