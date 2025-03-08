@@ -9,6 +9,7 @@
 #include "utils_header/mmio.h"
 #include "data_structures/ellpack_matrix.h"
 #include "data_structures/csr_matix.h"
+#include "data_structures/performance.h"
 #include "headers/csr_headers.h"
 #include "headers/ellpack_headers.h"
 #include "headers/operation.h"
@@ -33,6 +34,7 @@ int main()
     double *y;
 
     // Variables to collect statistics
+    struct performance *head = NULL, *tail = NULL, *node = NULL;
     struct timespec start, end;
     double time_used;
     double flops, mflops, gflops;
@@ -72,19 +74,53 @@ int main()
         // Get the time used for the dot-product
         clock_gettime(CLOCK_MONOTONIC, &end);
 
-        printf("Dopo il prodotto\n");
-
         time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
         flops = 2.0 * csr_matrix.NZ / time_used;
         mflops = flops / 1e6;
         gflops = flops / 1e9;
 
-        printf("Time used for dot-product:      %.16lf\n", time_used);
-        printf("Performance\n");
-        printf("FLOPS:                          %.16lf\n", flops);
-        printf("MFLOPS:                         %.16lf\n", mflops);
-        printf("GFLOPS:                         %.16lf\n", gflops);
+        node = (struct performance *)calloc(1, sizeof(struct performance));
+        if (node == NULL)
+        {
+            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        }
+
+        strcpy(node->matrix, matrix_filename);
+        node->number_of_threads_used = 1;
+        node->flops = flops;
+        node->mflops = mflops;
+        node->gflops = gflops;
+        node->time_used = time_used;
+
+        printf("Performance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+        printf("Time used for dot-product:      %.16lf\n", node->time_used);
+        printf("FLOPS:                          %.16lf\n", node->flops);
+        printf("MFLOPS:                         %.16lf\n", node->mflops);
+        printf("GFLOPS:                         %.16lf\n", node->gflops);
+
+        if (head == NULL)
+        {
+            head = (struct performance *)calloc(1, sizeof(struct performance));
+            if (head == NULL)
+            {
+                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            }
+            tail = (struct performance *)calloc(1, sizeof(struct performance));
+            if (tail == NULL)
+            {
+                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            }
+
+            head = node;
+            tail = node;
+        }
+        else
+        {
+            tail->next_node = node;
+            node->prev_node = tail;
+            tail = node;
+        }
 
         fclose(matrix_file);
     }
