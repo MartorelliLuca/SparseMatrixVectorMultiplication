@@ -35,18 +35,19 @@ void matvec_ellpack(HLL_matrix *ellpack_matrix, double *x, double *y)
 {
 }
 
-int csr_matrix_vector_product_blocked(CSR_matrix *matrix, double *x, double *y, int block_size)
+int get_real_non_zero_values_count(CSR_matrix *matrix, int block_size, int is_symmetric)
 {
     int new_non_zero_values_count = 0;
+
     for (int block_start = 0; block_start < matrix->M; block_start += block_size)
     {
         int block_end = (block_start + block_size > matrix->M) ? matrix->M : block_start + block_size;
 
-        // Allocazione temporanea della porzione della matrice
+        // Allocazione del blocco
         double **dense_block = (double **)calloc((block_end - block_start), sizeof(double *));
         if (!dense_block)
         {
-            printf("Erro in malloc in dot product in memory\nError Code: %d\n", errno);
+            printf("Errore in malloc in dot product in memory\nError Code: %d\n", errno);
             exit(EXIT_FAILURE);
         }
 
@@ -55,7 +56,7 @@ int csr_matrix_vector_product_blocked(CSR_matrix *matrix, double *x, double *y, 
             dense_block[i] = (double *)calloc(matrix->N, sizeof(double));
             if (!dense_block[i])
             {
-                printf("Errore di allocazione della riga %d del blocco\n", errno);
+                printf("Error in malloc for block row\nError Code: %d\n", errno);
                 for (int j = 0; j < i; j++)
                     free(dense_block[j]);
                 free(dense_block);
@@ -63,25 +64,25 @@ int csr_matrix_vector_product_blocked(CSR_matrix *matrix, double *x, double *y, 
             }
         }
 
-        // Popoliamo il blocco con i dati CSR
+        // Popoliamo il blocco con i dati CSR e contiamo gli elementi non zero
         for (int i = block_start; i < block_end; i++)
         {
             for (int j = matrix->IRP[i]; j < matrix->IRP[i + 1]; j++)
             {
                 int col = matrix->JA[j];
-                dense_block[i - block_start][col] = matrix->AS[j];
-            }
-        }
 
-        // Calcoliamo il prodotto della porzione della matrice con il vettore
-        for (int i = 0; i < block_end - block_start; i++)
-        {
-            for (int j = 0; j < matrix->N; j++)
-            {
-                if (dense_block[i][j] != 0.0)
+                // Controllo che col rientri nei limiti
+                if (col < matrix->N)
                 {
-                    new_non_zero_values_count++;
-                    y[block_start + i] += dense_block[i][j] * x[j];
+                    dense_block[i - block_start][col] = matrix->AS[j];
+                    new_non_zero_values_count++; // Conta il valore originale
+                }
+
+                // Se la matrice è simmetrica e stiamo leggendo il triangolo superiore, aggiungiamo il triangolo inferiore
+                if (is_symmetric && i != col && col >= block_start && col < block_end)
+                {
+                    dense_block[col - block_start][i] = matrix->AS[j];
+                    new_non_zero_values_count++; // Conta il valore simmetrico
                 }
             }
         }
@@ -90,7 +91,7 @@ int csr_matrix_vector_product_blocked(CSR_matrix *matrix, double *x, double *y, 
         for (int i = 0; i < block_end - block_start; i++)
             free(dense_block[i]);
         free(dense_block);
-
-        return new_non_zero_values_count;
     }
+
+    return new_non_zero_values_count;
 }

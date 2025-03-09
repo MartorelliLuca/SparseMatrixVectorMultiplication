@@ -33,6 +33,7 @@ int main()
     double time_used;
     double flops, mflops, gflops;
     int new_non_zero_values;
+    int symmetric = 0;
 
     const char *dir_name = "matrici";
     char matrix_filename[256]; // Matrix filename
@@ -71,7 +72,7 @@ int main()
         if (strcmp(matrix_filename, "amazon0302.mtx") == 0 || strcmp(matrix_filename, "roadNet-PA.mtx") == 0)
             continue;
 
-        matrix_file = get_matrix_file(dir_name, matrix_filename, file_type);
+        matrix_file = get_matrix_file(dir_name, matrix_filename, file_type, &symmetric);
 
         // Get matrix from matrix market format in csr format
         read_CSR_matrix(matrix_file, &csr_matrix, file_type);
@@ -81,6 +82,11 @@ int main()
         // Initialize x and y vector
         x = initialize_x_vector(csr_matrix.M);
         y = initialize_y_vector(csr_matrix.M);
+
+        new_non_zero_values = get_real_non_zero_values_count(&csr_matrix, 5000, symmetric);
+
+        printf("New non-zero values:        %d.\n", new_non_zero_values);
+        printf("Non zero values reaeds:     %d.\n", csr_matrix.NZ);
 
         //
         // SERIAL EXECUTION WITH CSR MATRIX FORMAT
@@ -94,69 +100,6 @@ int main()
 
         // Get time used
         time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-
-        // Compute metrics
-        flops = 2.0 * csr_matrix.NZ / time_used;
-        mflops = flops / 1e6;
-        gflops = flops / 1e9;
-
-        // Allocating the node to save performance
-        node = (struct performance *)calloc(1, sizeof(struct performance));
-        if (node == NULL)
-        {
-            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-        }
-
-        strcpy(node->matrix, csr_matrix.name);
-        node->number_of_threads_used = 1;
-        node->flops = flops;
-        node->mflops = mflops;
-        node->gflops = gflops;
-        node->time_used = time_used;
-
-        if (head == NULL)
-        {
-            head = (struct performance *)calloc(1, sizeof(struct performance));
-            if (head == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
-            tail = (struct performance *)calloc(1, sizeof(struct performance));
-            if (tail == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
-
-            head = node;
-            tail = node;
-        }
-        else
-        {
-            tail->next_node = node;
-            node->prev_node = tail;
-            tail = node;
-        }
-
-        printf("Prestazioni Ottenute con il prodotto con csr!\n");
-
-        printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
-        printf("Time used for dot-product:      %.16lf\n", node->time_used);
-        printf("FLOPS:                          %.16lf\n", node->flops);
-        printf("MFLOPS:                         %.16lf\n", node->mflops);
-        printf("GFLOPS:                         %.16lf\n\n", node->gflops);
-
-        node = NULL;
-
-        printf("\n\n Esecuzione con la divisione in chunck!\n");
-
-        // SERIAL EXECUTION WITH MATRIX ALL IN MEMORY
-        // Get statistics for the dot-product
-        clock_gettime(CLOCK_MONOTONIC, &start);
-        // Start dot-product
-        // Recreate full matrix in memory and then perform the product
-        new_non_zero_values = (&csr_matrix, x, y, 5000);
-        // Get the time used for the dot-product
-        clock_gettime(CLOCK_MONOTONIC, &end);
 
         // Compute metrics
         flops = 2.0 * new_non_zero_values / time_used;
@@ -200,11 +143,13 @@ int main()
             tail = node;
         }
 
-        printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
-        printf("Time used for dot-product:      %.16lf\n", node->time_used);
-        printf("FLOPS:                          %.16lf\n", node->flops);
-        printf("MFLOPS:                         %.16lf\n", node->mflops);
-        printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+        // printf("Prestazioni Ottenute con il prodotto con csr!\n");
+
+        // printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+        // printf("Time used for dot-product:      %.16lf\n", node->time_used);
+        // printf("FLOPS:                          %.16lf\n", node->flops);
+        // printf("MFLOPS:                         %.16lf\n", node->mflops);
+        // printf("GFLOPS:                         %.16lf\n\n", node->gflops);
 
         node = NULL;
 
@@ -232,7 +177,7 @@ int main()
             time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
             // Compute metrics
-            flops = 2.0 * csr_matrix.NZ / time_used;
+            flops = 2.0 * new_non_zero_values / time_used;
             mflops = flops / 1e6;
             gflops = flops / 1e9;
 
@@ -273,11 +218,11 @@ int main()
                 tail = node;
             }
 
-            printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
-            printf("Time used for dot-product:      %.16lf\n", node->time_used);
-            printf("FLOPS:                          %.16lf\n", node->flops);
-            printf("MFLOPS:                         %.16lf\n", node->mflops);
-            printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+            //     printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+            //     printf("Time used for dot-product:      %.16lf\n", node->time_used);
+            //     printf("FLOPS:                          %.16lf\n", node->flops);
+            //     printf("MFLOPS:                         %.16lf\n", node->mflops);
+            //     printf("GFLOPS:                         %.16lf\n\n", node->gflops);
         }
 
         node = NULL;

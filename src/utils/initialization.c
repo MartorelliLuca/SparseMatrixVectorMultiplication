@@ -10,7 +10,7 @@
 #include "../utils_header/mmio.h"
 #include "../data_structures/csr_matix.h"
 
-FILE *get_matrix_file(char *dir_name, char *matrix_filename, int *file_type)
+FILE *get_matrix_file(char *dir_name, char *matrix_filename, int *file_type, int *symmetric)
 {
     // file_type[0] -> is_sparse_matrix
     // file_type[1] -> is_array_file
@@ -43,6 +43,8 @@ FILE *get_matrix_file(char *dir_name, char *matrix_filename, int *file_type)
 
     file_type[0] = is_sparse_matrix;
     file_type[1] = is_array_file;
+
+    *symmetric = mm_is_symmetric(matcode);
 
     if (!mm_is_matrix(matcode) || !mm_is_coordinate(matcode) || !mm_is_real(matcode))
     {
