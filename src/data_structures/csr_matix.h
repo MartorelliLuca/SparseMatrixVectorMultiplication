@@ -3,6 +3,7 @@
 
 typedef struct
 {
+    char name[256];        // Matrix Name
     int M;                 // Number of rows
     int N;                 // Number of columns
     int *IRP;              // Pointer to the start of each row in JA and AS

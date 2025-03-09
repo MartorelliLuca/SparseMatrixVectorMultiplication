@@ -1,0 +1,5 @@
+-- 9/3/2025 --
+
+Matrices which, so far, give problems:
+- amazon0302.mtx, gives error in reading matrix coefficients even though they are in the correct form;
+- roadNet-PA.mtx, does not respect the format of the sparse matrices.

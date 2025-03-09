@@ -9,12 +9,20 @@
 #include "../utils_header/initialization.h"
 #include "../utils_header/mmio.h"
 
-FILE *get_matrix_file(char *dir_name, char *matrix_filename)
+FILE *get_matrix_file(char *dir_name, char *matrix_filename, int *file_type)
 {
+    // file_type[0] -> is_sparse_matrix
+    // file_type[1] -> is_array_file
+
+    // Varibles to read the matrix market file
     MM_typecode matcode;
     char matrix_fullpath[256];
+    int is_sparse_matrix, is_array_file;
+
+    // Get the full path of the matrix market file to open
     snprintf(matrix_fullpath, sizeof(matrix_fullpath), "%s/%s", dir_name, matrix_filename);
 
+    // Open the file
     FILE *matrix_file = fopen(matrix_fullpath, "r");
     if (matrix_file == NULL)
     {
@@ -29,7 +37,13 @@ FILE *get_matrix_file(char *dir_name, char *matrix_filename)
         exit(EXIT_FAILURE);
     }
 
-    if (!mm_is_matrix(matcode) || !mm_is_coordinate(matcode))
+    is_sparse_matrix = mm_is_sparse(matcode);
+    is_array_file = mm_is_array(matcode);
+
+    file_type[0] = is_sparse_matrix;
+    file_type[1] = is_array_file;
+
+    if (!mm_is_matrix(matcode) || !mm_is_coordinate(matcode) || !mm_is_real(matcode))
     {
         printf("The file %s does not respect the format of sparse matrices!\n", matrix_filename);
         fclose(matrix_file);

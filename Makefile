@@ -3,7 +3,7 @@ UNAME_S := $(shell uname -s)
 
 # Configurazione per Ubuntu (GCC 13.3.0)
 ifeq ($(UNAME_S), Linux)
-  CC = gcc-13
+  CC = gcc
   CFLAGS = -Iinclude -fopenmp -O0
   LDFLAGS = -fopenmp
   # Puoi anche aggiungere eventuali altre configurazioni specifiche per Ubuntu
