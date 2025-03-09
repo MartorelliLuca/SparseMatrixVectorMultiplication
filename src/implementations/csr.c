@@ -3,47 +3,18 @@
 #include <math.h>
 #include <errno.h>
 #include <string.h>
+
+#include "../utils_header/initialization.h"
 #include "../headers/csr_headers.h"
+#include "../headers/matrix.h"
 #include "../data_structures/csr_matix.h"
 
 // Function to read matrix stored and convert it to csr_matrix format
-void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix, int *file_type)
+void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix, int *file_type, matrix_format *matrix)
 {
-    int result1, result2;
-    // Read matrix dimension and convert in csr_matrix format
-    if (file_type[0])
-    {
-        if (mm_read_mtx_crd_size(matrix_file, &csr_matrix->M, &csr_matrix->N, &csr_matrix->NZ) != 0)
-        {
-            printf("Error occour while try to read matrix dimension!\nError code: %d\n", errno);
-            fclose(matrix_file);
-            exit(EXIT_FAILURE);
-        }
-    }
-    else if (file_type[1])
-    {
-        if (mm_read_mtx_array_size(matrix_file, &csr_matrix->M, &csr_matrix->N) != 0)
-        {
-            printf("Error occour while try to read matrix array dimension!\nError code: %d\n", errno);
-            fclose(matrix_file);
-            exit(EXIT_FAILURE);
-        }
-
-        // If the matrix is an array, the matrix is dense
-        csr_matrix->NZ = csr_matrix->M * csr_matrix->N;
-    }
-    else
-    {
-        printf("Error occour while try to read matrix dimension!\nError code: %d\n", errno);
-        fclose(matrix_file);
-        exit(EXIT_FAILURE);
-    }
-
-    puts("");
-    printf("Matrix number of columns:           %d\n", csr_matrix->M);
-    printf("Matrix number of raws:              %d\n", csr_matrix->N);
-    printf("matrix number of non-zero values:   %d\n", csr_matrix->NZ);
-    puts("");
+    csr_matrix->M = matrix->M;
+    csr_matrix->N = matrix->N;
+    csr_matrix->NZ = matrix->NZ;
 
     // Create array for csr_matrix struct
 
@@ -74,65 +45,9 @@ void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix, int *file_type)
     // If the matrix is sparse
     if (file_type[0])
     {
-        // Allocate arrays to read values from the matrix file
-
-        // Allocare array to row indices
-        csr_matrix->row_indices = (int *)calloc(csr_matrix->NZ, sizeof(int));
-        if (csr_matrix->row_indices == NULL)
-        {
-            printf("Error in malloc for rax indexes array!\nError code: %d\n", errno);
-            exit(EXIT_FAILURE);
-        }
-
-        // Allocate array for columns indices
-        csr_matrix->columns_indices = (int *)calloc(csr_matrix->NZ, sizeof(int));
-        if (csr_matrix->columns_indices == NULL)
-        {
-            printf("Error in malloc for columns indexes array!\nError code: %d\n", errno);
-            exit(EXIT_FAILURE);
-        }
-
-        // Allocare array for readed values from file
-        csr_matrix->readed_values = (double *)calloc(csr_matrix->NZ, sizeof(double));
-        if (csr_matrix->readed_values == NULL)
-        {
-            printf("Error in malloc for non-zero values array!\nError code: %d\n", errno);
-            exit(EXIT_FAILURE);
-        }
-
-        // Read values from matrix market file format
-        for (int i = 0; i < csr_matrix->NZ; i++)
-        {
-            // If we can read 3 values then the matrix is not in pattern form
-            result1 = fscanf(matrix_file, "%d %d %lf", &csr_matrix->row_indices[i], &csr_matrix->columns_indices[i], &csr_matrix->readed_values[i]);
-            if (result1 != 3)
-            {
-                // If we read 2 values the matrix is in pattern form
-                result2 = fscanf(matrix_file, "%d %d", &csr_matrix->row_indices[i], &csr_matrix->columns_indices[i]);
-                if (result2 == 2)
-                {
-                    csr_matrix->readed_values[i] = 1.0;
-                }
-                else
-                {
-                    // Debug print
-                    // printf("result1 = %d\n", result1);
-                    // printf("result2 = %d\n", result2);
-                    printf("Error occour while trying to read matrix elements!\nError code: %d\n", errno);
-                    free(csr_matrix->row_indices);
-                    free(csr_matrix->columns_indices);
-                    free(csr_matrix->readed_values);
-                    exit(EXIT_FAILURE);
-                }
-            }
-            // Back to index matrix to 0
-            csr_matrix->row_indices[i]--;
-            csr_matrix->columns_indices[i]--;
-        }
-
         // Count the non zero values for every rows
         for (int i = 0; i < csr_matrix->NZ; i++)
-            csr_matrix->IRP[csr_matrix->row_indices[i] + 1]++;
+            csr_matrix->IRP[matrix->row_indices[i] + 1]++;
 
         // Inizialize the IRP vector to the correct values
         for (int i = 1; i <= csr_matrix->M; i++)
@@ -151,10 +66,10 @@ void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix, int *file_type)
 
         for (int i = 0; i < csr_matrix->NZ; i++)
         {
-            row = csr_matrix->row_indices[i];
+            row = matrix->row_indices[i];
             position = csr_matrix->IRP[row] + row_positions[row];
-            csr_matrix->JA[position] = csr_matrix->columns_indices[i];
-            csr_matrix->AS[position] = csr_matrix->readed_values[i];
+            csr_matrix->JA[position] = matrix->columns_indices[i];
+            csr_matrix->AS[position] = matrix->values[i];
             row_positions[row]++;
         }
 

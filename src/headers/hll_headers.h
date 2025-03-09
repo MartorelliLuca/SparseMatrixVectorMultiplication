@@ -3,9 +3,8 @@
 
 #include "../data_structures/hll_matrix.h"
 
-HLL_matrix *read_ELLPACK_matrix(char *filename);
-void convert_to_ellpack(HLL_matrix *ellpack_matrix);
-void print_ELLPACK_matrix(HLL_matrix *matrix);
-void destroy_ELLPACK_matrix(HLL_matrix *matrix);
+void *read_HLL_matrix(FILE *matrix_file, HLL_matrix *hll_matrix, int *file_type);
+void print_HLL_matrix(HLL_matrix *matrix);
+void destroy_HLL_matrix(HLL_matrix *matrix);
 
 #endif

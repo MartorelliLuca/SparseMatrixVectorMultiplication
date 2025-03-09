@@ -34,6 +34,16 @@ static const char *matrix_filenames[] = {
     //"roadNet-PA.mtx"
 };
 
+typedef struct
+{
+    int M;                // Row Number
+    int N;                // Colum Number
+    int NZ;               // Non-Zero Number
+    int *row_indices;     // Array of row indices of non zeroes values
+    int *columns_indices; // Array of column indices of non zeroes values
+    double *values;
+} matrix_format;
+
 static const int num_matrices = sizeof(matrix_filenames) / sizeof(matrix_filenames[0]);
 
 #endif

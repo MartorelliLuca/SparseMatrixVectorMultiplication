@@ -9,7 +9,7 @@ ifeq ($(UNAME_S), Linux)
   # Puoi anche aggiungere eventuali altre configurazioni specifiche per Ubuntu
 endif
 
-SRC = src/utils/mmio.c src/utils/read.c src/utils/write.c src/main.c src/implementations/csr.c src/implementations/ellpack.c src/implementations/operation.c src/utils/initialization.c
+SRC = src/utils/mmio.c src/utils/read.c src/utils/write.c src/main.c src/implementations/csr.c src/implementations/hll.c src/implementations/operation.c src/utils/initialization.c
 OUT = project
 
 all:

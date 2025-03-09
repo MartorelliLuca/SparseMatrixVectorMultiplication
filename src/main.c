@@ -41,9 +41,10 @@ int main()
     DIR *dir;
     struct dirent *entry;
     FILE *matrix_file;
+    matrix_format *matrix = NULL;
 
     CSR_matrix csr_matrix;
-    HLL_matrix ellpack_matrix;
+    HLL_matrix hll_matrix;
 
     double *x;
     double *y;
@@ -72,10 +73,21 @@ int main()
         if (strcmp(matrix_filename, "amazon0302.mtx") == 0 || strcmp(matrix_filename, "roadNet-PA.mtx") == 0)
             continue;
 
+        matrix = (matrix_format *)calloc(1, sizeof(matrix_format));
+        if (matrix == NULL)
+        {
+            printf("Error occour in malloc for matrix format varibale!\nError Code:%d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
         matrix_file = get_matrix_file(dir_name, matrix_filename, file_type, &symmetric);
+        get_matrix_format(matrix_file, file_type, matrix);
 
         // Get matrix from matrix market format in csr format
-        read_CSR_matrix(matrix_file, &csr_matrix, file_type);
+        read_CSR_matrix(matrix_file, &csr_matrix, file_type, matrix);
+
+        // Get matrix from matrix market format in hll format
+        read_HLL_matrix(matrix_file, &hll_matrix, file_type);
 
         strcpy(csr_matrix.name, matrix_filename);
 
@@ -85,8 +97,9 @@ int main()
 
         new_non_zero_values = get_real_non_zero_values_count(&csr_matrix, 5000, symmetric);
 
-        printf("New non-zero values:        %d.\n", new_non_zero_values);
-        printf("Non zero values reaeds:     %d.\n", csr_matrix.NZ);
+        // Debug Print
+        // printf("New non-zero values:        %d.\n", new_non_zero_values);
+        // printf("Non zero values reaeds:     %d.\n", csr_matrix.NZ);
 
         //
         // SERIAL EXECUTION WITH CSR MATRIX FORMAT
@@ -143,13 +156,13 @@ int main()
             tail = node;
         }
 
-        // printf("Prestazioni Ottenute con il prodotto con csr!\n");
+        printf("Prestazioni Ottenute con il prodotto con csr!\n");
 
-        // printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
-        // printf("Time used for dot-product:      %.16lf\n", node->time_used);
-        // printf("FLOPS:                          %.16lf\n", node->flops);
-        // printf("MFLOPS:                         %.16lf\n", node->mflops);
-        // printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+        printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+        printf("Time used for dot-product:      %.16lf\n", node->time_used);
+        printf("FLOPS:                          %.16lf\n", node->flops);
+        printf("MFLOPS:                         %.16lf\n", node->mflops);
+        printf("GFLOPS:                         %.16lf\n\n", node->gflops);
 
         node = NULL;
 
@@ -218,16 +231,16 @@ int main()
                 tail = node;
             }
 
-            //     printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
-            //     printf("Time used for dot-product:      %.16lf\n", node->time_used);
-            //     printf("FLOPS:                          %.16lf\n", node->flops);
-            //     printf("MFLOPS:                         %.16lf\n", node->mflops);
-            //     printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+            printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+            printf("Time used for dot-product:      %.16lf\n", node->time_used);
+            printf("FLOPS:                          %.16lf\n", node->flops);
+            printf("MFLOPS:                         %.16lf\n", node->mflops);
+            printf("GFLOPS:                         %.16lf\n\n", node->gflops);
         }
 
         node = NULL;
 
-        // // Read Values
+        // // Read Values of the List
         // while (head != NULL)
         // {
         //     node = head;

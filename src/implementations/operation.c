@@ -31,7 +31,7 @@ void matvec_csr(CSR_matrix *csr_matrix, double *x, double *y)
 }
 
 // First attempt to do matrix-vector dot produt in ELLPACK format
-void matvec_ellpack(HLL_matrix *ellpack_matrix, double *x, double *y)
+void matvec_hll(HLL_matrix *ellpack_matrix, double *x, double *y)
 {
 }
 

@@ -3,7 +3,7 @@
 
 #include "../data_structures/csr_matix.h"
 
-void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix, int *file_type);
+void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix, int *file_type, matrix_format *matrix);
 void print_CSR_matrix(CSR_matrix *csr_matrix);
 void destroy_CSR_matrix(CSR_matrix *csr_matrix);
 
