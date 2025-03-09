@@ -4,6 +4,10 @@
         "omp.h": "c",
         "csr_matix.h": "c",
         "csr_headers.h": "c",
-        "initialization.h": "c"
+        "initialization.h": "c",
+        "ellpack_headers.h": "c",
+        "hll_headers.h": "c",
+        "hll_matrix.h": "c",
+        "operation.h": "c"
     }
 }

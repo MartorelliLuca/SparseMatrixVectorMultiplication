@@ -2,35 +2,35 @@
 #define MATRIX_H
 
 static const char *matrix_filenames[] = {
-    "cage4.mtx",
-    "mhda416.mtx",
-    "mcfe.mtx",
-    "olm1000.mtx",
-    "adder_dcop_32.mtx",
-    "west2021.mtx",
-    "cavity10.mtx",
-    "rdist2.mtx",
-    "cant.mtx",
-    "olafu.mtx",
-    //"Cube_Coup_dt0.mtx", //code=2(cudaErrorMemoryAllocation) "cudaMalloc(&d_AS, block->max_nz_per_row * matrix_data_host->M * sizeof(double))" -> commentare per run su CUDA
-    "ML_Laplace.mtx",
-    "bcsstk17.mtx",
-    "mac_econ_fwd500.mtx",
-    "mhd4800a.mtx",
-    "cop20k_A.mtx",
-    "raefsky2.mtx",
-    "af23560.mtx",
-    "lung2.mtx",
-    "PR02R.mtx",
-    "FEM_3D_thermal1.mtx",
-    "thermal1.mtx",
-    "thermal2.mtx",
-    "thermomech_TK.mtx",
-    "nlpkkt80.mtx",
-    "webbase-1M.mtx",
-    "dc1.mtx",
+    "cage4.mtx",           // ok
+    "mhda416.mtx",         // ok
+    "mcfe.mtx",            // ok
+    "olm1000.mtx",         // ok
+    "adder_dcop_32.mtx",   // ok
+    "west2021.mtx",        // ok
+    "cavity10.mtx",        // ok
+    "rdist2.mtx",          // ok
+    "cant.mtx",            // ok
+    "olafu.mtx",           // ok
+    "Cube_Coup_dt0.mtx",   // ok
+    "ML_Laplace.mtx",      // ok
+    "bcsstk17.mtx",        // ok
+    "mac_econ_fwd500.mtx", // ok
+    "mhd4800a.mtx",        // ok
+    "cop20k_A.mtx",        // ok
+    "raefsky2.mtx",        // ok
+    "af23560.mtx",         // ok
+    "lung2.mtx",           // ok
+    "PR02R.mtx",           // ok
+    "FEM_3D_thermal1.mtx", // ok
+    "thermal1.mtx",        // ok
+    "thermal2.mtx",        // ok
+    "thermomech_TK.mtx",   // ok
+    "nlpkkt80.mtx",        // ok
+    "webbase-1M.mtx",      // ok
+    "dc1.mtx",             // ok
     //"amazon0302.mtx",
-    "af_1_k101.mtx",
+    "af_1_k101.mtx", // ok
     //"roadNet-PA.mtx"
 };
 

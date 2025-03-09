@@ -11,6 +11,6 @@ typedef struct
     int **JA;             // 2D array of column's indices;
     double **AS;          // 2D array of coefficients
 
-} ELLPACK_matrix;
+} HLL_matrix;
 
 #endif
