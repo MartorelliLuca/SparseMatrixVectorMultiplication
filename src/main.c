@@ -86,8 +86,9 @@ int main()
         // Get matrix from matrix market format in csr format
         read_CSR_matrix(matrix_file, &csr_matrix, file_type, matrix);
 
+        printf("Prima\n");
         // Get matrix from matrix market format in hll format
-        read_HLL_matrix(matrix_file, &hll_matrix, file_type);
+        // read_HLL_matrix(matrix_file, &hll_matrix, file_type, matrix);
 
         strcpy(csr_matrix.name, matrix_filename);
 
