@@ -1,0 +1,4 @@
+/home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/build/CMakeFiles/project.dir
+/home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/build/CMakeFiles/run.dir
+/home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/build/CMakeFiles/edit_cache.dir
+/home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/build/CMakeFiles/rebuild_cache.dir

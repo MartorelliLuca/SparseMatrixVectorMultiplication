@@ -16,7 +16,7 @@
 #include "headers/operation.h"
 #include "utils_header/initialization.h"
 
-#define MATRIX_DIR = "/matrici"
+#define MATRIX_DIR = "../matrici"
 
 int main()
 {
@@ -35,7 +35,7 @@ int main()
     int new_non_zero_values;
     int symmetric = 0;
 
-    const char *dir_name = "matrici";
+    const char *dir_name = "../matrici";
     char matrix_filename[256]; // Matrix filename
     char matrix_fullpath[256]; // Buffer to full path of the matrix file to open
     DIR *dir;
