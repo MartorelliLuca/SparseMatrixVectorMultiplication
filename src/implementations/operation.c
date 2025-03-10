@@ -7,7 +7,7 @@
 #include <bits/time.h>
 #include <errno.h>
 
-#include "../data_structures/csr_matix.h"
+#include "../data_structures/csr_matrix.h"
 #include "../data_structures/hll_matrix.h"
 
 void matvec(double **A, double *x, double *y, int M, int N)

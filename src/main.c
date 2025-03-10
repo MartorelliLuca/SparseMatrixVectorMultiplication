@@ -8,7 +8,7 @@
 
 #include "utils_header/mmio.h"
 #include "data_structures/hll_matrix.h"
-#include "data_structures/csr_matix.h"
+#include "data_structures/csr_matrix.h"
 #include "data_structures/performance.h"
 #include "headers/matrix.h"
 #include "headers/csr_headers.h"
@@ -86,9 +86,8 @@ int main()
         // Get matrix from matrix market format in csr format
         read_CSR_matrix(matrix_file, &csr_matrix, file_type, matrix);
 
-        printf("Prima\n");
         // Get matrix from matrix market format in hll format
-        read_HLL_matrix(matrix_file, &hll_matrix, file_type, matrix);
+        read_HLL_matrix(&csr_matrix, &hll_matrix);
 
         strcpy(csr_matrix.name, matrix_filename);
 

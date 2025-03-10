@@ -1,7 +1,7 @@
 #ifndef INIZIALITAZION_H
 #define INIZIALITAZION_H
 
-#include "../data_structures/csr_matix.h"
+#include "../data_structures/csr_matrix.h"
 #include "../data_structures/hll_matrix.h"
 #include "../headers/matrix.h"
 

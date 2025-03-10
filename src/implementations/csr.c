@@ -7,11 +7,12 @@
 #include "../utils_header/initialization.h"
 #include "../headers/csr_headers.h"
 #include "../headers/matrix.h"
-#include "../data_structures/csr_matix.h"
+#include "../data_structures/csr_matrix.h"
 
 // Function to read matrix stored and convert it to csr_matrix format
 void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix, int *file_type, matrix_format *matrix)
 {
+    printf("Starting reading CSR.\n");
     csr_matrix->M = matrix->M;
     csr_matrix->N = matrix->N;
     csr_matrix->NZ = matrix->NZ;

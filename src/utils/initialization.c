@@ -9,7 +9,7 @@
 #include "../utils_header/initialization.h"
 #include "../utils_header/mmio.h"
 #include "../headers/matrix.h"
-#include "../data_structures/csr_matix.h"
+#include "../data_structures/csr_matrix.h"
 
 FILE *get_matrix_file(char *dir_name, char *matrix_filename, int *file_type, int *symmetric)
 {
