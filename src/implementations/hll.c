@@ -11,6 +11,7 @@
 // Function to read hll_matrix stored in csr format
 void *read_HLL_matrix(FILE *matrix_file, HLL_matrix *hll_matrix, int *file_type, matrix_format *matrix)
 {
+    printf("Appena entro\n");
     hll_matrix->hack_size = 32;
     hll_matrix->M = matrix->M;
     hll_matrix->N = matrix->N;

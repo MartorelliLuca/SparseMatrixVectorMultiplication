@@ -88,7 +88,7 @@ int main()
 
         printf("Prima\n");
         // Get matrix from matrix market format in hll format
-        // read_HLL_matrix(matrix_file, &hll_matrix, file_type, matrix);
+        read_HLL_matrix(matrix_file, &hll_matrix, file_type, matrix);
 
         strcpy(csr_matrix.name, matrix_filename);
 
