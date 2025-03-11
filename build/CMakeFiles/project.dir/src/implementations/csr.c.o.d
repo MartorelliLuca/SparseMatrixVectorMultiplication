@@ -1,5 +1,5 @@
 CMakeFiles/project.dir/src/implementations/csr.c.o: \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/csr.c \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/csr.c \
  /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -72,12 +72,12 @@ CMakeFiles/project.dir/src/implementations/csr.c.o: \
  /usr/include/strings.h \
  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/initialization.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../data_structures/csr_matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../data_structures/hll_matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../headers/matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../headers/csr_headers.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../headers/../data_structures/csr_matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../headers/matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/csr_matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/mmio.h
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../utils_header/initialization.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../utils_header/../data_structures/csr_matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../utils_header/../data_structures/hll_matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../utils_header/../headers/matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../headers/csr_headers.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../headers/../data_structures/csr_matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../headers/matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../data_structures/csr_matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../utils_header/mmio.h

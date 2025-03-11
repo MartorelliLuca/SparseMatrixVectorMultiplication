@@ -112,10 +112,34 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
     }
 }
 
-// First attempt to do matrix-vector dot produt in ELLPACK format
-void matvec_hll(HLL_matrix *ellpack_matrix, double *x, double *y)
+// First attempt to do matrix-vector dot produt in HLL format
+void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
 {
+    for (int h = 0; h < hll_matrix->num_hacks; h++)
+    {
+        int start_idx = hll_matrix->hack_offsets[h];
+        int end_idx = (h < hll_matrix->num_hacks - 1) ? hll_matrix->hack_offsets[h + 1] : hll_matrix->M;
+        int hack_rows = end_idx - start_idx;
+
+        for (int i = 0; i < hack_rows; i++)
+        {
+            double sum = 0.0;
+            for (int j = 0; j < hll_matrix->hack_size; j++)
+            {
+                int index = start_idx * hll_matrix->hack_size + i * hll_matrix->hack_size + j;
+                int col = hll_matrix->JA[index];
+                double val = hll_matrix->AS[index];
+
+                if (col >= 0)
+                {
+                    sum += val * x[col];
+                }
+            }
+            y[start_idx + i] += sum;
+        }
+    }
 }
+
 int get_real_non_zero_values_count(CSR_matrix *matrix)
 {
     int count = 0;
@@ -126,7 +150,7 @@ int get_real_non_zero_values_count(CSR_matrix *matrix)
         {
             count++;
 
-            // Se la matrice è simmetrica, consideriamo il valore speculare solo una volta
+            // If the matrix is symmetrical, we consider the mirror value only once
             if (matrix->is_symmetric && matrix->JA[j] > i)
             {
                 count++;
@@ -137,7 +161,7 @@ int get_real_non_zero_values_count(CSR_matrix *matrix)
     return count;
 }
 
-void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values)
+void compute_serial_performance_csr(struct performance *node, double time_used, int new_non_zero_values)
 {
     // Compute metrics
     double flops = 2.0 * new_non_zero_values / time_used;

@@ -127,7 +127,7 @@ int main()
 
         time_used = end - start;
 
-        compute_serial_performance(node, time_used, new_non_zero_values);
+        compute_serial_performance_csr(node, time_used, new_non_zero_values);
 
         if (head == NULL)
         {
@@ -152,7 +152,62 @@ int main()
             tail = node;
         }
 
-        printf("Prestazioni Ottenute con il prodotto con csr!\n");
+        printf("Prestazioni Ottenute con il prodotto utilizzando il formato csr!\n");
+
+        printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+        printf("Time used for dot-product:      %.16lf\n", node->time_used);
+        printf("FLOPS:                          %.16lf\n", node->flops);
+        printf("MFLOPS:                         %.16lf\n", node->mflops);
+        printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+
+        node = NULL;
+
+        // SERIAL EXECTUTION WITH HLL MATRIX FORMAT
+        //
+
+        node = (struct performance *)calloc(1, sizeof(struct performance));
+        if (node == NULL)
+        {
+            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        }
+        strcpy(node->matrix, csr_matrix->name);
+
+        re_initialize_y_vector(hll_matrix->M, y);
+        // Get statistics for the dot-product
+        start = omp_get_wtime();
+        // Start dot-product
+        matvec_serial_hll(hll_matrix, x, y);
+        // Get the time used for the dot-product
+        end = omp_get_wtime();
+
+        time_used = end - start;
+
+        compute_serial_performance_csr(node, time_used, new_non_zero_values);
+
+        if (head == NULL)
+        {
+            head = (struct performance *)calloc(1, sizeof(struct performance));
+            if (head == NULL)
+            {
+                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            }
+            tail = (struct performance *)calloc(1, sizeof(struct performance));
+            if (tail == NULL)
+            {
+                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            }
+
+            head = node;
+            tail = node;
+        }
+        else
+        {
+            tail->next_node = node;
+            node->prev_node = tail;
+            tail = node;
+        }
+
+        printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll!\n");
 
         printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
         printf("Time used for dot-product:      %.16lf\n", node->time_used);

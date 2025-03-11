@@ -61,6 +61,9 @@ void read_HLL_matrix(CSR_matrix *csr_matrix, HLL_matrix *hll_matrix)
         hll_matrix->JA[i] = -1;
     }
 
+    hll_matrix->M = csr_matrix->M;
+    hll_matrix->N = csr_matrix->N;
+
     int offset = 0;
     for (int h = 0; h < num_hacks; h++)
     {

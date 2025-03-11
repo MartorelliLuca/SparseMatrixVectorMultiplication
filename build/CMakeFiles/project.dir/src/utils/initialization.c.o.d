@@ -1,5 +1,5 @@
 CMakeFiles/project.dir/src/utils/initialization.c.o: \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/initialization.c \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/utils/initialization.c \
  /usr/include/stdc-predef.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
@@ -76,10 +76,10 @@ CMakeFiles/project.dir/src/utils/initialization.c.o: \
  /usr/include/time.h /usr/include/x86_64-linux-gnu/bits/time.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/initialization.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../data_structures/csr_matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../data_structures/hll_matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../headers/matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/mmio.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../headers/matrix.h \
- /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../data_structures/csr_matrix.h
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/utils/../utils_header/initialization.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/utils/../utils_header/../data_structures/csr_matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/utils/../utils_header/../data_structures/hll_matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/utils/../utils_header/../headers/matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/utils/../utils_header/mmio.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/utils/../headers/matrix.h \
+ /home/alessandro/Documenti/GitHub/SCPAProject/src/utils/../data_structures/csr_matrix.h
