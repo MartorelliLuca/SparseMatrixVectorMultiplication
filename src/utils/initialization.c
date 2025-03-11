@@ -11,7 +11,7 @@
 #include "../headers/matrix.h"
 #include "../data_structures/csr_matrix.h"
 
-FILE *get_matrix_file(char *dir_name, char *matrix_filename, int *file_type, int *symmetric)
+FILE *get_matrix_file(char *dir_name, char *matrix_filename)
 {
     // file_type[0] -> is_sparse_matrix
     // file_type[1] -> is_array_file
@@ -29,28 +29,6 @@ FILE *get_matrix_file(char *dir_name, char *matrix_filename, int *file_type, int
     if (matrix_file == NULL)
     {
         printf("Error occurred while opening matrix file: %s\nError code: %d\n", matrix_filename, errno);
-        exit(EXIT_FAILURE);
-    }
-
-    if (mm_read_banner(matrix_file, &matcode) != 0)
-    {
-        printf("Error while trying to read banner of Matrix Market for %s!\nError code: %d\n", matrix_filename, errno);
-        fclose(matrix_file);
-        exit(EXIT_FAILURE);
-    }
-
-    is_sparse_matrix = mm_is_sparse(matcode);
-    is_array_file = mm_is_array(matcode);
-
-    file_type[0] = is_sparse_matrix;
-    file_type[1] = is_array_file;
-
-    *symmetric = mm_is_symmetric(matcode);
-
-    if (!mm_is_matrix(matcode) || !mm_is_coordinate(matcode) || !mm_is_real(matcode))
-    {
-        printf("The file %s does not respect the format of sparse matrices!\n", matrix_filename);
-        fclose(matrix_file);
         exit(EXIT_FAILURE);
     }
 
@@ -86,6 +64,12 @@ double *initialize_y_vector(int size)
         printf("Error occour in malloc for the y vector!\n Error code: %d\n", errno);
         exit(EXIT_FAILURE);
     }
+}
+
+void re_initialize_y_vector(int size, double *y)
+{
+    for (int i = 0; i < size; i++)
+        y[i] = 0.0;
 }
 
 double **get_matrix_from_csr(CSR_matrix *csr_matrix)
@@ -128,7 +112,7 @@ void free_dense_matrix(double **dense_matrix, int M)
     free(dense_matrix);
 }
 
-void *get_matrix_format(FILE *matrix_file, int *file_type, matrix_format *matrix)
+void get_matrix_format(FILE *matrix_file, int *file_type, matrix_format *matrix)
 {
 
     int result1, result2;

@@ -10,6 +10,7 @@
         "hll_matrix.h": "c",
         "operation.h": "c",
         "matrix.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "mmio.h": "c"
     }
 }

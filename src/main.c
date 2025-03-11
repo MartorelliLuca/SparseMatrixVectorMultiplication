@@ -23,14 +23,9 @@ int main()
     int thread_numbers[6] = {2, 4, 8, 16, 32, 40};
     int matrix_counter = 0; // Number of matrices processed
 
-    int file_type[2];
-    // file_type[0] -> is_sparse_matrix
-    // file_type[1] -> is_array_file
-
     // Variables to collect statistics
     struct performance *head = NULL, *tail = NULL, *node = NULL;
-    struct timespec start, end;
-    double time_used;
+    double time_used, start, end;
     double flops, mflops, gflops;
     int new_non_zero_values;
     int symmetric = 0;
@@ -43,8 +38,8 @@ int main()
     FILE *matrix_file;
     matrix_format *matrix = NULL;
 
-    CSR_matrix csr_matrix;
-    HLL_matrix hll_matrix;
+    CSR_matrix *csr_matrix = NULL;
+    HLL_matrix *hll_matrix = NULL;
 
     double *x;
     double *y;
@@ -60,6 +55,21 @@ int main()
     // Take one test matrix every time and transform it to csr and ellapack format
     while ((entry = readdir(dir)) != NULL)
     {
+
+        csr_matrix = (CSR_matrix *)calloc(1, sizeof(CSR_matrix));
+        if (csr_matrix == NULL)
+        {
+            printf("Error occour in malloc for csr matrix\nError Code: %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
+        hll_matrix = (HLL_matrix *)calloc(1, sizeof(HLL_matrix));
+        if (hll_matrix == NULL)
+        {
+            printf("Error occour in malloc for hll matrix\nError Code: %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
         if (entry->d_name[0] == '.')
             continue;
 
@@ -80,58 +90,44 @@ int main()
             exit(EXIT_FAILURE);
         }
 
-        matrix_file = get_matrix_file(dir_name, matrix_filename, file_type, &symmetric);
-        get_matrix_format(matrix_file, file_type, matrix);
+        matrix_file = get_matrix_file(dir_name, matrix_filename);
 
         // Get matrix from matrix market format in csr format
-        read_CSR_matrix(matrix_file, &csr_matrix, file_type, matrix);
+        read_CSR_matrix(matrix_file, csr_matrix);
 
         // Get matrix from matrix market format in hll format
-        read_HLL_matrix(&csr_matrix, &hll_matrix);
+        read_HLL_matrix(csr_matrix, hll_matrix);
 
-        strcpy(csr_matrix.name, matrix_filename);
+        strcpy(csr_matrix->name, matrix_filename);
 
         // Initialize x and y vector
-        x = initialize_x_vector(csr_matrix.M);
-        y = initialize_y_vector(csr_matrix.M);
+        x = initialize_x_vector(csr_matrix->M);
+        y = initialize_y_vector(csr_matrix->M);
 
-        new_non_zero_values = get_real_non_zero_values_count(&csr_matrix, 5000, symmetric);
+        new_non_zero_values = get_real_non_zero_values_count(csr_matrix);
 
         // Debug Print
         // printf("New non-zero values:        %d.\n", new_non_zero_values);
         // printf("Non zero values reaeds:     %d.\n", csr_matrix.NZ);
 
-        //
         // SERIAL EXECUTION WITH CSR MATRIX FORMAT
-        //
-        // Get statistics for the dot-product
-        clock_gettime(CLOCK_MONOTONIC, &start);
-        // Start dot-product
-        matvec_csr(&csr_matrix, x, y);
-        // Get the time used for the dot-product
-        clock_gettime(CLOCK_MONOTONIC, &end);
-
-        // Get time used
-        time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-
-        // Compute metrics
-        flops = 2.0 * new_non_zero_values / time_used;
-        mflops = flops / 1e6;
-        gflops = flops / 1e9;
-
         // Allocating the node to save performance
         node = (struct performance *)calloc(1, sizeof(struct performance));
         if (node == NULL)
         {
             printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
         }
+        strcpy(node->matrix, csr_matrix->name);
+        // Get statistics for the dot-product
+        start = omp_get_wtime();
+        // Start dot-product
+        matvec_serial_csr(csr_matrix, x, y);
+        // Get the time used for the dot-product
+        end = omp_get_wtime();
 
-        strcpy(node->matrix, csr_matrix.name);
-        node->number_of_threads_used = 1;
-        node->flops = flops;
-        node->mflops = mflops;
-        node->gflops = gflops;
-        node->time_used = time_used;
+        time_used = end - start;
+
+        compute_serial_performance(node, time_used, new_non_zero_values);
 
         if (head == NULL)
         {
@@ -164,95 +160,26 @@ int main()
         printf("MFLOPS:                         %.16lf\n", node->mflops);
         printf("GFLOPS:                         %.16lf\n\n", node->gflops);
 
-        node = NULL;
-
         //
         // OpenMP EXECUTION
         //
 
-        printf("Prestazioni ottenute con OpenMP!\n");
-
-        for (int index = 0; index < 6; index++)
-        {
-            int num_threads = thread_numbers[index];
-
-            // Set number of threads to perform dot product executions
-            omp_set_num_threads(num_threads);
-
-            // Get statistics for the dot-product
-            clock_gettime(CLOCK_MONOTONIC, &start);
-            // Start dot-product
-            matvec_csr(&csr_matrix, x, y);
-            // Get the time used for the dot-product
-            clock_gettime(CLOCK_MONOTONIC, &end);
-
-            // Get time used
-            time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-
-            // Compute metrics
-            flops = 2.0 * new_non_zero_values / time_used;
-            mflops = flops / 1e6;
-            gflops = flops / 1e9;
-
-            // Allocating the node to save performance
-            node = (struct performance *)calloc(1, sizeof(struct performance));
-            if (node == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
-
-            strcpy(node->matrix, matrix_filename);
-            node->number_of_threads_used = num_threads;
-            node->flops = flops;
-            node->mflops = mflops;
-            node->gflops = gflops;
-            node->time_used = time_used;
-
-            if (head == NULL)
-            {
-                head = (struct performance *)calloc(1, sizeof(struct performance));
-                if (head == NULL)
-                {
-                    printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-                }
-                tail = (struct performance *)calloc(1, sizeof(struct performance));
-                if (tail == NULL)
-                {
-                    printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-                }
-
-                head = node;
-                tail = node;
-            }
-            else
-            {
-                tail->next_node = node;
-                node->prev_node = tail;
-                tail = node;
-            }
-
-            printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
-            printf("Time used for dot-product:      %.16lf\n", node->time_used);
-            printf("FLOPS:                          %.16lf\n", node->flops);
-            printf("MFLOPS:                         %.16lf\n", node->mflops);
-            printf("GFLOPS:                         %.16lf\n\n", node->gflops);
-        }
-
         node = NULL;
 
-        // // Read Values of the List
-        // while (head != NULL)
-        // {
-        //     node = head;
-        //     printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
-        //     printf("Time used for dot-product:      %.16lf\n", node->time_used);
-        //     printf("FLOPS:                          %.16lf\n", node->flops);
-        //     printf("MFLOPS:                         %.16lf\n", node->mflops);
-        //     printf("GFLOPS:                         %.16lf\n\n", node->gflops);
-        //     head = head->next_node;
-        // }
+        printf("Prestazioni ottenute con OpenMP!\n");
+        re_initialize_y_vector(csr_matrix->M, y);
+        node = (struct performance *)calloc(1, sizeof(struct performance));
+        if (node == NULL)
+        {
+            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
 
-        fclose(matrix_file);
+        strcpy(node->matrix, matrix_filename);
+
+        // matvec_parallel_csr(&csr_matrix, x, y, &node, thread_numbers, head, tail);
+
+        node = NULL;
 
         sleep(3);
     }

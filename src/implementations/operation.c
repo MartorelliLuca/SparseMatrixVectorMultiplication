@@ -9,6 +9,7 @@
 
 #include "../data_structures/csr_matrix.h"
 #include "../data_structures/hll_matrix.h"
+#include "../data_structures/performance.h"
 
 void matvec(double **A, double *x, double *y, int M, int N)
 {
@@ -17,10 +18,20 @@ void matvec(double **A, double *x, double *y, int M, int N)
             y[i] += A[i][j] * x[j];
 }
 
+// void matrix_partition(int M, int nz, int *num_threads, int *IRP, int *first_row, int *last_row)
+// {
+//     int block_size = M / nz;
+//     for (int i = 0; i < nz; i++)
+//     {
+//         first_row[i] = i * block_size;
+//         last_row[i] = (i + 1) * block_size;
+//     }
+//     last_row[nz - 1] = M;
+// }
+
 // First attempt to do matrix-vector dot product in CSR format
-void matvec_csr(CSR_matrix *csr_matrix, double *x, double *y)
+void matvec_serial_csr(CSR_matrix *csr_matrix, double *x, double *y)
 {
-#pragma omp parallel for
     for (int i = 0; i < csr_matrix->M; i++)
     {
         for (int j = csr_matrix->IRP[i]; j < csr_matrix->IRP[i + 1]; j++)
@@ -30,68 +41,134 @@ void matvec_csr(CSR_matrix *csr_matrix, double *x, double *y)
     }
 }
 
+void product(CSR_matrix *csr_matrix, double *x, double *y, int num_threads, int *first_row, int *last_row)
+{
+#pragma omp parallel num_threads(num_threads)
+    {
+        int tid = omp_get_thread_num();
+        for (int i = first_row[tid]; i < last_row[tid]; i++)
+        {
+            for (int j = csr_matrix->IRP[i]; j < csr_matrix->IRP[i + 1]; j++)
+            {
+                y[i] += csr_matrix->AS[j] * x[csr_matrix->JA[j]];
+            }
+        }
+    }
+}
+
+// TODO cambia il modo in cui calcoli performance
+void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node,
+                         int *thread_numbers, struct performance *head, struct performance *tail)
+{
+
+    double time_used, start, end;
+    int new_non_zero_values;
+    for (int index = 0; index < 6; index++)
+    {
+        int num_threads = thread_numbers[index];
+
+        // Set number of threads to perform dot product executions
+        omp_set_num_threads(num_threads);
+
+        // partiziona il lavoro tra i thread
+        int *first_row, *last_row;
+
+        // matrix_partition(csr_matrix->M, num_threads, first_row, last_row);
+
+        product(csr_matrix, x, y, num_threads, first_row, last_row);
+
+        compute_parallel_performance(node, time_used, new_non_zero_values, num_threads);
+
+        if (head == NULL)
+        {
+            head = (struct performance *)calloc(1, sizeof(struct performance));
+            if (head == NULL)
+            {
+                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            }
+            tail = (struct performance *)calloc(1, sizeof(struct performance));
+            if (tail == NULL)
+            {
+                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            }
+
+            head = node;
+            tail = node;
+        }
+        else
+        {
+            tail->next_node = node;
+            node->prev_node = tail;
+            tail = node;
+        }
+
+        printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+        printf("Time used for dot-product:      %.16lf\n", node->time_used);
+        printf("FLOPS:                          %.16lf\n", node->flops);
+        printf("MFLOPS:                         %.16lf\n", node->mflops);
+        printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+
+        // fai il prodotto scalare tra la riga i-esima e il vettore x
+    }
+}
+
 // First attempt to do matrix-vector dot produt in ELLPACK format
 void matvec_hll(HLL_matrix *ellpack_matrix, double *x, double *y)
 {
 }
-
-int get_real_non_zero_values_count(CSR_matrix *matrix, int block_size, int is_symmetric)
+int get_real_non_zero_values_count(CSR_matrix *matrix)
 {
-    int new_non_zero_values_count = 0;
+    int count = 0;
 
-    for (int block_start = 0; block_start < matrix->M; block_start += block_size)
+    for (int i = 0; i < matrix->M; i++)
     {
-        int block_end = (block_start + block_size > matrix->M) ? matrix->M : block_start + block_size;
-
-        // Allocazione del blocco
-        double **dense_block = (double **)calloc((block_end - block_start), sizeof(double *));
-        if (!dense_block)
+        for (int j = matrix->IRP[i]; j < matrix->IRP[i + 1]; j++)
         {
-            printf("Errore in malloc in dot product in memory\nError Code: %d\n", errno);
-            exit(EXIT_FAILURE);
-        }
+            count++;
 
-        for (int i = 0; i < block_end - block_start; i++)
-        {
-            dense_block[i] = (double *)calloc(matrix->N, sizeof(double));
-            if (!dense_block[i])
+            // Se la matrice è simmetrica, consideriamo il valore speculare solo una volta
+            if (matrix->is_symmetric && matrix->JA[j] > i)
             {
-                printf("Error in malloc for block row\nError Code: %d\n", errno);
-                for (int j = 0; j < i; j++)
-                    free(dense_block[j]);
-                free(dense_block);
-                exit(EXIT_FAILURE);
+                count++;
             }
         }
-
-        // Popoliamo il blocco con i dati CSR e contiamo gli elementi non zero
-        for (int i = block_start; i < block_end; i++)
-        {
-            for (int j = matrix->IRP[i]; j < matrix->IRP[i + 1]; j++)
-            {
-                int col = matrix->JA[j];
-
-                // Controllo che col rientri nei limiti
-                if (col < matrix->N)
-                {
-                    dense_block[i - block_start][col] = matrix->AS[j];
-                    new_non_zero_values_count++; // Conta il valore originale
-                }
-
-                // Se la matrice è simmetrica e stiamo leggendo il triangolo superiore, aggiungiamo il triangolo inferiore
-                if (is_symmetric && i != col && col >= block_start && col < block_end)
-                {
-                    dense_block[col - block_start][i] = matrix->AS[j];
-                    new_non_zero_values_count++; // Conta il valore simmetrico
-                }
-            }
-        }
-
-        // Deallocazione del blocco
-        for (int i = 0; i < block_end - block_start; i++)
-            free(dense_block[i]);
-        free(dense_block);
     }
 
-    return new_non_zero_values_count;
+    return count;
+}
+
+void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values)
+{
+    // Compute metrics
+    double flops = 2.0 * new_non_zero_values / time_used;
+    double mflops = flops / 1e6;
+    double gflops = flops / 1e9;
+
+    node->number_of_threads_used = 1;
+    node->flops = flops;
+    node->mflops = mflops;
+    node->gflops = gflops;
+    node->time_used = time_used;
+}
+
+void compute_parallel_performance(struct performance *node, double time_used, int new_non_zero_values, int num_threads)
+{
+    // Compute metrics
+
+    double flops = 2.0 * new_non_zero_values / time_used;
+    double mflops = flops / 1e6;
+    double gflops = flops / 1e9;
+
+    node->number_of_threads_used = num_threads;
+    node->flops = flops;
+    node->mflops = mflops;
+    node->gflops = gflops;
+    node->time_used = time_used;
+    printf("///////////////////////////\n///////////////////////////\n");
+    printf("Time used in node:      %.16lf\n", node->time_used);
+    printf("FLOPS:                          %.16lf\n", node->flops);
+    printf("MFLOPS:                         %.16lf\n", node->mflops);
+    printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+    printf("new_non_zero_values: %d\n", new_non_zero_values);
+    printf("time_used: %lf\n", time_used);
 }

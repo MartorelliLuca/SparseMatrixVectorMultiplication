@@ -1,16 +1,16 @@
 #ifndef HLL_MATRIX_H
 #define HLL_MATRIX_H
 
-#include "ellpack_block.h"
+#define HACKSIZE 32
 
 typedef struct
 {
-    int hack_size;        // Hack Size Parameter
-    int num_blocks;       // Num Blocks
-    int M;                // Number of rows
-    int N;                // Number of columns
-    ELLPACKBlock *blocks; // ELLPACK Blocks
-
+    int M, N;          // Rows and Columns number
+    int hack_size;     // Hack dimension
+    int num_hacks;     // Hack Number
+    int *hack_offsets; // Start indices of hcks
+    int *JA;           // Columns indicies
+    double *AS;        // Non-zeroes values
 } HLL_matrix;
 
 #endif

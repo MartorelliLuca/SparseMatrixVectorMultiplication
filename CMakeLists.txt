@@ -10,6 +10,14 @@ set(CMAKE_C_FLAGS "-Iinclude -fopenmp -O0")
 # Set linking flags
 set(CMAKE_EXE_LINKER_FLAGS "-fopenmp")
 
+add_compile_options(-O3)
+add_compile_options(-march=native)
+
+set(CMAKE_CXX_FLAGC "-O3")
+
+add_compile_options(-ffast-math)
+add_compile_options(-funroll-loops)
+
 # Source files
 set(SRC_FILES
     src/utils/mmio.c

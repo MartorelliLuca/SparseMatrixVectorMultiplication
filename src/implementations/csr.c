@@ -8,103 +8,151 @@
 #include "../headers/csr_headers.h"
 #include "../headers/matrix.h"
 #include "../data_structures/csr_matrix.h"
+#include "../utils_header/mmio.h"
 
 // Function to read matrix stored and convert it to csr_matrix format
-void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix, int *file_type, matrix_format *matrix)
+void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix)
 {
-    printf("Starting reading CSR.\n");
-    csr_matrix->M = matrix->M;
-    csr_matrix->N = matrix->N;
-    csr_matrix->NZ = matrix->NZ;
 
-    // Create array for csr_matrix struct
-
-    // Create IRP array for csr_matrix format
-    csr_matrix->IRP = (int *)calloc(((csr_matrix->M) + 1), sizeof(int));
-    if (csr_matrix->IRP == NULL)
+    MM_typecode matcode;
+    if (mm_read_banner(matrix_file, &matcode) != 0)
     {
-        printf("Error occour in malloc for IRP in csr_matrix conversion!\nError code: %d\n", errno);
-        exit(EXIT_FAILURE);
+        printf("Error in read of bunner of Matrix Market!\n");
+        fclose(matrix_file);
+        return NULL;
     }
 
-    // Create JA array for csr_matrix format
-    csr_matrix->JA = (int *)calloc((csr_matrix->NZ), sizeof(int));
-    if (csr_matrix->JA == NULL)
+    int is_sparse = mm_is_sparse(matcode);
+    int is_symmetric = mm_is_symmetric(matcode);
+    csr_matrix->is_symmetric = is_symmetric;
+    int is_pattern = mm_is_pattern(matcode);
+    int is_array = mm_is_array(matcode);
+
+    if (!mm_is_matrix(matcode) || (!mm_is_real(matcode) && !is_pattern))
     {
-        printf("Error occour in malloc for JA in csr_matrix convertion!\nError code: %d\n", errno);
-        exit(EXIT_FAILURE);
+        printf("File format non supported\n");
+        fclose(matrix_file);
+        return NULL;
     }
 
-    // Create AS array for csr_matrix format
-    csr_matrix->AS = (double *)calloc((csr_matrix->NZ), sizeof(double));
-    if (csr_matrix->AS == NULL)
+    int M, N, NZ;
+    if (mm_read_mtx_crd_size(matrix_file, &M, &N, &NZ) != 0)
     {
-        printf("Error occour in malloc for AS in csr_matrix convertion!\nError code: %d\n", errno);
-        exit(EXIT_FAILURE);
+        printf("Error in read of dimesion of matrix!\n");
+        fclose(matrix_file);
+        return NULL;
     }
 
-    // If the matrix is sparse
-    if (file_type[0])
+    int max_entries = is_symmetric ? 2 * NZ : NZ;
+    int *I = malloc(max_entries * sizeof(int));
+    int *J = malloc(max_entries * sizeof(int));
+    double *values = is_pattern ? NULL : malloc(max_entries * sizeof(double));
+
+    if (!I || !J || (!is_pattern && !values))
     {
-        // Count the non zero values for every rows
-        for (int i = 0; i < csr_matrix->NZ; i++)
-            csr_matrix->IRP[matrix->row_indices[i] + 1]++;
+        printf("Errror in malloc for read CSR matrix!\n");
+        free(I);
+        free(J);
+        free(values);
+        fclose(matrix_file);
+        return NULL;
+    }
 
-        // Inizialize the IRP vector to the correct values
-        for (int i = 1; i <= csr_matrix->M; i++)
-            csr_matrix->IRP[i] += csr_matrix->IRP[i - 1];
-
-        int *row_positions;
-        int row, position;
-
-        // Assign to JA and AS the values
-        row_positions = (int *)calloc(csr_matrix->M, sizeof(int));
-        if (row_positions == NULL)
+    int count = 0;
+    for (int i = 0; i < NZ; i++)
+    {
+        int row, col;
+        double val = 1.0;
+        if (is_pattern)
         {
-            printf("Error occour in malloc for row position in convert to csr_matrix format function!\nError code: %d\n", errno);
-            exit(EXIT_FAILURE);
+            fscanf(matrix_file, "%d %d", &row, &col);
         }
-
-        for (int i = 0; i < csr_matrix->NZ; i++)
+        else
         {
-            row = matrix->row_indices[i];
-            position = csr_matrix->IRP[row] + row_positions[row];
-            csr_matrix->JA[position] = matrix->columns_indices[i];
-            csr_matrix->AS[position] = matrix->values[i];
-            row_positions[row]++;
+            fscanf(matrix_file, "%d %d %lf", &row, &col, &val);
         }
+        row--;
+        col--;
 
-        free(row_positions);
+        I[count] = row;
+        J[count] = col;
+        if (!is_pattern)
+            values[count] = val;
+        count++;
+
+        if (is_symmetric && row != col)
+        {
+            I[count] = col;
+            J[count] = row;
+            if (!is_pattern)
+                values[count] = val;
+            count++;
+        }
     }
-    else if (file_type[1])
+    fclose(matrix_file);
+
+    int *IRP = calloc(M + 1, sizeof(int));
+    int *JA = malloc(count * sizeof(int));
+    double *AS = malloc(count * sizeof(double));
+
+    if (!IRP || !JA || !AS)
     {
-        int index = 0;
-        double value = 0.0;
-        for (int i = 0; i < csr_matrix->M; i++)
-        {
-            for (int j = 0; j < csr_matrix->M; j++)
-            {
-                fscanf(matrix_file, "%lf", &value);
-                if (value != 0)
-                {
-                    csr_matrix->AS[index] = value;
-                    csr_matrix->JA[index] = j;
-                    index++;
-                }
-            }
-            csr_matrix->IRP[i + 1] = index;
-        }
-        csr_matrix->NZ = index;
+        printf("Error in malloc in read CSR matrix!\n");
+        free(I);
+        free(J);
+        free(values);
+        free(IRP);
+        free(JA);
+        free(AS);
+        return NULL;
     }
 
-    // print_matrix(csr_matrix);
+    for (int i = 0; i < count; i++)
+    {
+        IRP[I[i] + 1]++;
+    }
+    for (int i = 1; i <= M; i++)
+    {
+        IRP[i] += IRP[i - 1];
+    }
+
+    int *row_fill = calloc(M, sizeof(int));
+    for (int i = 0; i < count; i++)
+    {
+        int row = I[i];
+        int pos = IRP[row] + row_fill[row];
+        JA[pos] = J[i];
+        AS[pos] = is_pattern ? 1.0 : values[i];
+        row_fill[row]++;
+    }
+
+    free(I);
+    free(J);
+    free(values);
+    free(row_fill);
+
+    csr_matrix->M = M;
+    csr_matrix->N = N;
+    csr_matrix->NZ = count;
+    csr_matrix->AS = AS;
+    csr_matrix->JA = JA;
+    csr_matrix->IRP = IRP;
 }
 
 // Function to destroy matrix
-void destroy_CSR_matrix(CSR_matrix *csr_matrix) {}
+void destroy_CSR_matrix(CSR_matrix *csr_matrix)
+{
+    if (!csr_matrix)
+        return;
+
+    free(csr_matrix->IRP);
+    free(csr_matrix->JA);
+    free(csr_matrix->AS);
+    free(csr_matrix);
+}
 
 // Function to print matrix values
-void print_csr(CSR_matrix *csr_matrix)
+void print_CSR_matrix(CSR_matrix *csr_matrix)
 {
     if (!csr_matrix)
     {
@@ -122,7 +170,7 @@ void print_csr(CSR_matrix *csr_matrix)
     }
     printf("\n");
 
-    printf("\nJA (columns indices):\n");
+    printf("\nJA (J indices):\n");
     for (int i = 0; i < csr_matrix->NZ; i++)
     {
         printf("%d ", csr_matrix->JA[i]);
