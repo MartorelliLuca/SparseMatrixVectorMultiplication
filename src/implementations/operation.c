@@ -18,16 +18,48 @@ void matvec(double **A, double *x, double *y, int M, int N)
             y[i] += A[i][j] * x[j];
 }
 
-// void matrix_partition(int M, int nz, int *num_threads, int *IRP, int *first_row, int *last_row)
-// {
-//     int block_size = M / nz;
-//     for (int i = 0; i < nz; i++)
-//     {
-//         first_row[i] = i * block_size;
-//         last_row[i] = (i + 1) * block_size;
-//     }
-//     last_row[nz - 1] = M;
-// }
+void matrix_partition(CSR_matrix *CSR_matrix, int nz, int num_threads, int *first_row)
+{
+    int *row_nnz = (int *)malloc(CSR_matrix->M * sizeof(int));
+    int *nnz_per_thread_count = (int *)calloc(num_threads, sizeof(int));
+    if (row_nnz == NULL || nnz_per_thread_count == NULL)
+    {
+        printf("Error occour in malloc for row_nnz or nnz_per_thread_count\nError Code: %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
+
+    double total_nnz = 0.0;
+    for (int i = 0; i < CSR_matrix->M; i++)
+    {
+        row_nnz[i] = CSR_matrix->IRP[i + 1] - CSR_matrix->IRP[i];
+        total_nnz += row_nnz[i];
+    }
+
+    double target_workload = total_nnz / num_threads;
+    double current_workload = 0.0;
+    int thread_id = 0;
+    first_row[0] = 0;
+
+    // 2️⃣ Suddivisione migliorata
+    for (int i = 0; i < CSR_matrix->M; i++)
+    {
+        current_workload += row_nnz[i];
+        nnz_per_thread_count[thread_id] += row_nnz[i];
+
+        // Se il thread ha accumulato abbastanza lavoro e ci sono ancora thread disponibili
+        if (current_workload >= target_workload && thread_id < num_threads - 1)
+        {
+            first_row[thread_id + 1] = i + 1; // Il prossimo thread partirà da qui
+            thread_id++;
+            current_workload = 0.0;
+        }
+    }
+
+    first_row[num_threads] = CSR_matrix->M;
+
+    free(row_nnz);
+    free(nnz_per_thread_count);
+}
 
 // First attempt to do matrix-vector dot product in CSR format
 void matvec_serial_csr(CSR_matrix *csr_matrix, double *x, double *y)
@@ -41,28 +73,31 @@ void matvec_serial_csr(CSR_matrix *csr_matrix, double *x, double *y)
     }
 }
 
-void product(CSR_matrix *csr_matrix, double *x, double *y, int num_threads, int *first_row, int *last_row)
+void product(CSR_matrix *csr_matrix, double *x, double *y, int num_threads, int *first_row, double *time_used)
 {
-#pragma omp parallel num_threads(num_threads)
+    int my_thread_number = omp_get_thread_num();
+    int row_one = first_row[my_thread_number];
+    int final_row = (my_thread_number == num_threads - 1) ? csr_matrix->M : first_row[my_thread_number + 1];
+    double start = omp_get_wtime();
+#pragma omp parallel for
+
+    for (int i = row_one; i < final_row; i++)
     {
-        int tid = omp_get_thread_num();
-        for (int i = first_row[tid]; i < last_row[tid]; i++)
+        for (int j = csr_matrix->IRP[i]; j < csr_matrix->IRP[i + 1]; j++)
         {
-            for (int j = csr_matrix->IRP[i]; j < csr_matrix->IRP[i + 1]; j++)
-            {
-                y[i] += csr_matrix->AS[j] * x[csr_matrix->JA[j]];
-            }
+            y[i] += csr_matrix->AS[j] * x[csr_matrix->JA[j]];
         }
     }
+    double end = omp_get_wtime();
+    *time_used = end - start;
+    printf("Thread %d: Tempo impiegato %.16lf\n", my_thread_number, *time_used);
 }
 
 // TODO cambia il modo in cui calcoli performance
-void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node,
-                         int *thread_numbers, struct performance *head, struct performance *tail)
+void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values)
 {
 
     double time_used, start, end;
-    int new_non_zero_values;
     for (int index = 0; index < 6; index++)
     {
         int num_threads = thread_numbers[index];
@@ -71,11 +106,17 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
         omp_set_num_threads(num_threads);
 
         // partiziona il lavoro tra i thread
-        int *first_row, *last_row;
+        int *first_row;
 
-        // matrix_partition(csr_matrix->M, num_threads, first_row, last_row);
+        first_row = (int *)calloc(num_threads + 1, sizeof(int)); // Allocare num_threads + 1 elementi
+        if (!first_row)
+        {
+            perror("Errore in calloc per first_row");
+            exit(EXIT_FAILURE);
+        }
 
-        product(csr_matrix, x, y, num_threads, first_row, last_row);
+        matrix_partition(csr_matrix, new_non_zero_values, num_threads, first_row);
+        product(csr_matrix, x, y, num_threads, first_row, &time_used);
 
         compute_parallel_performance(node, time_used, new_non_zero_values, num_threads);
 
@@ -188,11 +229,4 @@ void compute_parallel_performance(struct performance *node, double time_used, in
     node->mflops = mflops;
     node->gflops = gflops;
     node->time_used = time_used;
-    printf("///////////////////////////\n///////////////////////////\n");
-    printf("Time used in node:      %.16lf\n", node->time_used);
-    printf("FLOPS:                          %.16lf\n", node->flops);
-    printf("MFLOPS:                         %.16lf\n", node->mflops);
-    printf("GFLOPS:                         %.16lf\n\n", node->gflops);
-    printf("new_non_zero_values: %d\n", new_non_zero_values);
-    printf("time_used: %lf\n", time_used);
 }

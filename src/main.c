@@ -232,7 +232,7 @@ int main()
 
         strcpy(node->matrix, matrix_filename);
 
-        // matvec_parallel_csr(&csr_matrix, x, y, &node, thread_numbers, head, tail);
+        matvec_parallel_csr(csr_matrix, x, y, node, thread_numbers, head, tail, new_non_zero_values);
 
         node = NULL;
 
