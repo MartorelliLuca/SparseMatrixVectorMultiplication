@@ -40,7 +40,7 @@ void matrix_partition(CSR_matrix *CSR_matrix, int nz, int num_threads, int *firs
     int thread_id = 0;
     first_row[0] = 0;
 
-    // 2️⃣ Suddivisione migliorata
+    // Suddivisione migliorata
     for (int i = 0; i < CSR_matrix->M; i++)
     {
         current_workload += row_nnz[i];
@@ -79,6 +79,7 @@ void product(CSR_matrix *csr_matrix, double *x, double *y, int num_threads, int 
     int row_one = first_row[my_thread_number];
     int final_row = (my_thread_number == num_threads - 1) ? csr_matrix->M : first_row[my_thread_number + 1];
     double start = omp_get_wtime();
+
 #pragma omp parallel for
 
     for (int i = row_one; i < final_row; i++)
@@ -88,6 +89,7 @@ void product(CSR_matrix *csr_matrix, double *x, double *y, int num_threads, int 
             y[i] += csr_matrix->AS[j] * x[csr_matrix->JA[j]];
         }
     }
+
     double end = omp_get_wtime();
     *time_used = end - start;
     printf("Thread %d: Tempo impiegato %.16lf\n", my_thread_number, *time_used);
@@ -114,6 +116,8 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
             perror("Errore in calloc per first_row");
             exit(EXIT_FAILURE);
         }
+
+        // TODO GUARDA QUESTE
 
         matrix_partition(csr_matrix, new_non_zero_values, num_threads, first_row);
         product(csr_matrix, x, y, num_threads, first_row, &time_used);
@@ -158,25 +162,28 @@ void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
 {
     for (int h = 0; h < hll_matrix->num_hacks; h++)
     {
-        int start_idx = hll_matrix->hack_offsets[h];
-        int end_idx = (h < hll_matrix->num_hacks - 1) ? hll_matrix->hack_offsets[h + 1] : hll_matrix->M;
-        int hack_rows = end_idx - start_idx;
+        int start_row = h * HACKSIZE;
+        int end_row = (start_row + HACKSIZE < hll_matrix->M) ? start_row + HACKSIZE : hll_matrix->M;
+        int maxNR = (hll_matrix->hack_offsets[h + 1] - hll_matrix->hack_offsets[h]) / (end_row - start_row);
 
-        for (int i = 0; i < hack_rows; i++)
+        int block_offset = hll_matrix->hack_offsets[h];
+
+        for (int i = start_row; i < end_row; i++)
         {
             double sum = 0.0;
-            for (int j = 0; j < hll_matrix->hack_size; j++)
+            int row_offset = block_offset + (i - start_row) * maxNR;
+
+            for (int j = 0; j < maxNR; j++)
             {
-                int index = start_idx * hll_matrix->hack_size + i * hll_matrix->hack_size + j;
-                int col = hll_matrix->JA[index];
-                double val = hll_matrix->AS[index];
+                int col = hll_matrix->JA[row_offset + j];
+                double val = hll_matrix->AS[row_offset + j];
 
                 if (col >= 0)
-                {
+                { // Verifica che la colonna sia valida
                     sum += val * x[col];
                 }
             }
-            y[start_idx + i] += sum;
+            y[i] = sum;
         }
     }
 }
@@ -202,7 +209,7 @@ int get_real_non_zero_values_count(CSR_matrix *matrix)
     return count;
 }
 
-void compute_serial_performance_csr(struct performance *node, double time_used, int new_non_zero_values)
+void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values)
 {
     // Compute metrics
     double flops = 2.0 * new_non_zero_values / time_used;

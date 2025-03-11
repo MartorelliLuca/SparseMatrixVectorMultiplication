@@ -125,9 +125,21 @@ int main()
         // Get the time used for the dot-product
         end = omp_get_wtime();
 
+        printf("Risultati ottenuti con il prodotto csr\n");
+
+        for (int i = 0; i < csr_matrix->M; i++)
+        {
+            printf("x[%d] = %lf\n", i, x[i]);
+        }
+
+        for (int i = 0; i < csr_matrix->M; i++)
+        {
+            printf("y[%d] = %lf\n", i, y[i]);
+        }
+
         time_used = end - start;
 
-        compute_serial_performance_csr(node, time_used, new_non_zero_values);
+        compute_serial_performance(node, time_used, new_non_zero_values);
 
         if (head == NULL)
         {
@@ -169,10 +181,13 @@ int main()
         if (node == NULL)
         {
             printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            exit(EXIT_FAILURE);
         }
+
         strcpy(node->matrix, csr_matrix->name);
 
         re_initialize_y_vector(hll_matrix->M, y);
+
         // Get statistics for the dot-product
         start = omp_get_wtime();
         // Start dot-product
@@ -182,7 +197,9 @@ int main()
 
         time_used = end - start;
 
-        compute_serial_performance_csr(node, time_used, new_non_zero_values);
+        new_non_zero_values = get_real_non_zero_values_count(csr_matrix);
+
+        compute_serial_performance(node, time_used, new_non_zero_values);
 
         if (head == NULL)
         {
@@ -205,6 +222,18 @@ int main()
             tail->next_node = node;
             node->prev_node = tail;
             tail = node;
+        }
+
+        printf("Risultati ottenuti con il prodotto hll\n");
+
+        for (int i = 0; i < csr_matrix->M; i++)
+        {
+            printf("x[%d] = %lf\n", i, x[i]);
+        }
+
+        for (int i = 0; i < csr_matrix->M; i++)
+        {
+            printf("y[%d] = %lf\n", i, y[i]);
         }
 
         printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll!\n");

@@ -10,21 +10,31 @@
 #include "../headers/csr_headers.h"
 #include "../headers/matrix.h"
 
-// Function to read hll_matrix stored in csr format
 void read_HLL_matrix(CSR_matrix *csr_matrix, HLL_matrix *hll_matrix)
 {
+    if (!csr_matrix || !hll_matrix)
+    {
+        printf("Error: one of csr or hll pointer is null\n");
+        exit(EXIT_FAILURE);
+    }
+
     int M = csr_matrix->M, N = csr_matrix->N;
     int num_hacks = (M + HACKSIZE - 1) / HACKSIZE;
 
     hll_matrix->hack_offsets = (int *)malloc((num_hacks + 1) * sizeof(int));
-    if (hll_matrix->hack_offsets == NULL)
+    if (!hll_matrix->hack_offsets)
     {
-        printf("Error in malloc in read hll matrix!\nError Code: %d\n", errno);
+        printf("Error allocating hack_offsets\nError Code: %d\n", errno);
         exit(EXIT_FAILURE);
     }
 
     int total_nnz = 0;
-    int *maxNR_per_hack = (int *)malloc(num_hacks * sizeof(int));
+    int *maxNR_per_hack = (int *)calloc(num_hacks, sizeof(int));
+    if (!maxNR_per_hack)
+    {
+        printf("Error allocating maxNR_per_hack\nError Code: %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
 
     for (int h = 0; h < num_hacks; h++)
     {
@@ -34,6 +44,11 @@ void read_HLL_matrix(CSR_matrix *csr_matrix, HLL_matrix *hll_matrix)
         int maxNR = 0;
         for (int i = start_row; i < end_row; i++)
         {
+            if (csr_matrix->IRP[i] >= csr_matrix->IRP[i + 1])
+            {
+                printf("Error: IRP not valid in row %d\n", i);
+                exit(EXIT_FAILURE);
+            }
             int nnz_row = csr_matrix->IRP[i + 1] - csr_matrix->IRP[i];
             if (nnz_row > maxNR)
                 maxNR = nnz_row;
@@ -43,26 +58,17 @@ void read_HLL_matrix(CSR_matrix *csr_matrix, HLL_matrix *hll_matrix)
     }
 
     hll_matrix->AS = (double *)calloc(total_nnz, sizeof(double));
-    if (hll_matrix->AS == NULL)
-    {
-        printf("Error in malloc in read hll matrix!\nError Code: %d\n", errno);
-        exit(EXIT_FAILURE);
-    }
-
     hll_matrix->JA = (int *)malloc(total_nnz * sizeof(int));
-    if (hll_matrix->JA == NULL)
+    if (!hll_matrix->AS || !hll_matrix->JA)
     {
-        printf("Error in malloc in read hll matrix!\nError Code: %d\n", errno);
+        printf("Error allocating AS or JA\nError Code: %d\n", errno);
         exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < total_nnz; i++)
-    {
-        hll_matrix->JA[i] = -1;
-    }
-
-    hll_matrix->M = csr_matrix->M;
-    hll_matrix->N = csr_matrix->N;
+    hll_matrix->M = M;
+    hll_matrix->N = N;
+    hll_matrix->hack_size = HACKSIZE;
+    hll_matrix->num_hacks = num_hacks;
 
     int offset = 0;
     for (int h = 0; h < num_hacks; h++)
@@ -77,15 +83,17 @@ void read_HLL_matrix(CSR_matrix *csr_matrix, HLL_matrix *hll_matrix)
             int row_offset = offset + (i - start_row) * maxNR;
             int row_nnz = csr_matrix->IRP[i + 1] - csr_matrix->IRP[i];
 
+            int last_col = -1;
             for (int j = 0; j < row_nnz; j++)
             {
-                hll_matrix->AS[row_offset + j] = csr_matrix->AS[csr_matrix->IRP[i] + j];
-                hll_matrix->JA[row_offset + j] = csr_matrix->JA[csr_matrix->IRP[i] + j];
+                int idx = csr_matrix->IRP[i] + j;
+                hll_matrix->AS[row_offset + j] = csr_matrix->AS[idx];
+                hll_matrix->JA[row_offset + j] = last_col = csr_matrix->JA[idx];
             }
 
             for (int j = row_nnz; j < maxNR; j++)
             {
-                hll_matrix->JA[row_offset + j] = -1;
+                hll_matrix->JA[row_offset + j] = (last_col != -1) ? last_col : 0;
             }
         }
         offset += (end_row - start_row) * maxNR;
