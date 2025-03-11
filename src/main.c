@@ -80,7 +80,7 @@ int main()
         printf("Processing %s matrix\n", matrix_filename);
 
         // For now, this matrix give error banner read but I don't know why. For now, skip
-        if (strcmp(matrix_filename, "amazon0302.mtx") == 0 || strcmp(matrix_filename, "roadNet-PA.mtx") == 0)
+        if (strcmp(matrix_filename, "amazon0302.mtx") == 0 || strcmp(matrix_filename, "roadNet-PA.mtx") == 0 || strcmp(matrix_filename, "cop20k_A.mtx") == 0)
             continue;
 
         matrix = (matrix_format *)calloc(1, sizeof(matrix_format));
@@ -124,18 +124,6 @@ int main()
         matvec_serial_csr(csr_matrix, x, y);
         // Get the time used for the dot-product
         end = omp_get_wtime();
-
-        printf("Risultati ottenuti con il prodotto csr\n");
-
-        for (int i = 0; i < csr_matrix->M; i++)
-        {
-            printf("x[%d] = %lf\n", i, x[i]);
-        }
-
-        for (int i = 0; i < csr_matrix->M; i++)
-        {
-            printf("y[%d] = %lf\n", i, y[i]);
-        }
 
         time_used = end - start;
 
@@ -224,18 +212,6 @@ int main()
             tail = node;
         }
 
-        printf("Risultati ottenuti con il prodotto hll\n");
-
-        for (int i = 0; i < csr_matrix->M; i++)
-        {
-            printf("x[%d] = %lf\n", i, x[i]);
-        }
-
-        for (int i = 0; i < csr_matrix->M; i++)
-        {
-            printf("y[%d] = %lf\n", i, y[i]);
-        }
-
         printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll!\n");
 
         printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
@@ -265,7 +241,7 @@ int main()
 
         node = NULL;
 
-        sleep(3);
+        sleep(10);
     }
 
     closedir(dir);
