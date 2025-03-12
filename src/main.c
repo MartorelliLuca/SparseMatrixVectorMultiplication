@@ -241,7 +241,7 @@ int main()
 
         node = NULL;
 
-        sleep(10);
+        sleep(3);
     }
 
     closedir(dir);

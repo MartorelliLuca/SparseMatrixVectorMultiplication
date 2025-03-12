@@ -137,6 +137,7 @@ void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix)
     csr_matrix->AS = AS;
     csr_matrix->JA = JA;
     csr_matrix->IRP = IRP;
+    print_CSR_matrix(csr_matrix);
 }
 
 // Function to destroy matrix

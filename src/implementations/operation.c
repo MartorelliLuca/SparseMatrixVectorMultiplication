@@ -190,23 +190,12 @@ void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
 
 int get_real_non_zero_values_count(CSR_matrix *matrix)
 {
-    int count = 0;
-
-    for (int i = 0; i < matrix->M; i++)
-    {
-        for (int j = matrix->IRP[i]; j < matrix->IRP[i + 1]; j++)
-        {
-            count++;
-
-            // If the matrix is symmetrical, we consider the mirror value only once
-            if (matrix->is_symmetric && matrix->JA[j] > i)
-            {
-                count++;
-            }
-        }
-    }
-
-    return count;
+    int total_elements = matrix->M * matrix->N;
+    int non_zero_elements = matrix->NZ;
+    printf("Elementi totali: %d\n", total_elements);
+    printf("Elementi NON nulli: %d\n", non_zero_elements);
+    printf("Elementi nulliAAAAAAAA: %d\n", total_elements - non_zero_elements);
+    return total_elements - non_zero_elements;
 }
 
 void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values)
