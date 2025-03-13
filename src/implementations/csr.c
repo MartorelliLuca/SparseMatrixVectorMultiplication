@@ -137,7 +137,7 @@ void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix)
     csr_matrix->AS = AS;
     csr_matrix->JA = JA;
     csr_matrix->IRP = IRP;
-    print_CSR_matrix(csr_matrix);
+    // print_CSR_matrix(csr_matrix);
 }
 
 // Function to destroy matrix
@@ -155,33 +155,14 @@ void destroy_CSR_matrix(CSR_matrix *csr_matrix)
 // Function to print matrix values
 void print_CSR_matrix(CSR_matrix *csr_matrix)
 {
-    if (!csr_matrix)
+    printf("Matrice CSR: %s\n", csr_matrix->name);
+    for (int i = 0; i < csr_matrix->M; i++)
     {
-        printf("CSR Matrix is empty!\n");
-        return;
+        printf("Riga %d:", i);
+        for (int j = csr_matrix->IRP[i]; j < csr_matrix->IRP[i + 1]; j++)
+        {
+            printf(" (Col %d, Val %.2f)", csr_matrix->JA[j], csr_matrix->AS[j]);
+        }
+        printf("\n");
     }
-
-    printf("Dimension: %d x %d\n", csr_matrix->M, csr_matrix->N);
-    printf("Non-zero Values: %d\n", csr_matrix->NZ);
-
-    printf("\nAS (values):\n");
-    for (int i = 0; i < csr_matrix->NZ; i++)
-    {
-        printf("%.10f ", csr_matrix->AS[i]);
-    }
-    printf("\n");
-
-    printf("\nJA (J indices):\n");
-    for (int i = 0; i < csr_matrix->NZ; i++)
-    {
-        printf("%d ", csr_matrix->JA[i]);
-    }
-    printf("\n");
-
-    printf("\nIRP (row pointers):\n");
-    for (int i = 0; i <= csr_matrix->M; i++)
-    {
-        printf("%d ", csr_matrix->IRP[i]);
-    }
-    printf("\n");
 }

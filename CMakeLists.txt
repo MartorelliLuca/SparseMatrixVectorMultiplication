@@ -15,8 +15,8 @@ add_compile_options(-march=native)
 
 set(CMAKE_CXX_FLAGC "-O3")
 
-#add_compile_options(-ffast-math)
-#add_compile_options(-funroll-loops)
+add_compile_options(-ffast-math)
+add_compile_options(-funroll-loops)
 
 # Source files
 set(SRC_FILES

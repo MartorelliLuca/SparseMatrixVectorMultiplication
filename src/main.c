@@ -102,6 +102,23 @@ int main()
 
         // Initialize x and y vector
         x = initialize_x_vector(csr_matrix->M);
+        // x = (int *)malloc(4 * sizeof(int)); // Allocazione dinamica
+
+        // if (x == NULL)
+        // {
+        //     perror("Errore di allocazione");
+        //     return EXIT_FAILURE;
+        // }
+
+        // // Inizializzazione dei valori
+        // x[0] = 5;
+        // x[1] = 5;
+        // x[2] = 2;
+        // x[3] = 2;
+        // printf("X vector initialized:\n");
+        // //print_vector(x, csr_matrix->M);
+        // printf("CSR Matrix:\n");
+        // print_CSR_matrix(csr_matrix);
         y = initialize_y_vector(csr_matrix->M);
 
         new_non_zero_values = get_real_non_zero_values_count(csr_matrix);
@@ -124,6 +141,8 @@ int main()
         matvec_serial_csr(csr_matrix, x, y);
         // Get the time used for the dot-product
         end = omp_get_wtime();
+        printf("Y vector initialized:\n");
+        // print_vector(y, csr_matrix->M);
 
         time_used = end - start;
 
@@ -165,60 +184,60 @@ int main()
         // SERIAL EXECTUTION WITH HLL MATRIX FORMAT
         //
 
-        node = (struct performance *)calloc(1, sizeof(struct performance));
-        if (node == NULL)
-        {
-            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            exit(EXIT_FAILURE);
-        }
+        // node = (struct performance *)calloc(1, sizeof(struct performance));
+        // if (node == NULL)
+        // {
+        //     printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        //     exit(EXIT_FAILURE);
+        // }
 
-        strcpy(node->matrix, csr_matrix->name);
+        // strcpy(node->matrix, csr_matrix->name);
 
-        re_initialize_y_vector(hll_matrix->M, y);
+        // re_initialize_y_vector(hll_matrix->M, y);
 
-        // Get statistics for the dot-product
-        start = omp_get_wtime();
-        // Start dot-product
-        matvec_serial_hll(hll_matrix, x, y);
-        // Get the time used for the dot-product
-        end = omp_get_wtime();
+        // // Get statistics for the dot-product
+        // start = omp_get_wtime();
+        // // Start dot-product
+        // matvec_serial_hll(hll_matrix, x, y);
+        // // Get the time used for the dot-product
+        // end = omp_get_wtime();
 
-        time_used = end - start;
+        // time_used = end - start;
 
-        new_non_zero_values = get_real_non_zero_values_count(csr_matrix);
+        // new_non_zero_values = get_real_non_zero_values_count(csr_matrix);
 
-        compute_serial_performance(node, time_used, new_non_zero_values);
+        // compute_serial_performance(node, time_used, new_non_zero_values);
 
-        if (head == NULL)
-        {
-            head = (struct performance *)calloc(1, sizeof(struct performance));
-            if (head == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
-            tail = (struct performance *)calloc(1, sizeof(struct performance));
-            if (tail == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
+        // if (head == NULL)
+        // {
+        //     head = (struct performance *)calloc(1, sizeof(struct performance));
+        //     if (head == NULL)
+        //     {
+        //         printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        //     }
+        //     tail = (struct performance *)calloc(1, sizeof(struct performance));
+        //     if (tail == NULL)
+        //     {
+        //         printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        //     }
 
-            head = node;
-            tail = node;
-        }
-        else
-        {
-            tail->next_node = node;
-            node->prev_node = tail;
-            tail = node;
-        }
+        //     head = node;
+        //     tail = node;
+        // }
+        // else
+        // {
+        //     tail->next_node = node;
+        //     node->prev_node = tail;
+        //     tail = node;
+        // }
 
-        printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll!\n");
+        // printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll!\n");
 
-        printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
-        printf("Time used for dot-product:      %.16lf\n", node->time_used);
-        printf("FLOPS:                          %.16lf\n", node->flops);
-        printf("MFLOPS:                         %.16lf\n", node->mflops);
-        printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+        // printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+        // printf("Time used for dot-product:      %.16lf\n", node->time_used);
+        // printf("FLOPS:                          %.16lf\n", node->flops);
+        // printf("MFLOPS:                         %.16lf\n", node->mflops);
+        // printf("GFLOPS:                         %.16lf\n\n", node->gflops);
 
         //
         // OpenMP EXECUTION
@@ -228,6 +247,8 @@ int main()
 
         printf("Prestazioni ottenute con OpenMP!\n");
         re_initialize_y_vector(csr_matrix->M, y);
+        printf("Y vector reinitialized\n");
+        // print_vector(y, csr_matrix->M);
         node = (struct performance *)calloc(1, sizeof(struct performance));
         if (node == NULL)
         {

@@ -1,5 +1,5 @@
 CMakeFiles/project.dir/src/implementations/operation.c.o: \
- /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/operation.c \
+ /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/operation.c \
  /usr/include/stdc-predef.h /usr/include/ctype.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -69,6 +69,6 @@ CMakeFiles/project.dir/src/implementations/operation.c.o: \
  /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
  /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
- /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../data_structures/csr_matrix.h \
- /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../data_structures/hll_matrix.h \
- /home/alessandro/Documenti/GitHub/SCPAProject/src/implementations/../data_structures/performance.h
+ /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/csr_matrix.h \
+ /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/hll_matrix.h \
+ /home/luca/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/performance.h
