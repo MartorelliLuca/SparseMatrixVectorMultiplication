@@ -255,6 +255,7 @@ int main()
             if (y[i] != z[i])
             {
                 printf("Discrepanza in %s!\n", csr_matrix->name);
+                printf("Discrepanza di %.16lf!\n", y[i] - z[i]);
                 sleep(3);
                 break;
             }

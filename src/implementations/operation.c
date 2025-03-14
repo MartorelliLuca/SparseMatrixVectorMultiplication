@@ -104,7 +104,7 @@ void matvec_serial_csr(CSR_matrix *csr_matrix, double *x, double *y)
 void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values)
 {
 
-    double time_used, start, end;
+    double time_used, time_used2, start, end;
     for (int index = 0; index < 6; index++)
     {
         int num_threads = thread_numbers[index];
@@ -131,8 +131,13 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
         }
 
         matrix_partition(csr_matrix, num_threads, first_row);
+        
+        double local_start_time = omp_get_wtime();
         product(csr_matrix, x, y, num_threads, first_row, &time_used, times_vector);
-
+        double local_end_time = omp_get_wtime();
+        time_used2 = local_end_time - local_start_time;
+        printf("Time used2 for dot-product: %.16lf\n", time_used2);
+        
         compute_parallel_performance(node, time_used, times_vector, new_non_zero_values, num_threads);
 
         if (head == NULL)
