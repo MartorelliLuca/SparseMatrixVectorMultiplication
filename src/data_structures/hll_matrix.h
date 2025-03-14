@@ -7,9 +7,17 @@
 
 typedef struct
 {
-    char name[256];        // Matrix Name
-    ELLPACK_block *blocks; // Blocks Array
-    int number_of_blocks;  // Blocks number
+    char name[256]; // Matrix Name
+    int M;          // Number of rows
+    int N;          // Number of columns
+    int *offest;
+    int num_offset;
+    int *columns;
+    double *values;
+    int num_values;
+    int num_hack;
+    int hack_size;
+    int *max_non_zeroes;
 } HLL_matrix;
 
 #endif

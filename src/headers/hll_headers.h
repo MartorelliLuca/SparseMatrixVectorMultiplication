@@ -7,7 +7,7 @@
 #include "../headers/matrix_format.h"
 
 void read_HLL_matrix(matrix_format *matrix, HLL_matrix *hll_matrix);
-void print_HLL_matrix(HLL_matrix *matrix);
+void print_HLL_matrix(const HLL_matrix *matrix);
 void destroy_HLL_matrix(HLL_matrix *matrix);
 
 #endif

@@ -31,10 +31,9 @@ static const char *matrix_filenames[] = {
     "nlpkkt80.mtx",        // ok
     "webbase-1M.mtx",      // ok
     "dc1.mtx",             // ok
-    //"amazon0302.mtx",
+    "amazon0302.mtx",
     "af_1_k101.mtx", // ok
-    //"roadNet-PA.mtx"
-};
+    "roadNet-PA.mtx"};
 
 typedef struct
 {
