@@ -4,3 +4,8 @@ Matrices which, so far, give problems:
 - amazon0302.mtx, have an erro on IRP for HLL format;
 - roadNet-PA.mtx, have an error on IRP for HLL format;
 - cop20k_A.mtx, have an error on IRP for HLL format.
+
+
+- mac_econ_fwd500.mtx
+- thermal1.mtx
+- lung2.mtx
