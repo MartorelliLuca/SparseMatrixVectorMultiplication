@@ -1,5 +1,7 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef MATRIX_FORMAT_H
+#define MATRIX_FORMAT_H
+
+#include "../utils_header/mmio.h"
 
 static const char *matrix_filenames[] = {
     "cage4.mtx",           // ok
@@ -36,12 +38,15 @@ static const char *matrix_filenames[] = {
 
 typedef struct
 {
-    int M;                // Row Number
-    int N;                // Colum Number
-    int NZ;               // Non-Zero Number
-    int *row_indices;     // Array of row indices of non zeroes values
-    int *columns_indices; // Array of column indices of non zeroes values
-    double *values;
+    char name[256];                   // Matrix Name
+    int *rows;                        // Row indices
+    int *columns;                     // Columns indices
+    double *values;                   // Non zeroes values
+    int M;                            // Rows
+    int N;                            // Columns
+    int number_of_non_zeoroes_values; // Number of nonzeroes values
+    MM_typecode matrix_typecode;      // Matrix typecode
+
 } matrix_format;
 
 static const int num_matrices = sizeof(matrix_filenames) / sizeof(matrix_filenames[0]);

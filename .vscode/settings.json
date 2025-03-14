@@ -11,6 +11,7 @@
         "operation.h": "c",
         "matrix.h": "c",
         "math.h": "c",
-        "mmio.h": "c"
+        "mmio.h": "c",
+        "csr_matrix.h": "c"
     }
 }

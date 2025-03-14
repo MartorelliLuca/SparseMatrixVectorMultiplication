@@ -5,12 +5,13 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "utils_header/mmio.h"
 #include "data_structures/hll_matrix.h"
 #include "data_structures/csr_matrix.h"
 #include "data_structures/performance.h"
-#include "headers/matrix.h"
+#include "headers/matrix_format.h"
 #include "headers/csr_headers.h"
 #include "headers/hll_headers.h"
 #include "headers/operation.h"
@@ -70,14 +71,22 @@ int main()
             exit(EXIT_FAILURE);
         }
 
+        matrix = (matrix_format *)calloc(1, sizeof(matrix_format));
+        if (matrix == NULL)
+        {
+            printf("Error occour in malloc for matrix format\nErro Code: %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
         if (entry->d_name[0] == '.')
             continue;
 
         matrix_counter++;
 
-        strcpy(matrix_filename, &entry->d_name);
+        strcpy(matrix_filename, entry->d_name);
+        strcpy(matrix->name, matrix_filename);
 
-        printf("Processing %s matrix\n", matrix_filename);
+        printf("Processing %s matrix\n", matrix->name);
 
         // For now, this matrix give error banner read but I don't know why. For now, skip
         if (strcmp(matrix_filename, "amazon0302.mtx") == 0 || strcmp(matrix_filename, "roadNet-PA.mtx") == 0 || strcmp(matrix_filename, "cop20k_A.mtx") == 0)
@@ -93,12 +102,12 @@ int main()
         matrix_file = get_matrix_file(dir_name, matrix_filename);
 
         // Get matrix from matrix market format in csr format
-        read_CSR_matrix(matrix_file, csr_matrix);
+        strcpy(csr_matrix->name, matrix_filename);
+        read_CSR_matrix(matrix_file, csr_matrix, matrix);
 
         // Get matrix from matrix market format in hll format
-        read_HLL_matrix(csr_matrix, hll_matrix);
-
-        strcpy(csr_matrix->name, matrix_filename);
+        strcpy(hll_matrix->name, matrix_filename);
+        read_HLL_matrix(matrix, hll_matrix);
 
         // Initialize x and y vector
         x = initialize_x_vector(csr_matrix->M);
@@ -141,7 +150,6 @@ int main()
         matvec_serial_csr(csr_matrix, x, y);
         // Get the time used for the dot-product
         end = omp_get_wtime();
-        printf("Y vector initialized:\n");
         // print_vector(y, csr_matrix->M);
 
         time_used = end - start;

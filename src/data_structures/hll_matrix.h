@@ -3,14 +3,13 @@
 
 #define HACKSIZE 32
 
+#include "ellpack_block.h"
+
 typedef struct
 {
-    int M, N;          // Rows and Columns number
-    int hack_size;     // Hack dimension
-    int num_hacks;     // Hack Number
-    int *hack_offsets; // Start indices of hcks
-    int *JA;           // Columns indicies
-    double *AS;        // Non-zeroes values
+    char name[256];        // Matrix Name
+    ELLPACK_block *blocks; // Blocks Array
+    int number_of_blocks;  // Blocks number
 } HLL_matrix;
 
 #endif

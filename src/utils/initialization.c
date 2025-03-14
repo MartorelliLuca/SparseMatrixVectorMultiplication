@@ -8,10 +8,10 @@
 
 #include "../utils_header/initialization.h"
 #include "../utils_header/mmio.h"
-#include "../headers/matrix.h"
+#include "../headers/matrix_format.h"
 #include "../data_structures/csr_matrix.h"
 
-FILE *get_matrix_file(char *dir_name, char *matrix_filename)
+FILE *get_matrix_file(const char *dir_name, char *matrix_filename)
 {
     // file_type[0] -> is_sparse_matrix
     // file_type[1] -> is_array_file
@@ -119,7 +119,7 @@ void get_matrix_format(FILE *matrix_file, int *file_type, matrix_format *matrix)
     // Read matrix dimension and convert in csr_matrix format
     if (file_type[0])
     {
-        if (mm_read_mtx_crd_size(matrix_file, &matrix->M, &matrix->N, &matrix->NZ) != 0)
+        if (mm_read_mtx_crd_size(matrix_file, &matrix->M, &matrix->N, &matrix->number_of_non_zeoroes_values) != 0)
         {
             printf("Error occour while try to read matrix dimension!\nError code: %d\n", errno);
             fclose(matrix_file);
@@ -136,7 +136,7 @@ void get_matrix_format(FILE *matrix_file, int *file_type, matrix_format *matrix)
         }
 
         // If the matrix is an array, the matrix is dense
-        matrix->NZ = matrix->M * matrix->N;
+        matrix->number_of_non_zeoroes_values = matrix->M * matrix->N;
     }
     else
     {
@@ -148,27 +148,27 @@ void get_matrix_format(FILE *matrix_file, int *file_type, matrix_format *matrix)
     puts("");
     printf("Matrix number of columns:           %d\n", matrix->M);
     printf("Matrix number of raws:              %d\n", matrix->N);
-    printf("matrix number of non-zero values:   %d\n", matrix->NZ);
+    printf("matrix number of non-zero values:   %d\n", matrix->number_of_non_zeoroes_values);
     puts("");
 
     // Allocare array to row indices
-    matrix->row_indices = (int *)calloc(matrix->NZ, sizeof(int));
-    if (matrix->row_indices == NULL)
+    matrix->rows = (int *)calloc(matrix->number_of_non_zeoroes_values, sizeof(int));
+    if (matrix->rows == NULL)
     {
         printf("Error in malloc for rax indexes array!\nError code: %d\n", errno);
         exit(EXIT_FAILURE);
     }
 
     // Allocate array for columns indices
-    matrix->columns_indices = (int *)calloc(matrix->NZ, sizeof(int));
-    if (matrix->columns_indices == NULL)
+    matrix->columns = (int *)calloc(matrix->number_of_non_zeoroes_values, sizeof(int));
+    if (matrix->columns == NULL)
     {
         printf("Error in malloc for columns indexes array!\nError code: %d\n", errno);
         exit(EXIT_FAILURE);
     }
 
     // Allocare array for readed values from file
-    matrix->values = (double *)calloc(matrix->NZ, sizeof(double));
+    matrix->values = (double *)calloc(matrix->number_of_non_zeoroes_values, sizeof(double));
     if (matrix->values == NULL)
     {
         printf("Error in malloc for non-zero values array!\nError code: %d\n", errno);
@@ -176,14 +176,14 @@ void get_matrix_format(FILE *matrix_file, int *file_type, matrix_format *matrix)
     }
 
     // Read values from matrix market file format
-    for (int i = 0; i < matrix->NZ; i++)
+    for (int i = 0; i < matrix->number_of_non_zeoroes_values; i++)
     {
         // If we can read 3 values then the matrix is not in pattern form
-        result1 = fscanf(matrix_file, "%d %d %lf", &matrix->row_indices[i], &matrix->columns_indices[i], &matrix->values[i]);
+        result1 = fscanf(matrix_file, "%d %d %lf", &matrix->rows[i], &matrix->columns[i], &matrix->values[i]);
         if (result1 != 3)
         {
             // If we read 2 values the matrix is in pattern form
-            result2 = fscanf(matrix_file, "%d %d", &matrix->row_indices[i], &matrix->columns_indices[i]);
+            result2 = fscanf(matrix_file, "%d %d", &matrix->rows[i], &matrix->columns[i]);
             if (result2 == 2)
             {
                 matrix->values[i] = 1.0;
@@ -194,15 +194,15 @@ void get_matrix_format(FILE *matrix_file, int *file_type, matrix_format *matrix)
                 // printf("result1 = %d\n", result1);
                 // printf("result2 = %d\n", result2);
                 printf("Error occour while trying to read matrix elements!\nError code: %d\n", errno);
-                free(matrix->row_indices);
-                free(matrix->columns_indices);
+                free(matrix->rows);
+                free(matrix->columns);
                 free(matrix->values);
                 exit(EXIT_FAILURE);
             }
         }
         // Back to index matrix to 0
-        matrix->row_indices[i]--;
-        matrix->columns_indices[i]--;
+        matrix->rows[i]--;
+        matrix->columns[i]--;
     }
 
     return &matrix;

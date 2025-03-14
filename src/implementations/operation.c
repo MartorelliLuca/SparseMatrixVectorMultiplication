@@ -170,32 +170,32 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
 // First attempt to do matrix-vector dot produt in HLL format
 void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
 {
-    for (int h = 0; h < hll_matrix->num_hacks; h++)
-    {
-        int start_row = h * HACKSIZE;
-        int end_row = (start_row + HACKSIZE < hll_matrix->M) ? start_row + HACKSIZE : hll_matrix->M;
-        int maxNR = (hll_matrix->hack_offsets[h + 1] - hll_matrix->hack_offsets[h]) / (end_row - start_row);
+    // for (int h = 0; h < hll_matrix->num_hacks; h++)
+    // {
+    //     int start_row = h * HACKSIZE;
+    //     int end_row = (start_row + HACKSIZE < hll_matrix->M) ? start_row + HACKSIZE : hll_matrix->M;
+    //     int maxNR = (hll_matrix->hack_offsets[h + 1] - hll_matrix->hack_offsets[h]) / (end_row - start_row);
 
-        int block_offset = hll_matrix->hack_offsets[h];
+    //     int block_offset = hll_matrix->hack_offsets[h];
 
-        for (int i = start_row; i < end_row; i++)
-        {
-            double sum = 0.0;
-            int row_offset = block_offset + (i - start_row) * maxNR;
+    //     for (int i = start_row; i < end_row; i++)
+    //     {
+    //         double sum = 0.0;
+    //         int row_offset = block_offset + (i - start_row) * maxNR;
 
-            for (int j = 0; j < maxNR; j++)
-            {
-                int col = hll_matrix->JA[row_offset + j];
-                double val = hll_matrix->AS[row_offset + j];
+    //         for (int j = 0; j < maxNR; j++)
+    //         {
+    //             int col = hll_matrix->JA[row_offset + j];
+    //             double val = hll_matrix->AS[row_offset + j];
 
-                if (col >= 0)
-                { // Verifica che la colonna sia valida
-                    sum += val * x[col];
-                }
-            }
-            y[i] = sum;
-        }
-    }
+    //             if (col >= 0)
+    //             { // Verifica che la colonna sia valida
+    //                 sum += val * x[col];
+    //             }
+    //         }
+    //         y[i] = sum;
+    //     }
+    // }
 }
 
 int get_real_non_zero_values_count(CSR_matrix *matrix)

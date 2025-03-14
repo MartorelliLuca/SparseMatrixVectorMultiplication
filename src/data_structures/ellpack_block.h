@@ -3,9 +3,11 @@
 
 typedef struct
 {
-    int MAXNZ;   // Max number of nonzero values for every raws;
-    int **JA;    // 2D array of column's indices;
-    double **AS; // 2D array of coefficients
-} ELLPACKBlock;
+    int max_non_zeroes_per_row; // Max number of nonzero values for every raws;
+    int array_size;             // Array size
+    int non_zeroes_per_block;   // Non zeroes per block
+    int *JA;                    // Array of column's indices;
+    double *AS;                 // Array of coefficients
+} ELLPACK_block;
 
 #endif
