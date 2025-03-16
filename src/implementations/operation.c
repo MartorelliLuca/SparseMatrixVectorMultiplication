@@ -17,6 +17,7 @@ void matvec(double **A, double *x, double *y, int M, int N)
         for (int j = 0; j < N; j++)
             y[i] += A[i][j] * x[j];
 }
+
 void matrix_partition(CSR_matrix *csr_matrix, int num_threads, int *start_row_indices)
 {
     int *row_non_zero_count = (int *)malloc(csr_matrix->M * sizeof(int));
@@ -53,6 +54,42 @@ void matrix_partition(CSR_matrix *csr_matrix, int num_threads, int *start_row_in
     free(workload_per_thread);
 }
 
+// void matrix_partition(CSR_matrix *csr_matrix, int num_threads, int *start_row_indices)
+// {
+//     int *row_non_zero_count = (int *)malloc(csr_matrix->M * sizeof(int));
+//     int total_non_zero_elements = 0;
+
+//     // Conta il numero di elementi non nulli per ogni riga
+//     for (int row = 0; row < csr_matrix->M; row++)
+//     {
+//         row_non_zero_count[row] = csr_matrix->IRP[row + 1] - csr_matrix->IRP[row];
+//         total_non_zero_elements += row_non_zero_count[row];
+//     }
+
+//     int ideal_workload_per_thread = total_non_zero_elements / num_threads;
+//     int accumulated_workload = 0;
+//     int current_thread = 0;
+
+//     start_row_indices[0] = 0; // Il primo thread parte dalla riga 0
+
+//     for (int row = 0; row < csr_matrix->M; row++)
+//     {
+//         accumulated_workload += row_non_zero_count[row];
+
+//         // Se il workload accumulato supera la quota ideale, passa al thread successivo
+//         if (accumulated_workload >= ideal_workload_per_thread && current_thread < num_threads - 1)
+//         {
+//             current_thread++;
+//             start_row_indices[current_thread] = row + 1;
+//             accumulated_workload = 0;
+//         }
+//     }
+
+//     start_row_indices[num_threads] = csr_matrix->M; // L'ultimo thread arriva fino all'ultima riga
+
+//     free(row_non_zero_count);
+// }
+
 void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector, int num_threads, int *start_row_indices, double *execution_time, double *times_vector)
 {
 
@@ -63,9 +100,11 @@ void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector
 
         double local_start_time = omp_get_wtime();
 
+#pragma omp for schedule(static)
         for (int row = start_row_indices[thread_id]; row < end_row; row++)
         {
             double sum = 0.0;
+#pragma omp parallel for reduction(+ : sum)
             for (int idx = csr_matrix->IRP[row]; idx < csr_matrix->IRP[row + 1]; idx++)
             {
                 sum += csr_matrix->AS[idx] * input_vector[csr_matrix->JA[idx]];
@@ -74,8 +113,13 @@ void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector
         }
 
         double local_end_time = omp_get_wtime();
-        // printf("Thread %d: started: %.16lf, ended: %.16lf and took this time: %.16lf\n", thread_id, local_start_time, local_end_time, local_end_time - local_start_time);
-        *execution_time = local_end_time - local_start_time;
+// printf("Thread %d: started: %.16lf, ended: %.16lf and took this time: %.16lf\n", thread_id, local_start_time, local_end_time, local_end_time - local_start_time);
+#pragma omp critical
+        {
+            if (*execution_time < local_end_time - local_start_time)
+                *execution_time = local_end_time - local_start_time;
+        }
+
         times_vector[thread_id] = local_end_time - local_start_time;
     }
 }
