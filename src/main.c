@@ -62,7 +62,6 @@ int main()
     struct performance *head = NULL, *tail = NULL, *node = NULL;
     double time_used, start, end;
     double flops, mflops, gflops;
-    int new_non_zero_values;
     int symmetric = 0;
 
     const char *dir_name = "../matrici";
@@ -123,10 +122,6 @@ int main()
 
         printf("Processing %s matrix\n", matrix->name);
 
-        // For now, this matrix give error banner read but I don't know why. For now, skip
-        // if (strcmp(matrix_filename, "amazon0302.mtx") == 0 || strcmp(matrix_filename, "roadNet-PA.mtx") == 0 || strcmp(matrix_filename, "nlpkkt80.mtx") == 0)
-        //     continue;
-
         matrix_file = get_matrix_file(dir_name, matrix_filename);
 
         if (read_matrix(matrix_file, matrix) == 1)
@@ -143,36 +138,15 @@ int main()
         strcpy(hll_matrix->name, matrix_filename);
         read_HLL_matrix(hll_matrix, HACKSIZE, matrix);
 
-        // Initialize x and y vector
+        // Initialize vectors
         x = initialize_x_vector(csr_matrix->M);
-        // x = (int *)malloc(4 * sizeof(int)); // Allocazione dinamica
-
-        // if (x == NULL)
-        // {
-        //     perror("Errore di allocazione");
-        //     return EXIT_FAILURE;
-        // }
-
-        // // Inizializzazione dei valori
-        // x[0] = 5;
-        // x[1] = 5;
-        // x[2] = 2;
-        // x[3] = 2;
-        // printf("X vector initialized:\n");
-        // //print_vector(x, csr_matrix->M);
-        // printf("CSR Matrix:\n");
-        // print_CSR_matrix(csr_matrix);
         y = initialize_y_vector(csr_matrix->M);
         z = initialize_y_vector(csr_matrix->M);
 
-        new_non_zero_values = get_real_non_zero_values_count(csr_matrix);
+        printf("matrix -> M = %d\n", matrix->M);
+        printf("matrix -> n = %d\n", matrix->N);
+        printf("matrix -> non zeroes = %d\n", matrix->number_of_non_zeoroes_values);
 
-        // Debug Print
-        // printf("New non-zero values:        %d.\n", new_non_zero_values);
-        // printf("Non zero values reaeds:     %d.\n", csr_matrix.NZ);
-
-        // SERIAL EXECUTION WITH CSR MATRIX FORMAT
-        // Allocating the node to save performance
         node = (struct performance *)calloc(1, sizeof(struct performance));
         if (node == NULL)
         {
@@ -181,16 +155,16 @@ int main()
         strcpy(node->matrix, csr_matrix->name);
 
         // Get statistics for the dot-product
-        start = omp_get_wtime();
+        start = clock();
         // Start dot-product
         matvec_serial_csr(csr_matrix, x, y);
         // Get the time used for the dot-product
-        end = omp_get_wtime();
+        end = clock();
         // print_vector(y, csr_matrix->M);
 
-        time_used = end - start;
+        time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-        compute_serial_performance(node, time_used, new_non_zero_values);
+        compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
 
         if (head == NULL)
         {
@@ -238,15 +212,13 @@ int main()
         strcpy(node->matrix, csr_matrix->name);
 
         // Get statistics for the dot-product
-        start = omp_get_wtime();
+        start = clock();
         // Start dot-product
         matvec_serial_hll(hll_matrix, x, z);
         // Get the time used for the dot-product
-        end = omp_get_wtime();
+        end = clock();
 
-        time_used = end - start;
-
-        new_non_zero_values = get_real_non_zero_values_count(csr_matrix);
+        time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
 
         if (!compute_norm(y, z, csr_matrix->M, 1e-6))
         {
@@ -254,7 +226,7 @@ int main()
             sleep(3);
         }
 
-        compute_serial_performance(node, time_used, new_non_zero_values);
+        compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
 
         if (head == NULL)
         {
@@ -296,7 +268,7 @@ int main()
         printf("Prestazioni ottenute con OpenMP!\n");
         re_initialize_y_vector(csr_matrix->M, y);
         re_initialize_y_vector(csr_matrix->M, z);
-        // print_vector(y, csr_matrix->M);
+
         node = (struct performance *)calloc(1, sizeof(struct performance));
         if (node == NULL)
         {
@@ -306,7 +278,7 @@ int main()
 
         strcpy(node->matrix, matrix_filename);
 
-        matvec_parallel_csr(csr_matrix, x, y, node, thread_numbers, head, tail, new_non_zero_values);
+        matvec_parallel_csr(csr_matrix, x, y, node, thread_numbers, head, tail, matrix->number_of_non_zeoroes_values);
 
         node = NULL;
         destroy_HLL_matrix(hll_matrix);

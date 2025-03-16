@@ -157,10 +157,10 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
 
         matrix_partition(csr_matrix, num_threads, first_row);
 
-        double local_start_time = omp_get_wtime();
+        double local_start_time = clock();
         product(csr_matrix, x, y, num_threads, first_row, &time_used, times_vector);
-        double local_end_time = omp_get_wtime();
-        time_used2 = local_end_time - local_start_time;
+        double local_end_time = clock();
+        time_used2 = ((double)(end - start)) / CLOCKS_PER_SEC;
         printf("Time used2 for dot-product: %.16lf\n", time_used2);
 
         compute_parallel_performance(node, time_used, times_vector, new_non_zero_values, num_threads);
@@ -225,16 +225,6 @@ void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
             y[rows * h + r] = sum;
         }
     }
-}
-
-int get_real_non_zero_values_count(CSR_matrix *matrix)
-{
-    int total_elements = matrix->M * matrix->N;
-    int non_zero_elements = matrix->non_zero_values;
-    // printf("Elementi totali: %d\n", total_elements);
-    // printf("Elementi NON nulli: %d\n", non_zero_elements);
-    // printf("Elementi nulliAAAAAAAA: %d\n", total_elements - non_zero_elements);
-    return total_elements - non_zero_elements;
 }
 
 void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values)
