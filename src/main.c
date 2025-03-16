@@ -6,6 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "utils_header/mmio.h"
 #include "data_structures/hll_matrix.h"
@@ -16,8 +17,41 @@
 #include "headers/hll_headers.h"
 #include "headers/operation.h"
 #include "utils_header/initialization.h"
+#include "utils_header/utils.h"
 
 #define MATRIX_DIR = "../matrici"
+
+double compute_norm(double *z, double *y, int n, double esp)
+{
+    double s = 0.0;
+    for (int i = 0; i < n; i++)
+    {
+        double d = fabs(z[i] - y[i]);
+        if (d > esp)
+        {
+            s += d;
+        }
+    }
+    s /= n;
+    if (s > 0.0)
+        printf("error = %.16lf\n", s);
+    return s > 0.0 ? 0 : 1;
+}
+
+double *unit_vector(int size)
+{
+    double *x = (double *)malloc(size * sizeof(double));
+    if (!x)
+    {
+        printf("Error in malloc per x\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < size; i++)
+        x[i] = 1.0;
+
+    return x;
+}
 
 int main()
 {
@@ -32,8 +66,10 @@ int main()
     int symmetric = 0;
 
     const char *dir_name = "../matrici";
-    char matrix_filename[256]; // Matrix filename
-    char matrix_fullpath[256]; // Buffer to full path of the matrix file to open
+    // Matrix filename
+    char matrix_filename[256];
+    // Buffer to full path of the matrix file to open
+    char matrix_fullpath[256];
     DIR *dir;
     struct dirent *entry;
     FILE *matrix_file;
@@ -42,9 +78,7 @@ int main()
     CSR_matrix *csr_matrix = NULL;
     HLL_matrix *hll_matrix = NULL;
 
-    double *x;
-    double *y;
-    double *z;
+    double *x, *y, *z;
 
     // Open dir matrix to take the tests matrix
     dir = opendir(dir_name);
@@ -90,27 +124,24 @@ int main()
         printf("Processing %s matrix\n", matrix->name);
 
         // For now, this matrix give error banner read but I don't know why. For now, skip
-        if (strcmp(matrix_filename, "amazon0302.mtx") == 0 || strcmp(matrix_filename, "roadNet-PA.mtx") == 0)
-            continue;
-
-        matrix = (matrix_format *)calloc(1, sizeof(matrix_format));
-        if (matrix == NULL)
-        {
-            printf("Error occour in malloc for matrix format varibale!\nError Code:%d\n", errno);
-            exit(EXIT_FAILURE);
-        }
+        // if (strcmp(matrix_filename, "amazon0302.mtx") == 0 || strcmp(matrix_filename, "roadNet-PA.mtx") == 0 || strcmp(matrix_filename, "nlpkkt80.mtx") == 0)
+        //     continue;
 
         matrix_file = get_matrix_file(dir_name, matrix_filename);
+
+        if (read_matrix(matrix_file, matrix) == 1)
+        {
+            printf("Error in read matrix!\n");
+            exit(EXIT_FAILURE);
+        }
 
         // Get matrix from matrix market format in csr format
         strcpy(csr_matrix->name, matrix_filename);
         read_CSR_matrix(matrix_file, csr_matrix, matrix);
-        // print_CSR_matrix(csr_matrix);
 
         // Get matrix from matrix market format in hll format
         strcpy(hll_matrix->name, matrix_filename);
-        read_HLL_matrix(matrix, hll_matrix);
-        // print_HLL_matrix(hll_matrix);
+        read_HLL_matrix(hll_matrix, HACKSIZE, matrix);
 
         // Initialize x and y vector
         x = initialize_x_vector(csr_matrix->M);
@@ -217,6 +248,12 @@ int main()
 
         new_non_zero_values = get_real_non_zero_values_count(csr_matrix);
 
+        if (!compute_norm(y, z, csr_matrix->M, 1e-6))
+        {
+            printf("Errore nel controllo per %s\n", csr_matrix->name);
+            sleep(3);
+        }
+
         compute_serial_performance(node, time_used, new_non_zero_values);
 
         if (head == NULL)
@@ -250,17 +287,6 @@ int main()
         printf("MFLOPS:                         %.16lf\n", node->mflops);
         printf("GFLOPS:                         %.16lf\n\n", node->gflops);
 
-        for (int i = 0; i < csr_matrix->M; i++)
-        {
-            if (y[i] != z[i])
-            {
-                printf("Discrepanza in %s!\n", csr_matrix->name);
-                printf("Discrepanza di %.16lf!\n", y[i] - z[i]);
-                sleep(3);
-                break;
-            }
-        }
-
         //
         // OpenMP EXECUTION
         //
@@ -283,6 +309,12 @@ int main()
         matvec_parallel_csr(csr_matrix, x, y, node, thread_numbers, head, tail, new_non_zero_values);
 
         node = NULL;
+        destroy_HLL_matrix(hll_matrix);
+        destroy_CSR_matrix(csr_matrix);
+        (matrix);
+        free(x);
+        free(y);
+        free(z);
         sleep(3);
     }
 

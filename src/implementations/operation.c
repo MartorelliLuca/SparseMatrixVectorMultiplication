@@ -74,7 +74,7 @@ void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector
         }
 
         double local_end_time = omp_get_wtime();
-        printf("Thread %d: started: %.16lf, ended: %.16lf and took this time: %.16lf\n", thread_id, local_start_time, local_end_time, local_end_time - local_start_time);
+        // printf("Thread %d: started: %.16lf, ended: %.16lf and took this time: %.16lf\n", thread_id, local_start_time, local_end_time, local_end_time - local_start_time);
         *execution_time = local_end_time - local_start_time;
         times_vector[thread_id] = local_end_time - local_start_time;
     }
@@ -101,6 +101,31 @@ void matvec_serial_csr(CSR_matrix *csr_matrix, double *x, double *y)
 //     printf("\n");
 // }
 
+void compute_parallel_performance(struct performance *node, double time_, double *times_vector, int new_non_zero_values, int num_threads)
+{
+    double max_time = 0.0;
+    for (int i = 0; i < num_threads; i++)
+    {
+        if (times_vector[i] > max_time)
+        {
+            max_time = times_vector[i];
+        }
+    }
+    printf("Max time: %.16lf\n", max_time);
+    printf("Tempo totale impiegato: %.16lf\n", max_time);
+    // Compute metrics
+
+    double flops = 2.0 * new_non_zero_values / max_time;
+    double mflops = flops / 1e6;
+    double gflops = flops / 1e9;
+
+    node->number_of_threads_used = num_threads;
+    node->flops = flops;
+    node->mflops = mflops;
+    node->gflops = gflops;
+    node->time_used = max_time;
+}
+
 void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values)
 {
 
@@ -123,7 +148,7 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
 
         // TODO GUARDA QUESTE
 
-        double *times_vector = (int *)calloc(num_threads, sizeof(double));
+        double *times_vector = (double *)calloc(num_threads, sizeof(double));
         if (!times_vector)
         {
             perror("Errore in calloc per times_vector");
@@ -131,13 +156,13 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
         }
 
         matrix_partition(csr_matrix, num_threads, first_row);
-        
+
         double local_start_time = omp_get_wtime();
         product(csr_matrix, x, y, num_threads, first_row, &time_used, times_vector);
         double local_end_time = omp_get_wtime();
         time_used2 = local_end_time - local_start_time;
         printf("Time used2 for dot-product: %.16lf\n", time_used2);
-        
+
         compute_parallel_performance(node, time_used, times_vector, new_non_zero_values, num_threads);
 
         if (head == NULL)
@@ -173,25 +198,31 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
     }
 }
 
+static inline int num_of_rows(HLL_matrix *hll, int h)
+{
+    if (hll->hacks_num - 1 == h && hll->M % hll->hack_size)
+    {
+        return hll->M % hll->hack_size;
+    }
+    return hll->hack_size;
+}
+
 // First attempt to do matrix-vector dot produt in HLL format
 void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
 {
-    int index = 0;
-    for (int b = 0; b < hll_matrix->num_hack; b++)
+
+    int rows = num_of_rows(hll_matrix, 0);
+    for (int h = 0; h < hll_matrix->hacks_num; ++h)
     {
-        int max_nz = hll_matrix->max_non_zeroes[b];
-        for (int r = 0; r < hll_matrix->hack_size && (b * hll_matrix->hack_size + r) < hll_matrix->M; r++)
+        for (int r = 0; r < num_of_rows(hll_matrix, h); ++r)
         {
-            for (int c = 0; c < max_nz; c++)
+            double sum = 0.0;
+            for (int j = 0; j < hll_matrix->max_nzr[h]; ++j)
             {
-                int col_idx = hll_matrix->columns[index];
-                double val = hll_matrix->values[index];
-                if (col_idx != -1)
-                {
-                    y[b * hll_matrix->hack_size + r] += val * x[col_idx];
-                }
-                index++;
+                int k = hll_matrix->offsets[h] + r * hll_matrix->max_nzr[h] + j;
+                sum += hll_matrix->data[k] * x[hll_matrix->col_index[k]];
             }
+            y[rows * h + r] = sum;
         }
     }
 }
@@ -199,7 +230,7 @@ void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
 int get_real_non_zero_values_count(CSR_matrix *matrix)
 {
     int total_elements = matrix->M * matrix->N;
-    int non_zero_elements = matrix->NZ;
+    int non_zero_elements = matrix->non_zero_values;
     // printf("Elementi totali: %d\n", total_elements);
     // printf("Elementi NON nulli: %d\n", non_zero_elements);
     // printf("Elementi nulliAAAAAAAA: %d\n", total_elements - non_zero_elements);
@@ -218,29 +249,4 @@ void compute_serial_performance(struct performance *node, double time_used, int 
     node->mflops = mflops;
     node->gflops = gflops;
     node->time_used = time_used;
-}
-
-void compute_parallel_performance(struct performance *node, double time_, double *times_vector, int new_non_zero_values, int num_threads)
-{
-    double max_time = 0.0;
-    for (int i = 0; i < num_threads; i++)
-    {
-        if (times_vector[i] > max_time)
-        {
-            max_time = times_vector[i];
-        }
-    }
-    printf("Max time: %.16lf\n", max_time);
-    printf("Tempo totale impiegato: %.16lf\n", max_time);
-    // Compute metrics
-
-    double flops = 2.0 * new_non_zero_values / max_time;
-    double mflops = flops / 1e6;
-    double gflops = flops / 1e9;
-
-    node->number_of_threads_used = num_threads;
-    node->flops = flops;
-    node->mflops = mflops;
-    node->gflops = gflops;
-    node->time_used = max_time;
 }

@@ -3,14 +3,13 @@
 
 typedef struct
 {
-    char name[256];   // Matrix Name
-    int is_symmetric; // Symmetric Matrix
-    int M;            // Number of rows
-    int N;            // Number of columns
-    int NZ;           // Number of non-zero values
-    int *IRP;         // Pointer to the start of each row in JA and AS
-    int *JA;          // Column indices
-    double *AS;       // Nonzero values
+    char name[256];
+    int *JA;
+    int *IRP;
+    double *AS;
+    int M;
+    int N;
+    int non_zero_values;
 } CSR_matrix;
 
 #endif

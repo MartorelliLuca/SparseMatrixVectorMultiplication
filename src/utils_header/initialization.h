@@ -5,7 +5,6 @@
 #include "../data_structures/hll_matrix.h"
 #include "../headers/matrix_format.h"
 
-FILE *get_matrix_file(const char *dir_name, char *matrix_filename);
 double *initialize_x_vector(int size);
 double *initialize_y_vector(int size);
 void re_initialize_y_vector(int size, double *y);

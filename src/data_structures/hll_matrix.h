@@ -1,23 +1,24 @@
 #ifndef HLL_MATRIX_H
 #define HLL_MATRIX_H
 
-#define HACKSIZE 32
+#include <stdlib.h>
+#include "../headers/matrix_format.h"
 
-#include "ellpack_block.h"
+#define HACKSIZE 32
 
 typedef struct
 {
-    char name[256]; // Matrix Name
-    int M;          // Number of rows
-    int N;          // Number of columns
-    int *offest;
-    int num_offset;
-    int *columns;
-    double *values;
-    int num_values;
-    int num_hack;
+    char name[256];
+    int M;
+    int N;
+    int *offsets;
+    int offsets_num;
+    int *col_index;
+    double *data;
+    int data_num;
+    int hacks_num;
     int hack_size;
-    int *max_non_zeroes;
+    int *max_nzr;
 } HLL_matrix;
 
 #endif

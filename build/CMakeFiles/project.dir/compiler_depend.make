@@ -6,10 +6,10 @@ CMakeFiles/project.dir/src/implementations/csr.c.o: /home/alessandro/Documenti/G
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/csr_headers.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/ellpack_block.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/initialization.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
@@ -96,11 +96,11 @@ CMakeFiles/project.dir/src/implementations/csr.c.o: /home/alessandro/Documenti/G
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h
 
 CMakeFiles/project.dir/src/implementations/hll.c.o: /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/hll.c \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/ellpack_block.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/ellpack_block.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/csr_headers.h \
@@ -108,7 +108,6 @@ CMakeFiles/project.dir/src/implementations/hll.c.o: /home/alessandro/Documenti/G
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/initialization.h \
   /usr/include/alloca.h \
@@ -123,6 +122,8 @@ CMakeFiles/project.dir/src/implementations/hll.c.o: /home/alessandro/Documenti/G
   /usr/include/stdc-predef.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
   /usr/include/x86_64-linux-gnu/asm/errno.h \
   /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
   /usr/include/x86_64-linux-gnu/bits/byteswap.h \
@@ -153,6 +154,8 @@ CMakeFiles/project.dir/src/implementations/hll.c.o: /home/alessandro/Documenti/G
   /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib.h \
+  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
   /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
@@ -163,11 +166,13 @@ CMakeFiles/project.dir/src/implementations/hll.c.o: /home/alessandro/Documenti/G
   /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
@@ -188,8 +193,9 @@ CMakeFiles/project.dir/src/implementations/hll.c.o: /home/alessandro/Documenti/G
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h
 
 CMakeFiles/project.dir/src/implementations/operation.c.o: /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/operation.c \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/ellpack_block.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/performance.h \
   /usr/include/alloca.h \
@@ -273,15 +279,14 @@ CMakeFiles/project.dir/src/implementations/operation.c.o: /home/alessandro/Docum
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h
 
 CMakeFiles/project.dir/src/main.c.o: /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/main.c \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/ellpack_block.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/performance.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/ellpack_block.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/csr_headers.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/hll_headers.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
@@ -291,6 +296,7 @@ CMakeFiles/project.dir/src/main.c.o: /home/alessandro/Documenti/GitHub/SparseMat
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/initialization.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/utils.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
@@ -301,6 +307,7 @@ CMakeFiles/project.dir/src/main.c.o: /home/alessandro/Documenti/GitHub/SparseMat
   /usr/include/features.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
+  /usr/include/math.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
@@ -320,11 +327,18 @@ CMakeFiles/project.dir/src/main.c.o: /home/alessandro/Documenti/GitHub/SparseMat
   /usr/include/x86_64-linux-gnu/bits/errno.h \
   /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
   /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
   /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
   /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
   /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
   /usr/include/x86_64-linux-gnu/bits/local_lim.h \
   /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
   /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
   /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
   /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
@@ -390,10 +404,10 @@ CMakeFiles/project.dir/src/main.c.o: /home/alessandro/Documenti/GitHub/SparseMat
 CMakeFiles/project.dir/src/utils/initialization.c.o: /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/initialization.c \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/ellpack_block.h \
-  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/initialization.h \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
@@ -619,6 +633,121 @@ CMakeFiles/project.dir/src/utils/read.c.o: /home/alessandro/Documenti/GitHub/Spa
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h
 
+CMakeFiles/project.dir/src/utils/utils.c.o: /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/utils.c \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
+  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/utils.h \
+  /usr/include/alloca.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/dirent.h \
+  /usr/include/endian.h \
+  /usr/include/errno.h \
+  /usr/include/features-time64.h \
+  /usr/include/features.h \
+  /usr/include/linux/errno.h \
+  /usr/include/linux/limits.h \
+  /usr/include/math.h \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdio.h \
+  /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/time.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/dirent.h \
+  /usr/include/x86_64-linux-gnu/bits/dirent_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
+  /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
+  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/select-decl.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/select2.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio2-decl.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
+  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd-decl.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h
+
 CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/write.c \
   /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h \
   /usr/include/alloca.h \
@@ -686,6 +815,8 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 
 /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/write.c:
 
+/home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/utils.c:
+
 /usr/include/x86_64-linux-gnu/bits/unistd.h:
 
 /usr/include/x86_64-linux-gnu/bits/unistd-decl.h:
@@ -730,6 +861,8 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 
 /usr/include/x86_64-linux-gnu/bits/wordsize.h:
 
+/usr/include/x86_64-linux-gnu/bits/waitstatus.h:
+
 /usr/include/x86_64-linux-gnu/bits/waitflags.h:
 
 /usr/include/x86_64-linux-gnu/bits/typesizes.h:
@@ -762,6 +895,10 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
+/usr/include/x86_64-linux-gnu/bits/floatn.h:
+
+/home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/initialization.h:
+
 /usr/include/math.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/timer_t.h:
@@ -769,10 +906,6 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 /usr/include/endian.h:
 
 /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/matrix_format.h:
-
-/usr/include/x86_64-linux-gnu/bits/types.h:
-
-/usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
 
 /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/main.c:
 
@@ -796,10 +929,6 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 
 /usr/include/features.h:
 
-/usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
-
-/usr/include/features-time64.h:
-
 /usr/include/x86_64-linux-gnu/bits/endian.h:
 
 /usr/include/string.h:
@@ -814,6 +943,10 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 
 /usr/include/x86_64-linux-gnu/bits/time64.h:
 
+/usr/include/x86_64-linux-gnu/bits/endianness.h:
+
+/home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h:
+
 /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/hll_matrix.h:
 
 /usr/include/asm-generic/errno.h:
@@ -824,23 +957,7 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 
 /usr/include/errno.h:
 
-/usr/include/x86_64-linux-gnu/bits/endianness.h:
-
-/home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/mmio.h:
-
 /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/csr.c:
-
-/home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/initialization.h:
-
-/usr/include/x86_64-linux-gnu/bits/floatn.h:
-
-/usr/include/x86_64-linux-gnu/bits/waitstatus.h:
-
-/home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/ellpack_block.h:
-
-/usr/include/time.h:
-
-/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
 
 /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/data_structures/csr_matrix.h:
 
@@ -849,6 +966,14 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 /usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdlib.h:
+
+/usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
+
+/usr/include/features-time64.h:
+
+/usr/include/time.h:
+
+/usr/include/x86_64-linux-gnu/bits/flt-eval-method.h:
 
 /usr/include/x86_64-linux-gnu/bits/fp-fast.h:
 
@@ -863,6 +988,8 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 /usr/include/x86_64-linux-gnu/bits/timesize.h:
 
 /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
+
+/home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils_header/utils.h:
 
 /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/headers/hll_headers.h:
 
@@ -903,6 +1030,10 @@ CMakeFiles/project.dir/src/utils/write.c.o: /home/alessandro/Documenti/GitHub/Sp
 /usr/include/x86_64-linux-gnu/asm/errno.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
+
+/usr/include/x86_64-linux-gnu/bits/types.h:
 
 /usr/include/stdc-predef.h:
 

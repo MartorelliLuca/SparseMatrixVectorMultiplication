@@ -66,17 +66,22 @@ CMakeFiles/project.dir/src/implementations/hll.c.o: \
  /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
  /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
+ /usr/include/string.h \
+ /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+ /usr/include/strings.h \
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/hll_matrix.h \
- /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/ellpack_block.h \
+ /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/../headers/matrix_format.h \
+ /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/../headers/../utils_header/mmio.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/initialization.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../data_structures/csr_matrix.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../data_structures/hll_matrix.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../headers/matrix_format.h \
- /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../headers/../utils_header/mmio.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/csr_matrix.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../headers/hll_headers.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../headers/../data_structures/hll_matrix.h \
- /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../headers/../data_structures/ellpack_block.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../headers/../data_structures/csr_matrix.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../headers/../headers/matrix_format.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../headers/csr_headers.h \

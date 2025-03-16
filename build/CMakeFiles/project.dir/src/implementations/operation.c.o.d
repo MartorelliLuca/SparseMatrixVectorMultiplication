@@ -71,5 +71,6 @@ CMakeFiles/project.dir/src/implementations/operation.c.o: \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/csr_matrix.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/hll_matrix.h \
- /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/ellpack_block.h \
+ /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/../headers/matrix_format.h \
+ /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/../headers/../utils_header/mmio.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../data_structures/performance.h

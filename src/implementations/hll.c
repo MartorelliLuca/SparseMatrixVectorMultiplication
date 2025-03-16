@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
+#include <string.h>
 
 #include "../data_structures/hll_matrix.h"
 #include "../utils_header/initialization.h"
@@ -10,127 +11,220 @@
 #include "../headers/csr_headers.h"
 #include "../headers/matrix_format.h"
 
-// Function to create a matrix in HLL format
-void read_HLL_matrix(matrix_format *matrix, HLL_matrix *hll_matrix)
+static inline int max(int *v, int lo, int hi_exclusive)
 {
-    strcpy(hll_matrix->name, matrix->name);
-    hll_matrix->M = matrix->M;
-    hll_matrix->N = matrix->N;
-    hll_matrix->hack_size = HACKSIZE;
-    hll_matrix->num_hack = (matrix->M + HACKSIZE - 1) / HACKSIZE;
-
-    int *row_nnz = (int *)calloc(matrix->M, sizeof(int));
-    for (int i = 0; i < matrix->number_of_non_zeoroes_values; i++)
+    int max = -1;
+    for (int i = lo; i < hi_exclusive; ++i)
     {
-        row_nnz[matrix->rows[i]]++;
-    }
-
-    int max_non_zeroes_per_block = 0;
-    int *max_non_zeroes = (int *)calloc(hll_matrix->num_hack, sizeof(int));
-    for (int i = 0; i < hll_matrix->num_hack; i++)
-    {
-        int local_max = 0;
-        for (int j = i * HACKSIZE; j < (i + 1) * HACKSIZE && j < matrix->M; j++)
+        if (max < v[i])
         {
-            if (row_nnz[j] > local_max)
-            {
-                local_max = row_nnz[j];
-            }
-        }
-        max_non_zeroes[i] = local_max;
-        if (local_max > max_non_zeroes_per_block)
-        {
-            max_non_zeroes_per_block = local_max;
+            max = v[i];
         }
     }
-
-    hll_matrix->max_non_zeroes = max_non_zeroes;
-    hll_matrix->num_values = hll_matrix->num_hack * HACKSIZE * max_non_zeroes_per_block;
-    hll_matrix->values = (double *)calloc(hll_matrix->num_values, sizeof(double));
-    hll_matrix->columns = (int *)calloc(hll_matrix->num_values, sizeof(int));
-    hll_matrix->offest = (int *)calloc(hll_matrix->num_hack + 1, sizeof(int));
-
-    for (int i = 0; i < hll_matrix->num_values; i++)
-    {
-        hll_matrix->columns[i] = -1;
-    }
-
-    int *current_pos = (int *)calloc(matrix->M, sizeof(int));
-    for (int i = 0; i < matrix->number_of_non_zeoroes_values; i++)
-    {
-        int row = matrix->rows[i];
-        int col = matrix->columns[i];
-        double val = matrix->values[i];
-
-        int block_idx = row / HACKSIZE;
-        int local_row = row % HACKSIZE;
-        int max_cols = max_non_zeroes[block_idx];
-
-        int index = block_idx * HACKSIZE * max_cols + local_row * max_cols + current_pos[row];
-        hll_matrix->columns[index] = col;
-        hll_matrix->values[index] = val;
-        current_pos[row]++;
-    }
-
-    int offset_value = 0;
-    for (int i = 0; i <= hll_matrix->num_hack; i++)
-    {
-        hll_matrix->offest[i] = offset_value;
-        if (i < hll_matrix->num_hack)
-        {
-            offset_value += HACKSIZE * max_non_zeroes[i];
-        }
-    }
-    hll_matrix->num_offset = hll_matrix->num_hack + 1;
-
-    free(row_nnz);
-    free(current_pos);
+    return max;
 }
 
-// Function to print hll_matrix
-void print_HLL_matrix(const HLL_matrix *matrix)
+static void get_nonzeros(matrix_format *matrix, int *nzr)
 {
-
-    printf("Matrix Name: %s\n", matrix->name);
-    printf("Dimensions: %d x %d\n", matrix->M, matrix->N);
-    printf("HACKSIZE: %d, Num Hacks: %d\n", matrix->hack_size, matrix->num_hack);
-
-    printf("\nOffsets:\n");
-    for (int i = 0; i < matrix->num_offset; i++)
+    memset(nzr, 0, sizeof(int) * matrix->M);
+    for (int i = 0; i < matrix->number_of_non_zeoroes_values; ++i)
     {
-        printf("%d ", matrix->offest[i]);
+        nzr[matrix->rows[i]]++;
     }
-    printf("\n");
+}
 
-    printf("\nValues and Columns:\n");
-    int index = 0;
-    for (int b = 0; b < matrix->num_hack; b++)
+static int get_data_size(int *nzr, int hack_size, int num_rows)
+{
+    int data_size = 0;
+    int start = 0;
+    while (start + hack_size < num_rows)
     {
-        int max_nz = matrix->max_non_zeroes[b];
-        printf("Block %d (Max NZ per row: %d):\n", b, max_nz);
-        for (int r = 0; r < matrix->hack_size && (b * matrix->hack_size + r) < matrix->M; r++)
+        data_size += hack_size * max(nzr, start, start + hack_size);
+        start += hack_size;
+    }
+    return data_size + (num_rows - start) * max(nzr, start, num_rows);
+}
+
+static inline void ifill(int *v, int start, int n, int val)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        v[start + i] = val;
+    }
+}
+
+static inline void dfill(double *v, int start, int n, double val)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        v[start + i] = val;
+    }
+}
+
+static void read_row(matrix_format *matrix, int *mmp, HLL_matrix *hll, int *hllp, int maxnzr)
+{
+    int row = matrix->rows[*mmp];
+    int n = 0;
+    for (int i = *mmp; i < matrix->number_of_non_zeoroes_values && row == matrix->rows[i]; ++i)
+    {
+        ++n;
+    }
+
+    memcpy(&hll->data[*hllp], &matrix->values[*mmp], n * sizeof(double));
+    memcpy(&hll->col_index[*hllp], &matrix->columns[*mmp], n * sizeof(int));
+    *hllp += n;
+    *mmp += n;
+
+    ifill(hll->col_index, *hllp, maxnzr - n, hll->col_index[*hllp - 1]);
+    dfill(hll->data, *hllp, maxnzr - n, 0.0);
+    *hllp += maxnzr - n;
+}
+
+static inline int get_hacks_num(int num_rows, int hack_size)
+{
+    int hacks_num = num_rows / hack_size;
+    if (num_rows % hack_size)
+    {
+        hacks_num++;
+    }
+    return hacks_num;
+}
+
+void add_null_row(matrix_format *mm, HLL_matrix *hll, int *hllp, int maxnzr)
+{
+    ifill(hll->col_index, *hllp, maxnzr, 0);
+    dfill(hll->data, *hllp, maxnzr, 0.0);
+    *hllp += maxnzr;
+}
+
+// Function to create a matrix in HLL format
+void read_HLL_matrix(HLL_matrix *hll, int hack_size, matrix_format *matrix)
+{
+    hll->M = matrix->M;
+    hll->N = matrix->N;
+    hll->hack_size = hack_size;
+    int *nzr = malloc(matrix->M * sizeof(int));
+    if (nzr == NULL)
+    {
+        printf("Errore in malloc in read hll matrix\n");
+        exit(EXIT_FAILURE);
+    }
+    get_nonzeros(matrix, nzr);
+
+    if (hack_size > hll->M)
+    {
+        hack_size = hll->M;
+        hll->hack_size = hack_size;
+    }
+
+    hll->hacks_num = get_hacks_num(hll->M, hack_size);
+    hll->offsets = malloc((hll->hacks_num + 1) * sizeof(int));
+    if (hll->offsets == NULL)
+    {
+        printf("Errore in malloc per hll offset in read hll\n");
+        free(nzr);
+        exit(EXIT_FAILURE);
+    }
+
+    int size = get_data_size(nzr, hack_size, matrix->M);
+
+    hll->data = malloc(size * sizeof(double));
+    if (hll->data == NULL)
+    {
+        printf("Errore in malloc per hll data\n");
+        free(nzr);
+        free(hll->offsets);
+        hll->offsets = NULL;
+        exit(EXIT_FAILURE);
+    }
+
+    hll->col_index = malloc(size * sizeof(int));
+    if (hll->col_index == NULL)
+    {
+        printf("Errre in malloc per hll index\n");
+        free(nzr);
+        free(hll->offsets);
+        free(hll->data);
+        hll->offsets = NULL;
+        hll->data = NULL;
+        exit(EXIT_FAILURE);
+    }
+
+    hll->max_nzr = malloc(sizeof(int) * hll->hacks_num);
+    if (hll->max_nzr == NULL)
+    {
+        printf("Errore in malloc per hll max_nrz\n");
+        free(nzr);
+        free(hll->offsets);
+        free(hll->data);
+        free(hll->col_index);
+        hll->offsets = NULL;
+        hll->data = NULL;
+        hll->col_index = NULL;
+        exit(EXIT_FAILURE);
+    }
+
+    int maxnzrp = 0;
+    int hllp = 0;
+    int offp = 0;
+    int mmp = 0;
+    int lo = 0;
+    hll->offsets[offp++] = 0;
+    int hacks_num = hll->hacks_num;
+    while (hacks_num-- > 0)
+    {
+        if (hacks_num == 0)
         {
-            printf("Row %d: ", b * matrix->hack_size + r);
-            for (int c = 0; c < max_nz; c++)
-            {
-                int col_idx = matrix->columns[index];
-                double val = matrix->values[index];
-                if (col_idx != -1)
-                {
-                    printf("(%d, %.2f) ", col_idx, val);
-                }
-                index++;
-            }
-            printf("\n");
+            hack_size = matrix->M - lo;
         }
+
+        int maxnzr = max(nzr, lo, lo + hack_size);
+        if (maxnzr > 0)
+        {
+            for (int i = 0; i < hack_size; ++i)
+            {
+                if (nzr[lo + i])
+                {
+                    read_row(matrix, &mmp, hll, &hllp, maxnzr);
+                }
+                else
+                {
+                    add_null_row(matrix, hll, &hllp, maxnzr);
+                }
+            }
+        }
+        hll->max_nzr[maxnzrp++] = maxnzr;
+        hll->offsets[offp++] = hllp;
+        lo += hack_size;
+    }
+
+    hll->offsets_num = offp;
+    if (hllp != size)
+    {
+        printf("elements read mismatch with elements expected\n");
+        free(nzr);
+        free(hll->offsets);
+        free(hll->data);
+        free(hll->col_index);
+        free(hll->max_nzr);
+        nzr = NULL;
+        hll->offsets = NULL;
+        hll->data = NULL;
+        hll->col_index = NULL;
+        hll->max_nzr = NULL;
+        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        hll->data_num = hllp;
     }
 }
 
 // Function to destroy ellpack_matrix
 void destroy_HLL_matrix(HLL_matrix *matrix)
 {
-    free(matrix->offest);
-    free(matrix->columns);
-    free(matrix->values);
-    free(matrix->max_non_zeroes);
+    free(matrix->offsets);
+    free(matrix->col_index);
+    free(matrix->data);
+    free(matrix->max_nzr);
 }

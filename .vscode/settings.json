@@ -12,6 +12,8 @@
         "matrix.h": "c",
         "math.h": "c",
         "mmio.h": "c",
-        "csr_matrix.h": "c"
+        "csr_matrix.h": "c",
+        "matrix_format.h": "c",
+        "performance.h": "c"
     }
 }

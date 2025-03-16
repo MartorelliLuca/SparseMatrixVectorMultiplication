@@ -23,6 +23,7 @@ set(SRC_FILES
     src/utils/mmio.c
     src/utils/read.c
     src/utils/write.c
+    src/utils/utils.c
     src/main.c
     src/implementations/csr.c
     src/implementations/hll.c

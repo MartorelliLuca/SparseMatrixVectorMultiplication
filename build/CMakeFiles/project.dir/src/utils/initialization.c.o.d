@@ -79,9 +79,9 @@ CMakeFiles/project.dir/src/utils/initialization.c.o: \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/initialization.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../data_structures/csr_matrix.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../data_structures/hll_matrix.h \
- /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../data_structures/ellpack_block.h \
+ /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../data_structures/../headers/matrix_format.h \
+ /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../data_structures/../headers/../utils_header/mmio.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../headers/matrix_format.h \
- /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/../headers/../utils_header/mmio.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../utils_header/mmio.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../headers/matrix_format.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/utils/../data_structures/csr_matrix.h
