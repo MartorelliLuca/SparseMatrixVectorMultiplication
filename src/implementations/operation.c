@@ -6,10 +6,12 @@
 #include <time.h>
 #include <bits/time.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include "../data_structures/csr_matrix.h"
 #include "../data_structures/hll_matrix.h"
 #include "../data_structures/performance.h"
+#include "../utils_header/utils.h"
 
 void matvec(double **A, double *x, double *y, int M, int N)
 {
@@ -53,42 +55,6 @@ void matrix_partition(CSR_matrix *csr_matrix, int num_threads, int *start_row_in
     free(row_non_zero_count);
     free(workload_per_thread);
 }
-
-// void matrix_partition(CSR_matrix *csr_matrix, int num_threads, int *start_row_indices)
-// {
-//     int *row_non_zero_count = (int *)malloc(csr_matrix->M * sizeof(int));
-//     int total_non_zero_elements = 0;
-
-//     // Conta il numero di elementi non nulli per ogni riga
-//     for (int row = 0; row < csr_matrix->M; row++)
-//     {
-//         row_non_zero_count[row] = csr_matrix->IRP[row + 1] - csr_matrix->IRP[row];
-//         total_non_zero_elements += row_non_zero_count[row];
-//     }
-
-//     int ideal_workload_per_thread = total_non_zero_elements / num_threads;
-//     int accumulated_workload = 0;
-//     int current_thread = 0;
-
-//     start_row_indices[0] = 0; // Il primo thread parte dalla riga 0
-
-//     for (int row = 0; row < csr_matrix->M; row++)
-//     {
-//         accumulated_workload += row_non_zero_count[row];
-
-//         // Se il workload accumulato supera la quota ideale, passa al thread successivo
-//         if (accumulated_workload >= ideal_workload_per_thread && current_thread < num_threads - 1)
-//         {
-//             current_thread++;
-//             start_row_indices[current_thread] = row + 1;
-//             accumulated_workload = 0;
-//         }
-//     }
-
-//     start_row_indices[num_threads] = csr_matrix->M; // L'ultimo thread arriva fino all'ultima riga
-
-//     free(row_non_zero_count);
-// }
 
 void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector, int num_threads, int *start_row_indices, double *execution_time, double *times_vector)
 {
@@ -145,7 +111,7 @@ void matvec_serial_csr(CSR_matrix *csr_matrix, double *x, double *y)
 //     printf("\n");
 // }
 
-void compute_parallel_performance(struct performance *node, double time_, double *times_vector, int new_non_zero_values, int num_threads)
+void compute_parallel_performance(struct performance *node, double time_used, double *times_vector, int new_non_zero_values, int num_threads)
 {
     double max_time = 0.0;
     for (int i = 0; i < num_threads; i++)
@@ -177,8 +143,6 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
     for (int index = 0; index < 6; index++)
     {
         int num_threads = thread_numbers[index];
-
-        // Set number of threads to perform dot product executions
 
         // partiziona il lavoro tra i thread
         int *first_row;
@@ -251,10 +215,9 @@ static inline int num_of_rows(HLL_matrix *hll, int h)
     return hll->hack_size;
 }
 
-// First attempt to do matrix-vector dot produt in HLL format
+// Matrix-vector serial dot produt in HLL format
 void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
 {
-
     int rows = num_of_rows(hll_matrix, 0);
     for (int h = 0; h < hll_matrix->hacks_num; ++h)
     {
@@ -268,6 +231,97 @@ void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
             }
             y[rows * h + r] = sum;
         }
+    }
+}
+
+void hll_parallel_product(HLL_matrix *hll_matrix, double *x, double *y, int num_threads)
+{
+    int rows = num_of_rows(hll_matrix, 0);
+    omp_set_num_threads(num_threads);
+#pragma omp parallel for schedule(dynamic, HACKSIZE)
+    for (int h = 0; h < hll_matrix->hacks_num; ++h)
+    {
+        for (int r = 0; r < num_of_rows(hll_matrix, h); ++r)
+        {
+            double sum = 0.0;
+#pragma omp simd reduction(+ : sum)
+            for (int j = 0; j < hll_matrix->max_nzr[h]; ++j)
+            {
+                int k = hll_matrix->offsets[h] + r * hll_matrix->max_nzr[h] + j;
+                __builtin_prefetch(&x[hll_matrix->col_index[k + 8]], 0, 1);
+                sum += hll_matrix->data[k] * x[hll_matrix->col_index[k]];
+            }
+#pragma omp critical
+            y[rows * h + r] = sum;
+        }
+    }
+}
+
+// Matrix-vector parallel dot product in HLL format
+void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
+{
+    double time_used, start, end;
+    for (int index = 0; index < 6; index++)
+    {
+        int num_threads = thread_numbers[index];
+
+        double *times_vector = (double *)calloc(num_threads, sizeof(double));
+        if (!times_vector)
+        {
+            perror("Errore in calloc per times_vector");
+            exit(EXIT_FAILURE);
+        }
+
+        double start = clock();
+        hll_parallel_product(hll_matrix, x, y, num_threads);
+        double end = clock();
+        time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        printf("Time used for dot-product: %.16lf\n", time_used);
+
+        double flops = 2.0 * new_non_zero_values / time_used;
+        double mflops = flops / 1e6;
+        double gflops = flops / 1e9;
+
+        node->number_of_threads_used = num_threads;
+        node->flops = flops;
+        node->mflops = mflops;
+        node->gflops = gflops;
+        node->time_used = time_used;
+
+        if (!compute_norm(y, effective_results, hll_matrix->M, 1e-6))
+        {
+            printf("Errore nel controllo per %s dopo il csr parallelo\n", hll_matrix->name);
+            sleep(3);
+        }
+
+        if (head == NULL)
+        {
+            head = (struct performance *)calloc(1, sizeof(struct performance));
+            if (head == NULL)
+            {
+                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            }
+            tail = (struct performance *)calloc(1, sizeof(struct performance));
+            if (tail == NULL)
+            {
+                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            }
+
+            head = node;
+            tail = node;
+        }
+        else
+        {
+            tail->next_node = node;
+            node->prev_node = tail;
+            tail = node;
+        }
+
+        printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+        printf("Time used for dot-product:      %.16lf\n", node->time_used);
+        printf("FLOPS:                          %.16lf\n", node->flops);
+        printf("MFLOPS:                         %.16lf\n", node->mflops);
+        printf("GFLOPS:                         %.16lf\n\n", node->gflops);
     }
 }
 

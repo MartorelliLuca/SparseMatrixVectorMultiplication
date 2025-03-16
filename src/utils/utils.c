@@ -234,3 +234,20 @@ void mtx_cleanup(matrix_format *matrix)
     free(matrix->rows);
     free(matrix->values);
 }
+
+double compute_norm(double *z, double *y, int n, double esp)
+{
+    double s = 0.0;
+    for (int i = 0; i < n; i++)
+    {
+        double d = fabs(z[i] - y[i]);
+        if (d > esp)
+        {
+            s += d;
+        }
+    }
+    s /= n;
+    if (s > 0.0)
+        printf("error = %.16lf\n", s);
+    return s > 0.0 ? 0 : 1;
+}

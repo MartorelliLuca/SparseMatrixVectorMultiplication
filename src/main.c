@@ -21,23 +21,6 @@
 
 #define MATRIX_DIR = "../matrici"
 
-double compute_norm(double *z, double *y, int n, double esp)
-{
-    double s = 0.0;
-    for (int i = 0; i < n; i++)
-    {
-        double d = fabs(z[i] - y[i]);
-        if (d > esp)
-        {
-            s += d;
-        }
-    }
-    s /= n;
-    if (s > 0.0)
-        printf("error = %.16lf\n", s);
-    return s > 0.0 ? 0 : 1;
-}
-
 double *unit_vector(int size)
 {
     double *x = (double *)malloc(size * sizeof(double));
@@ -62,7 +45,6 @@ int main()
     struct performance *head = NULL, *tail = NULL, *node = NULL;
     double time_used, start, end;
     double flops, mflops, gflops;
-    int symmetric = 0;
 
     const char *dir_name = "../matrici";
     // Matrix filename
@@ -143,10 +125,6 @@ int main()
         y = initialize_y_vector(csr_matrix->M);
         z = initialize_y_vector(csr_matrix->M);
 
-        printf("matrix -> M = %d\n", matrix->M);
-        printf("matrix -> n = %d\n", matrix->N);
-        printf("matrix -> non zeroes = %d\n", matrix->number_of_non_zeoroes_values);
-
         node = (struct performance *)calloc(1, sizeof(struct performance));
         if (node == NULL)
         {
@@ -199,6 +177,7 @@ int main()
 
         node = NULL;
 
+        //
         // SERIAL EXECTUTION WITH HLL MATRIX FORMAT
         //
 
@@ -251,7 +230,7 @@ int main()
             tail = node;
         }
 
-        printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll!\n");
+        printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll in modalità seriale!\n");
 
         printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
         printf("Time used for dot-product:      %.16lf\n", node->time_used);
@@ -260,13 +239,13 @@ int main()
         printf("GFLOPS:                         %.16lf\n\n", node->gflops);
 
         //
-        // OpenMP EXECUTION
+        // OpenMP CSR Matrix Format PARALLEL EXECUTION
         //
 
         node = NULL;
 
-        printf("Prestazioni ottenute con OpenMP!\n");
-        re_initialize_y_vector(csr_matrix->M, y);
+        printf("Prestazioni ottenute con OpenMP eseguendo il calcolo in parallelo!\n");
+        // re_initialize_y_vector(csr_matrix->M, y);
         re_initialize_y_vector(csr_matrix->M, z);
 
         node = (struct performance *)calloc(1, sizeof(struct performance));
@@ -278,7 +257,31 @@ int main()
 
         strcpy(node->matrix, matrix_filename);
 
-        matvec_parallel_csr(csr_matrix, x, y, node, thread_numbers, head, tail, matrix->number_of_non_zeoroes_values);
+        matvec_parallel_csr(csr_matrix, x, z, node, thread_numbers, head, tail, matrix->number_of_non_zeoroes_values);
+
+        if (!compute_norm(y, z, csr_matrix->M, 1e-6))
+        {
+            printf("Errore nel controllo per %s dopo il csr parallelo\n", csr_matrix->name);
+            sleep(3);
+        }
+
+        //
+        // OpenMP HLL Matrix Format PARALLEL EXECUTION
+        //
+
+        node = (struct performance *)calloc(1, sizeof(struct performance));
+        if (node == NULL)
+        {
+            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
+        strcpy(node->matrix, matrix_filename);
+
+        printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll in modalità parallela!\n");
+        re_initialize_y_vector(csr_matrix->M, z);
+
+        matvec_parallel_hll(hll_matrix, x, z, node, thread_numbers, head, tail, matrix->number_of_non_zeoroes_values, y);
 
         node = NULL;
         destroy_HLL_matrix(hll_matrix);
@@ -287,6 +290,7 @@ int main()
         free(x);
         free(y);
         free(z);
+
         sleep(3);
     }
 

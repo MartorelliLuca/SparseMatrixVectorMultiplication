@@ -8,5 +8,6 @@
 FILE *get_matrix_file(const char *dir_name, char *matrix_filename);
 int read_matrix(FILE *matrix_file, matrix_format *matrix);
 void mtx_cleanup(matrix_format *matrix);
+double compute_norm(double *z, double *y, int n, double esp);
 
 #endif
