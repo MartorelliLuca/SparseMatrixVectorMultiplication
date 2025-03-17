@@ -141,6 +141,7 @@ int main()
         // print_vector(y, csr_matrix->M);
 
         time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        printf("Tempo seriale csr:%.16lf\n", time_used);
 
         compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
 
@@ -246,7 +247,7 @@ int main()
 
         printf("Prestazioni ottenute con OpenMP eseguendo il calcolo in parallelo!\n");
         // re_initialize_y_vector(csr_matrix->M, y);
-        re_initialize_y_vector(csr_matrix->M, z);
+        // re_initialize_y_vector(csr_matrix->M, z);
 
         node = (struct performance *)calloc(1, sizeof(struct performance));
         if (node == NULL)
