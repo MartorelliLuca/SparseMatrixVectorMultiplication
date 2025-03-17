@@ -85,4 +85,5 @@ CMakeFiles/project.dir/src/implementations/operation.c.o: \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/utils.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../data_structures/csr_matrix.h \
  /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../data_structures/hll_matrix.h \
- /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../headers/matrix_format.h
+ /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/../headers/matrix_format.h \
+ /home/alessandro/Documenti/GitHub/SparseMatrixVectorMultiplication/src/implementations/../utils_header/initialization.h

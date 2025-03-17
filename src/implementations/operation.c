@@ -12,6 +12,7 @@
 #include "../data_structures/hll_matrix.h"
 #include "../data_structures/performance.h"
 #include "../utils_header/utils.h"
+#include "../utils_header/initialization.h"
 
 void matvec(double **A, double *x, double *y, int M, int N)
 {
@@ -77,13 +78,14 @@ void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector
         }
 
         double local_end_time = omp_get_wtime();
-        printf("Thread %d: started: %.16lf, ended: %.16lf and took this time: %.16lf\n", thread_id, local_start_time, local_end_time, local_end_time - local_start_time);
+        // printf("Thread %d: started: %.16lf, ended: %.16lf and took this time: %.16lf\n", thread_id, local_start_time, local_end_time, local_end_time - local_start_time);
         times_vector[thread_id] = local_end_time - local_start_time;
     }
 
     double end_time = omp_get_wtime();
     *execution_time = end_time - start_time;
 }
+
 // First attempt to do matrix-vector dot product in CSR format
 void matvec_serial_csr(CSR_matrix *csr_matrix, double *x, double *y)
 {
@@ -229,22 +231,21 @@ void hll_parallel_product(HLL_matrix *hll_matrix, double *x, double *y, int num_
 {
     int rows = num_of_rows(hll_matrix, 0);
     omp_set_num_threads(num_threads);
-#pragma omp parallel for schedule(dynamic, HACKSIZE)
-    for (int h = 0; h < hll_matrix->hacks_num; ++h)
+#pragma omp parallel for schedule(dynamic, 32)
+    for (int idx = 0; idx < rows; ++idx)
     {
-        for (int r = 0; r < num_of_rows(hll_matrix, h); ++r)
-        {
-            double sum = 0.0;
+        int h = idx / hll_matrix->hack_size;
+        int r = idx % hll_matrix->hack_size;
+
+        double sum = 0.0;
 #pragma omp simd reduction(+ : sum)
-            for (int j = 0; j < hll_matrix->max_nzr[h]; ++j)
-            {
-                int k = hll_matrix->offsets[h] + r * hll_matrix->max_nzr[h] + j;
-                __builtin_prefetch(&x[hll_matrix->col_index[k + 8]], 0, 1);
-                sum += hll_matrix->data[k] * x[hll_matrix->col_index[k]];
-            }
-#pragma omp critical
-            y[rows * h + r] = sum;
+        for (int j = 0; j < hll_matrix->max_nzr[h]; ++j)
+        {
+            int k = hll_matrix->offsets[h] + r * hll_matrix->max_nzr[h] + j;
+            // __builtin_prefetch(&x[hll_matrix->col_index[k + 8]], 0, 1);
+            sum += hll_matrix->data[k] * x[hll_matrix->col_index[k]];
         }
+        y[idx] = sum;
     }
 }
 
@@ -279,12 +280,6 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
         node->gflops = gflops;
         node->time_used = time_used;
 
-        if (!compute_norm(y, effective_results, hll_matrix->M, 1e-6))
-        {
-            printf("Errore nel controllo per %s dopo il csr parallelo\n", hll_matrix->name);
-            sleep(3);
-        }
-
         if (head == NULL)
         {
             head = (struct performance *)calloc(1, sizeof(struct performance));
@@ -313,6 +308,14 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
         printf("FLOPS:                          %.16lf\n", node->flops);
         printf("MFLOPS:                         %.16lf\n", node->mflops);
         printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+
+        if (!compute_norm(y, effective_results, hll_matrix->M, 1e-6))
+        {
+            printf("Errore nel controllo per %s dopo il hll parallelo\n", hll_matrix->name);
+            sleep(3);
+        }
+
+        re_initialize_y_vector(hll_matrix->M, y);
     }
 }
 
