@@ -5,7 +5,7 @@ project(ProjectName C)  # Change "ProjectName" as needed
 set(CMAKE_C_COMPILER gcc)
 
 # Set compilation flags
-set(CMAKE_C_FLAGS "-Iinclude -fopenmp -O0")
+set(CMAKE_C_FLAGS "-Iinclude -fopenmp")
 
 # Set linking flags
 set(CMAKE_EXE_LINKER_FLAGS "-fopenmp")

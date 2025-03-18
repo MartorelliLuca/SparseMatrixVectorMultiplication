@@ -7,6 +7,7 @@
 #include <bits/time.h>
 #include <errno.h>
 #include <unistd.h>
+#include <immintrin.h> // Per AVX e SIMD
 
 #include "../data_structures/csr_matrix.h"
 #include "../data_structures/hll_matrix.h"
@@ -189,7 +190,7 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
             tail = node;
         }
 
-        printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+        printf("\n\nParallel Performance for %s with %d threads, with CSR:\n", node->matrix, node->number_of_threads_used);
         printf("Time used for dot-product:      %.16lf\n", node->time_used);
         printf("FLOPS:                          %.16lf\n", node->flops);
         printf("MFLOPS:                         %.16lf\n", node->mflops);
@@ -227,27 +228,44 @@ void matvec_serial_hll(HLL_matrix *hll_matrix, double *x, double *y)
     }
 }
 
-void hll_parallel_product(HLL_matrix *hll_matrix, double *x, double *y, int num_threads)
+void hll_parallel_product(HLL_matrix *restrict hll_matrix, double *restrict x, double *restrict y,
+                          int num_threads, double *time_used)
 {
-    int rows = num_of_rows(hll_matrix, 0);
-    omp_set_num_threads(num_threads);
-#pragma omp parallel for schedule(dynamic, 32)
-    for (int idx = 0; idx < rows; ++idx)
-    {
-        int h = idx / hll_matrix->hack_size;
-        int r = idx % hll_matrix->hack_size;
+    const int rows = num_of_rows(hll_matrix, 0);
+    double start = omp_get_wtime();
 
-        double sum = 0.0;
-#pragma omp simd reduction(+ : sum)
-        for (int j = 0; j < hll_matrix->max_nzr[h]; ++j)
+#pragma omp parallel for schedule(dynamic) num_threads(num_threads) default(none) \
+    shared(hll_matrix, x, y, rows)
+    for (int h = 0; h < hll_matrix->hacks_num; ++h)
+    {
+        const int rows_in_h = num_of_rows(hll_matrix, h);
+        const int max_nzr_h = hll_matrix->max_nzr[h];
+        const int offset_h = hll_matrix->offsets[h];
+
+        for (int r = 0; r < rows_in_h; ++r)
         {
-            int k = hll_matrix->offsets[h] + r * hll_matrix->max_nzr[h] + j;
-            // __builtin_prefetch(&x[hll_matrix->col_index[k + 8]], 0, 1);
-            sum += hll_matrix->data[k] * x[hll_matrix->col_index[k]];
+            double sum = 0.0;
+            int j = 0;
+            // Loop residuo
+            for (; j < max_nzr_h; ++j)
+            {
+                int k = offset_h + r * max_nzr_h + j;
+                sum += hll_matrix->data[k] * x[hll_matrix->col_index[k]];
+            }
+
+            y[rows * h + r] = sum;
         }
-        y[idx] = sum;
     }
+
+    double end = omp_get_wtime();
+    *time_used = end - start;
 }
+
+/*
+    double start = omp_get_wtime();
+
+    double end = omp_get_wtime();
+    *time_used = end - start;*/
 
 // Matrix-vector parallel dot product in HLL format
 void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
@@ -264,10 +282,8 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
             exit(EXIT_FAILURE);
         }
 
-        double start = clock();
-        hll_parallel_product(hll_matrix, x, y, num_threads);
-        double end = clock();
-        time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        hll_parallel_product(hll_matrix, x, y, num_threads, &time_used);
+
         printf("Time used for dot-product: %.16lf\n", time_used);
 
         double flops = 2.0 * new_non_zero_values / time_used;
@@ -303,7 +319,7 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
             tail = node;
         }
 
-        printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+        printf("\n\nParallel Performance for %s with %d threads, with HLL:\n", node->matrix, node->number_of_threads_used);
         printf("Time used for dot-product:      %.16lf\n", node->time_used);
         printf("FLOPS:                          %.16lf\n", node->flops);
         printf("MFLOPS:                         %.16lf\n", node->mflops);
