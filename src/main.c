@@ -18,6 +18,7 @@
 #include "headers/operation.h"
 #include "utils_header/initialization.h"
 #include "utils_header/utils.h"
+#include "utils_header/computation_type.h"
 
 #define MATRIX_DIR = "../matrici"
 
@@ -38,7 +39,20 @@ double *unit_vector(int size)
 
 int main()
 {
-    int thread_numbers[6] = {2, 4, 8, 16, 32, 40};
+    int *thread_numbers = (int *)calloc(39, sizeof(int));
+    if (!thread_numbers)
+    {
+        printf("Error occour while creating thread_numbers pointer!\nError code: %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
+
+    int count = 2;
+
+    for (int i = 0; i < 39; i++)
+    {
+        thread_numbers[i] = count + i;
+    }
+
     int matrix_counter = 0; // Number of matrices processed
 
     // Variables to collect statistics
@@ -103,7 +117,6 @@ int main()
         strcpy(matrix->name, matrix_filename);
 
         printf("Processing %s matrix\n", matrix->name);
-
         matrix_file = get_matrix_file(dir_name, matrix_filename);
 
         if (read_matrix(matrix_file, matrix) == 1)
@@ -112,6 +125,7 @@ int main()
             exit(EXIT_FAILURE);
         }
 
+        printf("Non zeroes values: %d\n", matrix->number_of_non_zeoroes_values);
         // Get matrix from matrix market format in csr format
         strcpy(csr_matrix->name, matrix_filename);
         read_CSR_matrix(matrix_file, csr_matrix, matrix);
@@ -131,6 +145,8 @@ int main()
             printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
         }
         strcpy(node->matrix, csr_matrix->name);
+        node->non_zeroes_values = matrix->number_of_non_zeoroes_values;
+        node->computation = SERIAL_CSR;
 
         // Get statistics for the dot-product
         start = clock();
@@ -207,6 +223,8 @@ int main()
         }
 
         compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
+        node->non_zeroes_values = matrix->number_of_non_zeoroes_values;
+        node->computation = SERIAL_HHL;
 
         if (head == NULL)
         {
