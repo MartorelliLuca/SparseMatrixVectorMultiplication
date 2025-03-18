@@ -3,7 +3,9 @@
 
 #include "../data_structures/csr_matrix.h"
 #include "../data_structures/hll_matrix.h"
+#include "../data_structures/performance.h"
 #include "../headers/matrix_format.h"
+#include "../utils_header/computation_type.h"
 
 FILE *get_matrix_file(const char *dir_name, char *matrix_filename);
 int read_matrix(FILE *matrix_file, matrix_format *matrix);

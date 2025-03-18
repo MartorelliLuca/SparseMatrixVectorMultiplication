@@ -215,6 +215,7 @@ int main()
         end = clock();
 
         time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        printf("Tempo seriale hll %.16lf\n", time_used);
 
         if (!compute_norm(y, z, csr_matrix->M, 1e-6))
         {

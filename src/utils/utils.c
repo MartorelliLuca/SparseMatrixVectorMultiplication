@@ -8,13 +8,18 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <math.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "../data_structures/csr_matrix.h"
 #include "../data_structures/hll_matrix.h"
+#include "../data_structures/performance.h"
 #include "../headers/matrix_format.h"
+#include "../utils_header/computation_type.h"
 #include "../utils_header/utils.h"
 #include "../utils_header/mmio.h"
 
+#define BASE_DIR "data/"
 #define IS_ZERO(x) (fabs(x) == 0.0)
 
 struct vec3d

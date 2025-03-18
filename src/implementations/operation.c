@@ -107,12 +107,10 @@ void print_vector(double *y, int size)
     printf("\n");
 }
 
-void compute_parallel_performance(struct performance *node, double time_used, int new_non_zero_values, int num_threads)
+void compute_parallel_performance(struct performance *node, double *time_used, int new_non_zero_values, int num_threads)
 {
-    printf("Time_used: %.16lf\n", time_used);
     // Compute metrics
-
-    double flops = 2.0 * new_non_zero_values / time_used;
+    double flops = 2.0 * new_non_zero_values / *time_used;
     double mflops = flops / 1e6;
     double gflops = flops / 1e9;
 
@@ -120,7 +118,8 @@ void compute_parallel_performance(struct performance *node, double time_used, in
     node->flops = flops;
     node->mflops = mflops;
     node->gflops = gflops;
-    node->time_used = time_used;
+    node->time_used = *time_used;
+    printf("node->time_used = %.16lf", node->time_used);
 }
 
 void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values)
@@ -151,7 +150,8 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
         matrix_partition(csr_matrix, num_threads, first_row);
 
         product(csr_matrix, x, y, num_threads, /*first_row,*/ &time_used /*, times_vector*/);
-        compute_parallel_performance(node, time_used, new_non_zero_values, num_threads);
+        compute_parallel_performance(node, &time_used, new_non_zero_values, num_threads);
+        printf("Tempo utilizzato per l'esecuzione con %d con csr parallelo = %.lf", num_threads, node->time_used);
 
         node->non_zeroes_values = new_non_zero_values;
         node->computation = PARALLEL_OPEN_MP_CSR;
@@ -254,12 +254,6 @@ void hll_parallel_product(HLL_matrix *restrict hll_matrix, double *restrict x, d
     *time_used = end - start;
 }
 
-/*
-    double start = omp_get_wtime();
-
-    double end = omp_get_wtime();
-    *time_used = end - start;*/
-
 // Matrix-vector parallel dot product in HLL format
 void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
 {
@@ -291,6 +285,8 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
         node->mflops = mflops;
         node->gflops = gflops;
         node->time_used = time_used;
+
+        printf("Tempo utilizzato per hll parallelo utilizzando %d thread = %.16lf\n", num_threads, node->time_used);
 
         if (head == NULL)
         {
