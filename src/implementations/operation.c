@@ -234,7 +234,7 @@ void hll_parallel_product(HLL_matrix *restrict hll_matrix, double *restrict x, d
     const int rows = num_of_rows(hll_matrix, 0);
     double start = omp_get_wtime();
 
-#pragma omp parallel for schedule(dynamic) num_threads(num_threads) default(none) \
+#pragma omp parallel for schedule(guided) num_threads(num_threads) default(none) \
     shared(hll_matrix, x, y, rows)
     for (int h = 0; h < hll_matrix->hacks_num; ++h)
     {
@@ -245,12 +245,16 @@ void hll_parallel_product(HLL_matrix *restrict hll_matrix, double *restrict x, d
         for (int r = 0; r < rows_in_h; ++r)
         {
             double sum = 0.0;
-            int j = 0;
-            // Loop residuo
-            for (; j < max_nzr_h; ++j)
+            double *data_ptr = &hll_matrix->data[offset_h + r * max_nzr_h];
+            int *col_ptr = &hll_matrix->col_index[offset_h + r * max_nzr_h];
+
+#pragma omp simd reduction(+ : sum)
+            for (int j = 0; j < max_nzr_h; ++j)
             {
-                int k = offset_h + r * max_nzr_h + j;
-                sum += hll_matrix->data[k] * x[hll_matrix->col_index[k]];
+                __builtin_prefetch(&data_ptr[j + 4], 0, 1); // Prefetch della riga successiva
+                __builtin_prefetch(&col_ptr[j + 4], 0, 1);
+
+                sum += data_ptr[j] * x[col_ptr[j]];
             }
 
             y[rows * h + r] = sum;
