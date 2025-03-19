@@ -67,7 +67,7 @@ void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector
     {
         int thread_id = omp_get_thread_num();
 
-#pragma omp for schedule(dynamic, 16) // Bilanciamento del carico
+#pragma omp for schedule(dynamic, 32) // Bilanciamento del carico
         for (int row = 0; row < csr_matrix->M; row++)
         {
             double sum = 0.0;
