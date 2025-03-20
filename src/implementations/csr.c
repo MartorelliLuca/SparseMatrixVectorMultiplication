@@ -10,7 +10,6 @@
 #include "../data_structures/csr_matrix.h"
 #include "../utils_header/mmio.h"
 
-// Function to read matrix stored and convert it to csr_matrix format
 void read_CSR_matrix(FILE *matrix_file, CSR_matrix *csr_matrix, matrix_format *matrix)
 {
     csr_matrix->M = matrix->M;

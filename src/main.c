@@ -19,6 +19,7 @@
 #include "utils_header/initialization.h"
 #include "utils_header/utils.h"
 #include "utils_header/computation_type.h"
+#include "../CUDA/headers/cudacsr.h"
 
 #define MATRIX_DIR = "../matrici"
 
@@ -302,6 +303,10 @@ int main()
         re_initialize_y_vector(csr_matrix->M, z);
 
         matvec_parallel_hll(hll_matrix, x, z, node, thread_numbers, head, tail, matrix->number_of_non_zeoroes_values, y);
+
+        // HERE STARTS CUDA IMPLEMENTATION
+        // TODO MO DEVI FA LA PER LA CHIAMATA AL KERNEL CUDA
+        // Prendendo la matrice csr mo devi passargliela a cuda e fare la moltiplicazione,... poi devi fare la stessa cosa con hll
 
         node = NULL;
         destroy_HLL_matrix(hll_matrix);
