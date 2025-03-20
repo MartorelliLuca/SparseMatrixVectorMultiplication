@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(ProjectName C)  # Change "ProjectName" as needed
+project(SparseMatrixVectorMultiplication C)
 
 # Set compiler
 set(CMAKE_C_COMPILER gcc)
