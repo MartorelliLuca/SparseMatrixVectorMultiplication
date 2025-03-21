@@ -19,7 +19,6 @@
 #include "utils_header/initialization.h"
 #include "utils_header/utils.h"
 #include "utils_header/computation_type.h"
-#include "../CUDA/headers/cudacsr.h"
 
 #define MATRIX_DIR = "../matrici"
 
@@ -58,7 +57,7 @@ int main()
 
     // Variables to collect statistics
     struct performance *head = NULL, *tail = NULL, *node = NULL;
-    double time_used, start, end;
+    double time_used, start, end, time;
     double flops, mflops, gflops;
 
     const char *dir_name = "../matrici";
@@ -145,19 +144,20 @@ int main()
         {
             printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
         }
+
         strcpy(node->matrix, csr_matrix->name);
         node->non_zeroes_values = matrix->number_of_non_zeoroes_values;
         node->computation = SERIAL_CSR;
 
         // Get statistics for the dot-product
-        start = clock();
+        start = omp_get_wtime();
         // Start dot-product
         matvec_serial_csr(csr_matrix, x, y);
         // Get the time used for the dot-product
-        end = clock();
+        end = omp_get_wtime();
         // print_vector(y, csr_matrix->M);
 
-        time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        time_used = end - start;
         printf("Tempo seriale csr:%.16lf\n", time_used);
 
         compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
@@ -209,13 +209,13 @@ int main()
         strcpy(node->matrix, csr_matrix->name);
 
         // Get statistics for the dot-product
-        start = clock();
+        start = omp_get_wtime();
         // Start dot-product
         matvec_serial_hll(hll_matrix, x, z);
         // Get the time used for the dot-product
-        end = clock();
+        end = omp_get_wtime();
 
-        time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        time_used = end - start;
         printf("Tempo seriale hll %.16lf\n", time_used);
 
         if (!compute_norm(y, z, csr_matrix->M, 1e-6))
@@ -306,7 +306,9 @@ int main()
 
         // HERE STARTS CUDA IMPLEMENTATION
         // TODO MO DEVI FA LA PER LA CHIAMATA AL KERNEL CUDA
-        // Prendendo la matrice csr mo devi passargliela a cuda e fare la moltiplicazione,... poi devi fare la stessa cosa con hll
+
+        time = invoke_kernel_1(hll_matrix, x, z);
+        printf("Time = %.16lf\n", time);
 
         node = NULL;
         destroy_HLL_matrix(hll_matrix);

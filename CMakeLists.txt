@@ -1,53 +1,52 @@
-cmake_minimum_required(VERSION 3.18)
-project(SparseMatrixVectorMultiplication)
+cmake_minimum_required(VERSION 3.10)
+project(progetto LANGUAGES C CXX CUDA)
 
-# Set compiler for C e C++
+# Specifica i compilatori per C e C++
 set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_CUDA_COMPILER nvcc)
 
-# Flag di compilazione per il C
-set(CMAKE_C_FLAGS "-Iinclude -fopenmp")
+# Architetture CUDA (Quadro RTX 5000 è 7.5)
+set(CMAKE_CUDA_ARCHITECTURES 75)
 
-# Linking flags
-set(CMAKE_EXE_LINKER_FLAGS "-fopenmp")
+# Impostazioni di ottimizzazione e flag per OpenMP (C e C++)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Iinclude -O3 -march=native -fopenmp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -fopenmp -lm")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 -Xcompiler -fopenmp")
 
-# Flag di ottimizzazione
-add_compile_options(-O3 -march=native -ffast-math -funroll-loops)
+# Linker flags
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp")
 
-# Abilita il supporto CUDA
-enable_language(CUDA)
+# Opzioni aggiuntive
+add_compile_options(-ffast-math -funroll-loops)
 
-# Imposta i flag per il compilatore CUDA
-set(CMAKE_CUDA_FLAGS "-O3 -arch=sm_60 -Xcompiler -fopenmp -lineinfo")
+# Trova OpenMP
+find_package(OpenMP REQUIRED)
+if (OpenMP_CXX_FOUND)
+    message(STATUS "Found OpenMP: ${OpenMP_CXX_FLAGS}")
+endif()
 
-# File sorgenti C
-set(C_SRC_FILES
-    src/utils/mmio.c
-    src/utils/read.c
-    src/utils/write.c
-    src/utils/utils.c
-    src/main.c
+# File sorgenti
+set(SRC_FILES
     src/implementations/csr.c
     src/implementations/hll.c
     src/implementations/operation.c
     src/utils/initialization.c
+    src/utils/mmio.c
+    src/utils/read.c
+    src/utils/utils.c
+    src/utils/write.c
+    CUDA/src/cudacsr.cu
+    CUDA/src/cudahll.cu
+    src/main.c
 )
 
-# File sorgenti CUDA
-file(GLOB CUDA_SRC_FILES CUDA/src/*.cu)
-
 # Creazione dell'eseguibile
-add_executable(project ${C_SRC_FILES} ${CUDA_SRC_FILES})
+add_executable(project ${SRC_FILES})
 
-# Link a OpenMP
-find_package(OpenMP REQUIRED)
-if(OpenMP_C_FOUND)
-    target_link_libraries(project OpenMP::OpenMP_C)
-endif()
-
-# Link a CUDA Toolkit (librerie base)
+# Link delle librerie
 find_package(CUDAToolkit REQUIRED)
-target_link_libraries(project CUDA::cudart)
+target_link_libraries(project OpenMP::OpenMP_CXX CUDA::cudart)
 
-# Target di esecuzione personalizzato
-add_custom_target(run COMMAND ./project DEPENDS project)
+# Abilita la compilazione separabile per CUDA
+set_target_properties(project PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

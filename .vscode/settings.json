@@ -15,6 +15,7 @@
         "csr_matrix.h": "c",
         "matrix_format.h": "c",
         "performance.h": "c",
-        "computation_type.h": "c"
+        "computation_type.h": "c",
+        "cudahll.cuh": "c"
     }
 }
