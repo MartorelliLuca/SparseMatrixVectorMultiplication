@@ -19,6 +19,7 @@
 #include "utils_header/initialization.h"
 #include "utils_header/utils.h"
 #include "utils_header/computation_type.h"
+#include "../CUDA/headers/cudahll.h"
 
 #define MATRIX_DIR = "../matrici"
 
@@ -308,6 +309,7 @@ int main()
         // TODO MO DEVI FA LA PER LA CHIAMATA AL KERNEL CUDA
 
         time = invoke_kernel_1(hll_matrix, x, z);
+
         printf("Time = %.16lf\n", time);
 
         node = NULL;

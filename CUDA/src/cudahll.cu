@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <dirent.h>
 
+#include "../headers/cudahll.h"
 #include "../../src/data_structures/hll_matrix.h"
 #include "../../src/data_structures/performance.h"
 #include "../kernel/hll/cuda_hll_kernel_v1.cuh"

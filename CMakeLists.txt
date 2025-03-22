@@ -1,52 +1,55 @@
-cmake_minimum_required(VERSION 3.10)
-project(progetto LANGUAGES C CXX CUDA)
+cmake_minimum_required(VERSION 3.7)
+project(SparseMatrixVectorMultiplication)
 
-# Specifica i compilatori per C e C++
-set(CMAKE_C_COMPILER gcc)
-set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_CUDA_COMPILER nvcc)
+set(CC 75)
 
-# Architetture CUDA (Quadro RTX 5000 è 7.5)
-set(CMAKE_CUDA_ARCHITECTURES 75)
-
-# Impostazioni di ottimizzazione e flag per OpenMP (C e C++)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Iinclude -O3 -march=native -fopenmp")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -fopenmp -lm")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 -Xcompiler -fopenmp")
-
-# Linker flags
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp")
-
-# Opzioni aggiuntive
-add_compile_options(-ffast-math -funroll-loops)
-
-# Trova OpenMP
 find_package(OpenMP REQUIRED)
-if (OpenMP_CXX_FOUND)
-    message(STATUS "Found OpenMP: ${OpenMP_CXX_FLAGS}")
+find_package(CUDAToolkit REQUIRED)
+
+if(OpenMP_FOUND)
+    message(STATUS "OpenMP trovato")
 endif()
 
-# File sorgenti
-set(SRC_FILES
-    src/implementations/csr.c
-    src/implementations/hll.c
-    src/implementations/operation.c
+if(CUDAToolkit_FOUND)
+    message(STATUS "CUDA trovato")
+endif()
+
+# File sorgenti del progetto
+set(SOURCE_FILES
+    src/main.c
     src/utils/initialization.c
     src/utils/mmio.c
     src/utils/read.c
     src/utils/utils.c
     src/utils/write.c
-    CUDA/src/cudacsr.cu
-    CUDA/src/cudahll.cu
-    src/main.c
+    src/implementations/hll.c
+    src/implementations/csr.c
+    src/implementations/operation.c
 )
 
-# Creazione dell'eseguibile
-add_executable(project ${SRC_FILES})
+# File CUDA
+set(CUDA_SOURCES
+    CUDA/src/cudacsr.cu
+    CUDA/src/cudahll.cu
+)
 
-# Link delle librerie
-find_package(CUDAToolkit REQUIRED)
-target_link_libraries(project OpenMP::OpenMP_CXX CUDA::cudart)
+# Kernel CUDA
+set(CUDA_KERNELS
+    CUDA/kernel/csr/cudakernel1.cuh
+    CUDA/kernel/hll/cuda_hll_kernel_v1.cuh
+)
 
-# Abilita la compilazione separabile per CUDA
-set_target_properties(project PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+add_executable(project ${SOURCE_FILES} ${CUDA_SOURCES} ${CUDA_KERNELS})
+
+# Collegamento delle librerie necessarie
+target_link_libraries(project PUBLIC OpenMP::OpenMP_C CUDA::cudart)
+
+# Opzioni di compilazione
+set(CMAKE_CXX_FLAGS "-O3")
+set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -DSM_${CC} -arch=sm_${CC} -lineinfo -Xcompiler=${CMAKE_CXX_FLAGS} -Xptxas=-v")
+
+set_target_properties(project PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    LINKER_LANGUAGE CXX
+)
