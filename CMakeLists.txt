@@ -1,55 +1,44 @@
-cmake_minimum_required(VERSION 3.7)
-project(SparseMatrixVectorMultiplication)
+cmake_minimum_required(VERSION 3.10)
+project(project)
 
-set(CC 75)
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_CXX_COMPILER g++)
+
+set(CMAKE_CUDA_ARCHITECTURES 75)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Iinclude -O3 -march=native -fopenmp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -fopenmp -lm")
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp")
+
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 --compiler-options=-fopenmp")
+
+add_compile_options(-ffast-math -funroll-loops)
 
 find_package(OpenMP REQUIRED)
-find_package(CUDAToolkit REQUIRED)
-
-if(OpenMP_FOUND)
-    message(STATUS "OpenMP trovato")
+if(OpenMP_CXX_FOUND)
+    message(STATUS "Found OpenMP: ${OpenMP_CXX_FLAGS}")
 endif()
 
-if(CUDAToolkit_FOUND)
-    message(STATUS "CUDA trovato")
-endif()
-
-# File sorgenti del progetto
-set(SOURCE_FILES
+# File sorgenti (C, C++ e CUDA)
+set(SRC_FILES
     src/main.c
+    src/implementations/csr.c
+    src/implementations/hll.c
+    src/implementations/operation.c
     src/utils/initialization.c
     src/utils/mmio.c
     src/utils/read.c
     src/utils/utils.c
     src/utils/write.c
-    src/implementations/hll.c
-    src/implementations/csr.c
-    src/implementations/operation.c
+    CUDA_src/cudacsr.cu
+    CUDA_src/cudahll.cu
 )
 
-# File CUDA
-set(CUDA_SOURCES
-    CUDA/src/cudacsr.cu
-    CUDA/src/cudahll.cu
-)
+add_executable(project ${SRC_FILES})
 
-# Kernel CUDA
-set(CUDA_KERNELS
-    CUDA/kernel/csr/cudakernel1.cuh
-    CUDA/kernel/hll/cuda_hll_kernel_v1.cuh
-)
+# Linka OpenMP
+target_link_libraries(project OpenMP::OpenMP_CXX)
 
-add_executable(project ${SOURCE_FILES} ${CUDA_SOURCES} ${CUDA_KERNELS})
-
-# Collegamento delle librerie necessarie
-target_link_libraries(project PUBLIC OpenMP::OpenMP_C CUDA::cudart)
-
-# Opzioni di compilazione
-set(CMAKE_CXX_FLAGS "-O3")
-set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -DSM_${CC} -arch=sm_${CC} -lineinfo -Xcompiler=${CMAKE_CXX_FLAGS} -Xptxas=-v")
-
-set_target_properties(project PROPERTIES
-    CUDA_SEPARABLE_COMPILATION ON
-    LINKER_LANGUAGE CXX
-)
+# Abilita la compilazione separabile per CUDA
+set_target_properties(project PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

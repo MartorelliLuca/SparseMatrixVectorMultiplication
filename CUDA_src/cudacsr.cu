@@ -3,8 +3,8 @@
 #include <cuda.h>
 #include <iostream>
 
-#include "../headers/cudacsr.h"
-#include "../kernel/csr/cudakernel1.cuh"
+#include "../CUDA_include/cudacsr.h"
+#include "../CUDA_include/cudakernel1.cuh"
 
 // qua alloca strutture dati per le chiamate a kernel (partizione del carico di ogni warp)
 
@@ -49,4 +49,9 @@ double call_kernel_v1(CSR_matrix *csr, double *x, double *y)
     cudaFree(d_res);
 
     return res;
+}
+
+void callcsr()
+{
+    printf("Dentro\n");
 }

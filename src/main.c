@@ -19,7 +19,8 @@
 #include "utils_header/initialization.h"
 #include "utils_header/utils.h"
 #include "utils_header/computation_type.h"
-#include "../CUDA/headers/cudahll.h"
+#include "../CUDA_include/cudahll.h"
+#include "../CUDA_include/cudacsr.h"
 
 #define MATRIX_DIR = "../matrici"
 
@@ -58,8 +59,9 @@ int main()
 
     // Variables to collect statistics
     struct performance *head = NULL, *tail = NULL, *node = NULL;
-    double time_used, start, end, time;
+    double time_used, start, end;
     double flops, mflops, gflops;
+    float time;
 
     const char *dir_name = "../matrici";
     // Matrix filename
@@ -308,7 +310,7 @@ int main()
         // HERE STARTS CUDA IMPLEMENTATION
         // TODO MO DEVI FA LA PER LA CHIAMATA AL KERNEL CUDA
 
-        time = invoke_kernel_1(hll_matrix, x, z);
+        invoke_kernel_1(hll_matrix, x, z, &time);
 
         printf("Time = %.16lf\n", time);
 
