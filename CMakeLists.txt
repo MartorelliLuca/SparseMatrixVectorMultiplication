@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(project)
+enable_language(CUDA)
 
 set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)

@@ -50,8 +50,3 @@ double call_kernel_v1(CSR_matrix *csr, double *x, double *y)
 
     return res;
 }
-
-void callcsr()
-{
-    printf("Dentro\n");
-}

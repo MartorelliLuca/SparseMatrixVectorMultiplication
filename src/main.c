@@ -310,6 +310,8 @@ int main()
         // HERE STARTS CUDA IMPLEMENTATION
         // TODO MO DEVI FA LA PER LA CHIAMATA AL KERNEL CUDA
 
+        printf("\n\nPrima di CUDA!\n");
+
         invoke_kernel_1(hll_matrix, x, z, &time);
 
         printf("Time = %.16lf\n", time);

@@ -11,11 +11,13 @@
 #include "../src/data_structures/performance.h"
 #include "../CUDA_include/cuda_hll_kernel_v1.cuh"
 
-extern "C" void invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z, float *time)
+void invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z, float *time)
 {
     cudaError_t error;
     int *d_offsets, *d_col_index;
     double *d_data, *d_x, *d_y;
+
+    printf("QUI\n");
 
     // Eventi CUDA per la misurazione del tempo
     cudaEvent_t start, stop;
