@@ -8,7 +8,13 @@ typedef enum
     PARALLEL_OPEN_MP_CSR,
     PARALLEL_OPEN_MP_HLL,
     CUDA_CSR,
-    CUDA_HLL
+    CUDA_HLL_KERNEL_0,
+    CUDA_HLL_KERNEL_1,
+    CUDA_HLL_KERNEL_2,
+    CUDA_HLL_KERNEL_3,
+    CUDA_HLL_KERNEL_4,
+    CUDA_HLL_KERNEL_5,
+    CUDA_HLL_KERNEL_6
 } computation_time;
 
 #endif

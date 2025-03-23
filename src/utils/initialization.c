@@ -10,6 +10,9 @@
 #include "../utils_header/mmio.h"
 #include "../headers/matrix_format.h"
 #include "../data_structures/csr_matrix.h"
+#include "../data_structures/hll_matrix.h"
+#include "../data_structures/matrix.h"
+#include "../data_structures/matrix.h"
 
 double *initialize_x_vector(int size)
 {
@@ -86,4 +89,59 @@ void free_dense_matrix(double **dense_matrix, int M)
     for (int i = 0; i < M; i++)
         free(dense_matrix[i]);
     free(dense_matrix);
+}
+
+int *initialize_threads_number()
+{
+    int *thread_numbers = (int *)calloc(39, sizeof(int));
+    if (!thread_numbers)
+    {
+        printf("Error occour while creating thread_numbers pointer!\nError code: %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
+
+    int count = 2;
+
+    for (int i = 0; i < 39; i++)
+    {
+        thread_numbers[i] = count + i;
+    }
+
+    return thread_numbers;
+}
+
+CSR_matrix *get_csr_matrix()
+{
+    CSR_matrix *csr_matrix = (CSR_matrix *)calloc(1, sizeof(CSR_matrix));
+    if (csr_matrix == NULL)
+    {
+        printf("Error occour in malloc for csr matrix\nError Code: %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
+
+    return csr_matrix;
+}
+
+HLL_matrix *get_hll_matrix()
+{
+    HLL_matrix *hll_matrix = (HLL_matrix *)calloc(1, sizeof(HLL_matrix));
+    if (hll_matrix == NULL)
+    {
+        printf("Error occour in malloc for hll matrix\nError Code: %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
+
+    return hll_matrix;
+}
+
+matrix_format *get_matrix_format_matrix()
+{
+    matrix_format *matrix = (matrix_format *)calloc(1, sizeof(matrix_format));
+    if (matrix == NULL)
+    {
+        printf("Error occour in malloc for matrix format\nErro Code: %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
+
+    return matrix;
 }

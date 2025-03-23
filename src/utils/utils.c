@@ -246,7 +246,7 @@ double compute_norm(double *z, double *y, int n, double esp)
     for (int i = 0; i < n; i++)
     {
         double d = fabs(z[i] - y[i]);
-        if (d > esp)
+        if (d >= esp)
         {
             s += d;
         }
@@ -255,4 +255,148 @@ double compute_norm(double *z, double *y, int n, double esp)
     if (s > 0.0)
         printf("error = %.16lf\n", s);
     return s > 0.0 ? 0 : 1;
+}
+
+double *unit_vector(int size)
+{
+    double *x = (double *)malloc(size * sizeof(double));
+    if (!x)
+    {
+        printf("Error in malloc per x\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < size; i++)
+        x[i] = 1.0;
+
+    return x;
+}
+
+void add_node_performance(struct performance *head, struct performance *tail, struct performance *node)
+{
+    if (head == NULL)
+    {
+        head = (struct performance *)calloc(1, sizeof(struct performance));
+        if (head == NULL)
+        {
+            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        }
+        tail = (struct performance *)calloc(1, sizeof(struct performance));
+        if (tail == NULL)
+        {
+            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        }
+
+        head = node;
+        tail = node;
+    }
+    else
+    {
+        tail->next_node = node;
+        node->prev_node = tail;
+        tail = node;
+    }
+}
+void *reset_node(struct performance *node)
+{
+    node = NULL;
+    node = (struct performance *)calloc(1, sizeof(struct performance));
+    if (node == NULL)
+    {
+        printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values)
+{
+    // Compute metrics
+    double flops = 2.0 * new_non_zero_values / time_used;
+    double mflops = flops / 1e6;
+    double gflops = flops / 1e9;
+
+    node->number_of_threads_used = 1;
+    node->flops = flops;
+    node->mflops = mflops;
+    node->gflops = gflops;
+    node->time_used = time_used;
+}
+
+void print_serial_csr_result(struct performance *node)
+{
+    printf("Prestazioni Ottenute con il prodotto utilizzando il formato csr!\n");
+    printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+    printf("Time used for dot-product:      %.16lf\n", node->time_used);
+    printf("FLOPS:                          %.16lf\n", node->flops);
+    printf("MFLOPS:                         %.16lf\n", node->mflops);
+    printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+}
+
+void print_serial_hll_result(struct performance *node)
+{
+    printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll in modalità seriale!\n");
+    printf("\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+    printf("Time used for dot-product:      %.16lf\n", node->time_used);
+    printf("FLOPS:                          %.16lf\n", node->flops);
+    printf("MFLOPS:                         %.16lf\n", node->mflops);
+    printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+}
+
+void print_parallel_csr_result(struct performance *node)
+{
+    printf("\n\nParallel Performance for %s with %d threads, with CSR:\n", node->matrix, node->number_of_threads_used);
+    printf("Time used for dot-product:      %.16lf\n", node->time_used);
+    printf("FLOPS:                          %.16lf\n", node->flops);
+    printf("MFLOPS:                         %.16lf\n", node->mflops);
+    printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+}
+
+void print_parallel_hll_result(struct performance *node)
+{
+    printf("\n\nParallel Performance for %s with %d threads, with HLL:\n", node->matrix, node->number_of_threads_used);
+    printf("Time used for dot-product:      %.16lf\n", node->time_used);
+    printf("FLOPS:                          %.16lf\n", node->flops);
+    printf("MFLOPS:                         %.16lf\n", node->mflops);
+    printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+}
+
+void print_cuda_hll_kernel_performance(struct performance *node)
+{
+    printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato hll con CUDA!\n");
+    switch (node->computation)
+    {
+    case CUDA_HLL_KERNEL_0:
+        printf("CUDA HLL Kernel 0\n");
+        break;
+
+    case CUDA_HLL_KERNEL_1:
+        printf("CUDA HLL Kernel 1\n");
+        break;
+
+    case CUDA_HLL_KERNEL_2:
+        printf("CUDA HLL Kernel 2\n");
+        break;
+
+    case CUDA_HLL_KERNEL_3:
+        printf("CUDA HLL Kernel 3\n");
+        break;
+
+    case CUDA_HLL_KERNEL_4:
+        printf("CUDA HLL Kernel 4\n");
+        break;
+
+    case CUDA_HLL_KERNEL_5:
+        printf("CUDA HLL Kernel 5\n");
+        break;
+
+    case CUDA_HLL_KERNEL_6:
+        printf("CUDA HLL Kernel 6\n");
+        break;
+    }
+
+    printf("\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+    printf("Time used for dot-product:      %.16lf\n", node->time_used);
+    printf("FLOPS:                          %.16lf\n", node->flops);
+    printf("MFLOPS:                         %.16lf\n", node->mflops);
+    printf("GFLOPS:                         %.16lf\n\n", node->gflops);
 }

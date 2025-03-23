@@ -16,6 +16,8 @@
 #include "../utils_header/initialization.h"
 #include "../utils_header/computation_type.h"
 
+#define NUM_THREADS 39
+
 void matvec(double **A, double *x, double *y, int M, int N)
 {
     for (int i = 0; i < M; i++)
@@ -119,14 +121,14 @@ void compute_parallel_performance(struct performance *node, double *time_used, i
     node->mflops = mflops;
     node->gflops = gflops;
     node->time_used = *time_used;
-    printf("node->time_used = %.16lf", node->time_used);
+    printf("node->time_used = %.16lf\n", node->time_used);
 }
 
-void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values)
+void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
 {
 
     double time_used, time_used2;
-    for (int index = 0; index < 39; index++)
+    for (int index = 0; index < NUM_THREADS; index++)
     {
         int num_threads = thread_numbers[index];
 
@@ -149,41 +151,22 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
 
         matrix_partition(csr_matrix, num_threads, first_row);
 
-        product(csr_matrix, x, y, num_threads, /*first_row,*/ &time_used /*, times_vector*/);
+        product(csr_matrix, x, y, num_threads, &time_used);
         compute_parallel_performance(node, &time_used, new_non_zero_values, num_threads);
-        printf("Tempo utilizzato per l'esecuzione con %d con csr parallelo = %.lf", num_threads, node->time_used);
+        printf("Tempo utilizzato per l'esecuzione con %d con csr parallelo = %.lf\n", num_threads, node->time_used);
+
+        if (!compute_norm(y, effective_results, csr_matrix->M, 1e-6))
+        {
+            printf("Errore nel controllo per %s dopo il csr parallelo\n", csr_matrix->name);
+            sleep(1);
+        }
 
         node->non_zeroes_values = new_non_zero_values;
         node->computation = PARALLEL_OPEN_MP_CSR;
 
-        if (head == NULL)
-        {
-            head = (struct performance *)calloc(1, sizeof(struct performance));
-            if (head == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
-            tail = (struct performance *)calloc(1, sizeof(struct performance));
-            if (tail == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
+        add_node_performance(head, tail, node);
 
-            head = node;
-            tail = node;
-        }
-        else
-        {
-            tail->next_node = node;
-            node->prev_node = tail;
-            tail = node;
-        }
-
-        printf("\n\nParallel Performance for %s with %d threads, with CSR:\n", node->matrix, node->number_of_threads_used);
-        printf("Time used for dot-product:      %.16lf\n", node->time_used);
-        printf("FLOPS:                          %.16lf\n", node->flops);
-        printf("MFLOPS:                         %.16lf\n", node->mflops);
-        printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+        print_parallel_csr_result(node);
 
         // fai il prodotto scalare tra la riga i-esima e il vettore x
     }
@@ -254,11 +237,31 @@ void hll_parallel_product(HLL_matrix *restrict hll_matrix, double *restrict x, d
     *time_used = end - start;
 }
 
+void compute_hll_parallel_performance(struct performance *node, int new_non_zero_values, double time_used, int num_threads)
+{
+    node->non_zeroes_values = new_non_zero_values;
+    node->computation = PARALLEL_OPEN_MP_HLL;
+
+    printf("Time used for dot-product: %.16lf\n", time_used);
+
+    double flops = 2.0 * new_non_zero_values / time_used;
+    double mflops = flops / 1e6;
+    double gflops = flops / 1e9;
+
+    node->number_of_threads_used = num_threads;
+    node->flops = flops;
+    node->mflops = mflops;
+    node->gflops = gflops;
+    node->time_used = time_used;
+
+    printf("Tempo utilizzato per hll parallelo utilizzando %d thread = %.16lf\n", num_threads, node->time_used);
+}
+
 // Matrix-vector parallel dot product in HLL format
 void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
 {
     double time_used, start, end;
-    for (int index = 0; index < 39; index++)
+    for (int index = 0; index < NUM_THREADS; index++)
     {
         int num_threads = thread_numbers[index];
 
@@ -271,51 +274,11 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
 
         hll_parallel_product(hll_matrix, x, y, num_threads, &time_used);
 
-        node->non_zeroes_values = new_non_zero_values;
-        node->computation = PARALLEL_OPEN_MP_HLL;
+        compute_hll_parallel_performance(node, new_non_zero_values, time_used, num_threads);
 
-        printf("Time used for dot-product: %.16lf\n", time_used);
+        add_node_performance(head, tail, node);
 
-        double flops = 2.0 * new_non_zero_values / time_used;
-        double mflops = flops / 1e6;
-        double gflops = flops / 1e9;
-
-        node->number_of_threads_used = num_threads;
-        node->flops = flops;
-        node->mflops = mflops;
-        node->gflops = gflops;
-        node->time_used = time_used;
-
-        printf("Tempo utilizzato per hll parallelo utilizzando %d thread = %.16lf\n", num_threads, node->time_used);
-
-        if (head == NULL)
-        {
-            head = (struct performance *)calloc(1, sizeof(struct performance));
-            if (head == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
-            tail = (struct performance *)calloc(1, sizeof(struct performance));
-            if (tail == NULL)
-            {
-                printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            }
-
-            head = node;
-            tail = node;
-        }
-        else
-        {
-            tail->next_node = node;
-            node->prev_node = tail;
-            tail = node;
-        }
-
-        printf("\n\nParallel Performance for %s with %d threads, with HLL:\n", node->matrix, node->number_of_threads_used);
-        printf("Time used for dot-product:      %.16lf\n", node->time_used);
-        printf("FLOPS:                          %.16lf\n", node->flops);
-        printf("MFLOPS:                         %.16lf\n", node->mflops);
-        printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+        print_parallel_hll_result(node);
 
         if (!compute_norm(y, effective_results, hll_matrix->M, 1e-6))
         {
@@ -325,18 +288,4 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
 
         re_initialize_y_vector(hll_matrix->M, y);
     }
-}
-
-void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values)
-{
-    // Compute metrics
-    double flops = 2.0 * new_non_zero_values / time_used;
-    double mflops = flops / 1e6;
-    double gflops = flops / 1e9;
-
-    node->number_of_threads_used = 1;
-    node->flops = flops;
-    node->mflops = mflops;
-    node->gflops = gflops;
-    node->time_used = time_used;
 }

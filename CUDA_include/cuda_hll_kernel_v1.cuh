@@ -3,20 +3,35 @@
 #include <cuda.h>
 #include <iostream>
 
-__global__ void hll_kernel_v1(int *offsets, int *col_index, double *data, double *x, double *y, int M)
+#include "../src/data_structures/hll_matrix.h"
+
+__global__ void hll_matvec_kernel(HLL_matrix d_A, double *d_x, double *d_y)
 {
+
     int row = blockIdx.x * blockDim.x + threadIdx.x;
-    if (row < M)
+
+    if (row < d_A.M)
     {
         double sum = 0.0;
-        int start = offsets[row];
-        int end = offsets[row + 1];
 
-        for (int idx = start; idx < end; idx++)
+        int hack_id = row / d_A.hack_size;
+        int start_offset = d_A.offsets[hack_id];
+        int end_offset = (hack_id < d_A.hacks_num - 1) ? d_A.offsets[hack_id + 1] : d_A.data_num;
+        int max_nonzeros = d_A.max_nzr[hack_id];
+
+        int local_row = row % d_A.hack_size;
+
+        for (int i = 0; i < max_nonzeros; i++)
         {
-            int col = col_index[idx];
-            sum += data[idx] * x[col];
+            int data_index = start_offset + local_row * max_nonzeros + i;
+            if (data_index < end_offset)
+            {
+                int col = d_A.col_index[data_index];
+                double val = d_A.data[data_index];
+                sum += val * d_x[col];
+            }
         }
-        y[row] = sum;
+
+        d_y[row] = sum;
     }
 }

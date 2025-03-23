@@ -13,73 +13,64 @@
 
 float invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z)
 {
+    HLL_matrix d_A;
+    double *d_x, *d_y;
     float time;
-    cudaError_t error;
-    int *d_offsets, *d_col_index;
-    double *d_data, *d_x, *d_y;
+
+    // Allocazione memoria su device
+    cudaMalloc(&d_A.offsets, hll_matrix->offsets_num * sizeof(int));
+    cudaMalloc(&d_A.col_index, hll_matrix->data_num * sizeof(int));
+    cudaMalloc(&d_A.data, hll_matrix->data_num * sizeof(double));
+    cudaMalloc(&d_A.max_nzr, hll_matrix->hacks_num * sizeof(int));
+
+    cudaMalloc(&d_x, hll_matrix->N * sizeof(double));
+    cudaMalloc(&d_y, hll_matrix->M * sizeof(double));
+
+    // Copia dei dati da host a device
+    cudaMemcpy(d_A.offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A.col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A.data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A.max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice);
+
+    cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice);
+
+    // Configurazione dei thread e lancio del kernel
+    int blockSize = 256;
+    int gridSize = (hll_matrix->M + blockSize - 1) / blockSize;
 
     // Eventi CUDA per la misurazione del tempo
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-    // Allocazione memoria GPU con controlli errori migliorati
-    if (cudaMalloc((void **)&d_offsets, hll_matrix->offsets_num * sizeof(int)) != cudaSuccess ||
-        cudaMalloc((void **)&d_col_index, hll_matrix->data_num * sizeof(int)) != cudaSuccess ||
-        cudaMalloc((void **)&d_data, hll_matrix->data_num * sizeof(double)) != cudaSuccess ||
-        cudaMalloc((void **)&d_x, hll_matrix->N * sizeof(double)) != cudaSuccess ||
-        cudaMalloc((void **)&d_y, hll_matrix->M * sizeof(double)) != cudaSuccess)
-    {
-        error = cudaGetLastError();
-        printf("Error during cudaMalloc!\nError code: %d\n", error);
-        exit(EXIT_FAILURE);
-    }
+    cudaEventRecord(start); // Inizio misurazione
+    hll_matvec_kernel<<<gridSize, blockSize>>>(d_A, d_x, d_y);
+    cudaEventRecord(stop); // Fine misurazione
 
-    // Copia dati da host a device
-    cudaMemcpy(d_offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice);
-
-    // Configurazione kernel
-    int blockSize = 32;
-    int numBlocks = (hll_matrix->M + blockSize - 1) / blockSize;
-
-    // FINO QUI OK
-
-    // Avvio misurazione tempo
-    cudaEventRecord(start);
-
-    // Esecuzione del kernel CUDA
-    hll_kernel_v1<<<numBlocks, blockSize>>>(d_offsets, d_col_index, d_data, d_x, d_y, hll_matrix->M);
-
-    // Sincronizzazione e controllo errori
-    cudaDeviceSynchronize();
-    error = cudaGetLastError();
-    if (error != cudaSuccess)
-    {
-        printf("Error during kernel execution!\nError code: %d\n", error);
-        exit(EXIT_FAILURE);
-    }
-
-    // Stop misurazione tempo
-    cudaEventRecord(stop);
     cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time, start, stop);
 
-    // Copia risultati da device a host
+    // Calcolo del tempo di esecuzione in millisecondi
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // Copia del risultato dal device all'host
     cudaMemcpy(z, d_y, hll_matrix->M * sizeof(double), cudaMemcpyDeviceToHost);
 
-    // Libera memoria GPU
-    cudaFree(d_offsets);
-    cudaFree(d_col_index);
-    cudaFree(d_data);
+    printf("Milliseconds = %.16lf\n", milliseconds);
+
+    // Calcolo delle prestazioni in MFLOPS
+    time = milliseconds / 1000.0;
+
+    // Deallocazione memoria device e eventi CUDA
+    cudaFree(d_A.offsets);
+    cudaFree(d_A.col_index);
+    cudaFree(d_A.data);
+    cudaFree(d_A.max_nzr);
     cudaFree(d_x);
     cudaFree(d_y);
 
-    // Distruggi eventi CUDA
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 
-    time = time / 1000.0; // Convertiamo da millisecondi a secondi
+    return time;
 }
