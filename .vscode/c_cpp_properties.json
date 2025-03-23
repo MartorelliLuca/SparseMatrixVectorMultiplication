@@ -2,10 +2,6 @@
     "configurations": [
         {
             "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/src"
-            ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",

@@ -29,9 +29,7 @@ set(SRC_FILES
     src/implementations/operation.c
     src/utils/initialization.c
     src/utils/mmio.c
-    src/utils/read.c
     src/utils/utils.c
-    src/utils/write.c
     CUDA_src/cudacsr.cu
     CUDA_src/cudahll.cu
 )

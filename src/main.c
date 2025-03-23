@@ -61,7 +61,7 @@ int main()
     struct performance *head = NULL, *tail = NULL, *node = NULL;
     double time_used, start, end;
     double flops, mflops, gflops;
-    float time;
+    float time = 15.0;
 
     const char *dir_name = "../matrici";
     // Matrix filename
@@ -136,6 +136,8 @@ int main()
         // Get matrix from matrix market format in hll format
         strcpy(hll_matrix->name, matrix_filename);
         read_HLL_matrix(hll_matrix, HACKSIZE, matrix);
+
+        mtx_cleanup(matrix);
 
         // Initialize vectors
         x = initialize_x_vector(csr_matrix->M);
@@ -312,14 +314,13 @@ int main()
 
         printf("\n\nPrima di CUDA!\n");
 
-        invoke_kernel_1(hll_matrix, x, z, &time);
+        time = invoke_kernel_1(hll_matrix, x, z);
 
         printf("Time = %.16lf\n", time);
 
         node = NULL;
         destroy_HLL_matrix(hll_matrix);
         destroy_CSR_matrix(csr_matrix);
-        (matrix);
         free(x);
         free(y);
         free(z);

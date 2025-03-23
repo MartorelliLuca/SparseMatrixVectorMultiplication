@@ -1,6 +1,6 @@
 #include <cuda_runtime.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <cuda.h>
 #include <string.h>
 #include <errno.h>
@@ -11,13 +11,12 @@
 #include "../src/data_structures/performance.h"
 #include "../CUDA_include/cuda_hll_kernel_v1.cuh"
 
-void invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z, float *time)
+float invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z)
 {
+    float time;
     cudaError_t error;
     int *d_offsets, *d_col_index;
     double *d_data, *d_x, *d_y;
-
-    printf("QUI\n");
 
     // Eventi CUDA per la misurazione del tempo
     cudaEvent_t start, stop;
@@ -46,6 +45,8 @@ void invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z, float *time)
     int blockSize = 32;
     int numBlocks = (hll_matrix->M + blockSize - 1) / blockSize;
 
+    // FINO QUI OK
+
     // Avvio misurazione tempo
     cudaEventRecord(start);
 
@@ -64,7 +65,7 @@ void invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z, float *time)
     // Stop misurazione tempo
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
-    cudaEventElapsedTime(time, start, stop);
+    cudaEventElapsedTime(&time, start, stop);
 
     // Copia risultati da device a host
     cudaMemcpy(z, d_y, hll_matrix->M * sizeof(double), cudaMemcpyDeviceToHost);
@@ -80,5 +81,5 @@ void invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z, float *time)
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 
-    *time / 1000.0; // Convertiamo da millisecondi a secondi
+    time = time / 1000.0; // Convertiamo da millisecondi a secondi
 }
