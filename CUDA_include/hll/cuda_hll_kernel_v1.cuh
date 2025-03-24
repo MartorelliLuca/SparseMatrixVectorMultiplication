@@ -3,7 +3,7 @@
 #include <cuda.h>
 #include <iostream>
 
-#include "../src/data_structures/hll_matrix.h"
+#include "../../src/data_structures/hll_matrix.h"
 
 __global__ void hll_matvec_kernel(HLL_matrix d_A, double *d_x, double *d_y)
 {
