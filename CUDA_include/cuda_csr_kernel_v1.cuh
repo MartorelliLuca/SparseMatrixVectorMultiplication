@@ -3,25 +3,23 @@
 #include <cuda.h>
 #include <iostream>
 
-__global__ void csr_matvec_warps_per_row(int n, int *d_row, int *d_col, double *d_val, double *d_x, double *d_y, double *d_res)
+#include "../src/data_structures/csr_matrix.h"
+
+__global__ void csr_matvec_kernel(CSR_matrix d_A, double *d_x, double *d_y)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < n)
+    int row = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (row < d_A.M)
     {
         double sum = 0.0;
-        for (int j = d_row[i]; j < d_row[i + 1]; j++)
+        int start = d_A.IRP[row];
+        int end = d_A.IRP[row + 1];
+        for (int i = start; i < end; i++)
         {
-            sum += d_val[j] * d_x[d_col[j]];
+            int col = d_A.JA[i];
+            double val = d_A.AS[i];
+            sum += val * d_x[col];
         }
-        d_y[i] = sum;
-    }
-    if (i == 0)
-    {
-        double res = 0.0;
-        for (int j = 0; j < n; j++)
-        {
-            res += d_y[j];
-        }
-        *d_res = res;
+        d_y[row] = sum;
     }
 }
