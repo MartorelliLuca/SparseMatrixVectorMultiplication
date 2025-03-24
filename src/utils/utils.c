@@ -400,3 +400,44 @@ void print_cuda_hll_kernel_performance(struct performance *node)
     printf("MFLOPS:                         %.16lf\n", node->mflops);
     printf("GFLOPS:                         %.16lf\n\n", node->gflops);
 }
+
+void print_cuda_csr_kernel_performance(struct performance *node)
+{
+    printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato CSR con CUDA!\n");
+    switch (node->computation)
+    {
+    case CUDA_HLL_KERNEL_0:
+        printf("CUDA CSR Kernel 0\n");
+        break;
+
+    case CUDA_HLL_KERNEL_1:
+        printf("CUDA CSR Kernel 1\n");
+        break;
+
+    case CUDA_HLL_KERNEL_2:
+        printf("CUDA CSR Kernel 2\n");
+        break;
+
+    case CUDA_HLL_KERNEL_3:
+        printf("CUDA CSR Kernel 3\n");
+        break;
+
+    case CUDA_HLL_KERNEL_4:
+        printf("CUDA CSR Kernel 4\n");
+        break;
+
+    case CUDA_HLL_KERNEL_5:
+        printf("CUDA CSR Kernel 5\n");
+        break;
+
+    case CUDA_HLL_KERNEL_6:
+        printf("CUDA CSR Kernel 6\n");
+        break;
+    }
+
+    printf("\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+    printf("Time used for dot-product:      %.16lf\n", node->time_used);
+    printf("FLOPS:                          %.16lf\n", node->flops);
+    printf("MFLOPS:                         %.16lf\n", node->mflops);
+    printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+}

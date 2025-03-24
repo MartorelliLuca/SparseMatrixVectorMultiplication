@@ -17,6 +17,7 @@
 #include "headers/hll_headers.h"
 #include "headers/operation.h"
 #include "headers/invoke_hll_kernel.h"
+#include "headers/invoke_csr_kernel.h"
 #include "utils_header/initialization.h"
 #include "utils_header/utils.h"
 #include "utils_header/computation_type.h"
@@ -192,7 +193,7 @@ int main()
 
         // HERE STARTS CUDA IMPLEMENTATION
         // TODO MO DEVI FA LA PER LA CHIAMATA AL KERNEL CUDA
-
+        invoke_cuda_csr_kernels(csr_matrix, x, z, y, head, tail, node);
         invoke_cuda_hll_kernels(hll_matrix, x, z, y, head, tail, node);
 
         node = NULL;
