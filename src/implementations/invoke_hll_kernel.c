@@ -34,6 +34,8 @@ void invoke_cuda_hll_kernels(HLL_matrix *hll_matrix, double *x, double *z, doubl
 {
     float time = invoke_kernel_1(hll_matrix, x, z);
 
+    printf("QUI\n");
+
     reset_node(node);
 
     compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_0, 256, hll_matrix->data_num);

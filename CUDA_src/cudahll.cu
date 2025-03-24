@@ -13,61 +13,137 @@
 
 float invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z)
 {
-    HLL_matrix d_A;
+    int thread_num = 256;
+    int block_num = hll_matrix->hacks_num / thread_num;
+    double *data;
     double *d_x, *d_y;
+    int *col_indexes, *maxnrz, *offsets;
     float time;
 
-    // Allocazione memoria su device
-    cudaMalloc(&d_A.offsets, hll_matrix->offsets_num * sizeof(int));
-    cudaMalloc(&d_A.col_index, hll_matrix->data_num * sizeof(int));
-    cudaMalloc(&d_A.data, hll_matrix->data_num * sizeof(double));
-    cudaMalloc(&d_A.max_nzr, hll_matrix->hacks_num * sizeof(int));
+    cudaError_t error;
+    cudaEvent_t start, stop;
 
-    cudaMalloc(&d_x, hll_matrix->N * sizeof(double));
-    cudaMalloc(&d_y, hll_matrix->M * sizeof(double));
+    // Memory allocation for Device
+    error = cudaMalloc(&data, hll_matrix->data_num * sizeof(double));
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMalloc in invoke kernel 1 for data\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
 
-    // Copia dei dati da host a device
-    cudaMemcpy(d_A.offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_A.col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_A.data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_A.max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice);
+    error = cudaMalloc(&col_indexes, hll_matrix->data_num * sizeof(int));
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMalloc in invoke kernel 1 for col indexes\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
 
-    cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice);
+    error = cudaMalloc(&maxnrz, hll_matrix->hacks_num * sizeof(int));
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMalloc in invoke kernel 1 for maxnrz\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
+
+    error = cudaMalloc(&offsets, hll_matrix->offsets_num * sizeof(int));
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMalloc in invoke kernel 1 for offsets\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
+
+    error = cudaMalloc(&d_x, hll_matrix->data_num * sizeof(int));
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMalloc in invoke kernel 1 for d_x\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
+
+    error = cudaMalloc(&d_y, hll_matrix->data_num * sizeof(int));
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMalloc in invoke kernel 1 for d_y\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
+
+    // Copy data from host to device
+    error = cudaMemcpy(data, hll_matrix->data, hll_matrix->data_num, cudaMemcpyHostToDevice);
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMemcpy in invoke kernel 1 for data\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
+
+    error = cudaMemcpy(col_indexes, hll_matrix->col_index, hll_matrix->data_num, cudaMemcpyHostToDevice);
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMemcpy in invoke kernel 1 for col indexes\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
+
+    error = cudaMemcpy(maxnrz, hll_matrix->max_nzr, hll_matrix->hacks_num, cudaMemcpyHostToDevice);
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMemcpy in invoke kernel 1 for col indexes\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
+
+    error = cudaMemcpy(offsets, hll_matrix->offsets, hll_matrix->offsets_num, cudaMemcpyHostToDevice);
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMemcpy in invoke kernel 1 for col indexes\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
+
+    error = cudaMemcpy(d_x, x, hll_matrix->offsets_num, cudaMemcpyHostToDevice);
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMemcpy in invoke kernel 1 for col indexes\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
 
     // Configurazione dei thread e lancio del kernel
-    int blockSize = 256;
-    int gridSize = (hll_matrix->M + blockSize - 1) / blockSize;
 
     // Eventi CUDA per la misurazione del tempo
-    cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-    cudaEventRecord(start); // Inizio misurazione
-    hll_matvec_kernel<<<gridSize, blockSize>>>(d_A, d_x, d_y);
-    cudaEventRecord(stop); // Fine misurazione
+    cudaEventRecord(start, 0);
+    // Invocazione del Kernel CUDA
+    cuda_kernel_0<<<block_num, thread_num>>>(d_y, hll_matrix->hack_size, hll_matrix->hacks_num, data, offsets, col_indexes, maxnrz, d_x, hll_matrix->N);
+    cudaEventRecord(stop, 0);
 
     cudaEventSynchronize(stop);
 
-    // Calcolo del tempo di esecuzione in millisecondi
+    // Calculation of execution time in milliseconds
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
 
-    // Copia del risultato dal device all'host
-    cudaMemcpy(z, d_y, hll_matrix->M * sizeof(double), cudaMemcpyDeviceToHost);
+    // Copy results from device to host
+    error = cudaMemcpy(z, d_y, hll_matrix->offsets_num, cudaMemcpyDeviceToHost);
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaMemcpy in invoke kernel 1 for col d_y\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
 
-    printf("Milliseconds = %.16lf\n", milliseconds);
+    // Calculation of performance
+    time = milliseconds / 1000;
 
-    // Calcolo delle prestazioni in MFLOPS
-    time = milliseconds / 1000.0;
-
-    // Deallocazione memoria device e eventi CUDA
-    cudaFree(d_A.offsets);
-    cudaFree(d_A.col_index);
-    cudaFree(d_A.data);
-    cudaFree(d_A.max_nzr);
-    cudaFree(d_x);
+    // Device memory deallocation and CUDA events
+    cudaFree(data);
+    cudaFree(col_indexes);
+    cudaFree(maxnrz);
+    cudaFree(offsets);
     cudaFree(d_y);
+    cudaFree(d_x);
+
+    error = cudaDeviceReset();
+    if (error != cudaSuccess)
+    {
+        printf("Error occour in cudaDeviceReset in invoke kernel 1\nError: %s\n", cudaGetErrorString(error));
+        exit(EXIT_FAILURE);
+    }
 
     cudaEventDestroy(start);
     cudaEventDestroy(stop);

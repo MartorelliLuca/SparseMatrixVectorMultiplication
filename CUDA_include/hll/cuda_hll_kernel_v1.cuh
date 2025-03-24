@@ -5,33 +5,40 @@
 
 #include "../../src/data_structures/hll_matrix.h"
 
-__global__ void hll_matvec_kernel(HLL_matrix d_A, double *d_x, double *d_y)
+__global__ void cuda_kernel_0(double *res, int hack_size, int hacks_num, double *data, int *offsets, int *col_index, int *max_nzr, double *x, int N)
 {
-
-    int row = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (row < d_A.M)
+    int h = blockDim.x * blockIdx.x + threadIdx.x;
+    if (h < hacks_num)
     {
-        double sum = 0.0;
-
-        int hack_id = row / d_A.hack_size;
-        int start_offset = d_A.offsets[hack_id];
-        int end_offset = (hack_id < d_A.hacks_num - 1) ? d_A.offsets[hack_id + 1] : d_A.data_num;
-        int max_nonzeros = d_A.max_nzr[hack_id];
-
-        int local_row = row % d_A.hack_size;
-
-        for (int i = 0; i < max_nonzeros; i++)
+        int rows;
+        if (0 == hacks_num - 1 && N % hack_size != 0)
         {
-            int data_index = start_offset + local_row * max_nonzeros + i;
-            if (data_index < end_offset)
-            {
-                int col = d_A.col_index[data_index];
-                double val = d_A.data[data_index];
-                sum += val * d_x[col];
-            }
+            rows = N % hack_size;
+        }
+        else
+        {
+            rows = hack_size;
         }
 
-        d_y[row] = sum;
+        int current_rows;
+        if (h == hacks_num - 1 && N % hack_size != 0)
+        {
+            current_rows = N % hack_size;
+        }
+        else
+        {
+            current_rows = hack_size;
+        }
+
+        for (int r = 0; r < current_rows; ++r)
+        {
+            double sum = 0.0;
+            for (int j = 0; j < max_nzr[h]; ++j)
+            {
+                int k = offsets[h] + r * max_nzr[h] + j;
+                sum += data[k] * x[col_index[k]];
+            }
+            res[rows * h + r] = sum;
+        }
     }
 }

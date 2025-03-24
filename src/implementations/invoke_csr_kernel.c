@@ -36,31 +36,32 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
 {
     for (int i = 1; i <= NUM_KERNELS; i++) // TODO per ora ho messo 2 kernel, ma dobbiamo metterne 7
     {
+        float time;
         switch (i)
         {
         case 1:
-            float time = invoke_kernel_csr_1(csr_matrix, x, z);
+            time = invoke_kernel_csr_1(csr_matrix, x, z);
             break;
 
         case 2:
-            float time = invoke_kernel_csr_2(csr_matrix, x, z);
+            time = invoke_kernel_csr_2(csr_matrix, x, z);
             break;
 
-        case 3:
-            float time = invoke_kernel_csr_3(csr_matrix, x, z);
-            break;
-        case 4:
-            float time = invoke_kernel_csr_4(csr_matrix, x, z);
-            break;
-        case 5:
-            float time = invoke_kernel_csr_5(csr_matrix, x, z);
-            break;
-        case 6:
-            float time = invoke_kernel_csr_6(csr_matrix, x, z);
-            break;
-        case 7:
-            float time = invoke_kernel_csr_7(csr_matrix, x, z);
-            break;
+            // case 3:
+            //     time = invoke_kernel_csr_3(csr_matrix, x, z);
+            //     break;
+            // case 4:
+            //     time = invoke_kernel_csr_4(csr_matrix, x, z);
+            //     break;
+            // case 5:
+            //     time = invoke_kernel_csr_5(csr_matrix, x, z);
+            //     break;
+            // case 6:
+            //     time = invoke_kernel_csr_6(csr_matrix, x, z);
+            //     break;
+            // case 7:
+            //     time = invoke_kernel_csr_7(csr_matrix, x, z);
+            //     break;
         }
 
         reset_node(node);
