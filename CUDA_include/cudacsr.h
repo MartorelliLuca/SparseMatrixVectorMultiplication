@@ -9,9 +9,9 @@ extern "C"
 {
 #endif
 
-    double call_kernel_v1(CSR_matrix *csr, double *x, double *y);
-    double call_kernel_v2(CSR_matrix *csr, double *x, double *y);
-    double call_kernel_v3(CSR_matrix *csr, double *x, double *y);
+    float invoke_kernel_csr_1(CSR_matrix *csr, double *x, double *y);
+    float invoke_kernel_csr_2(CSR_matrix *csr, double *x, double *y);
+    float invoke_kernel_csr_3(CSR_matrix *csr, double *x, double *y);
 
 #ifdef __cplusplus
 }

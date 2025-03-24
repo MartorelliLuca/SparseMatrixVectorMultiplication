@@ -28,6 +28,7 @@ set(SRC_FILES
     src/implementations/hll.c
     src/implementations/operation.c
     src/implementations/invoke_hll_kernel.c
+    src/implementations/invoke_csr_kernel.c
     src/utils/initialization.c
     src/utils/mmio.c
     src/utils/utils.c

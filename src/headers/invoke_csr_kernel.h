@@ -1,5 +1,5 @@
-#ifndef INVOKE_CSR_KENREL_H
-#define INVOKE_CSr_KENREL_H
+#ifndef INVOKE_CSR_KERNEL_H
+#define INVOKE_CSR_KERNEL_H
 
 #include "../data_structures/csr_matrix.h"
 #include "../data_structures/performance.h"

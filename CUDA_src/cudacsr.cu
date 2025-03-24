@@ -8,7 +8,7 @@
 
 // qua alloca strutture dati per le chiamate a kernel (partizione del carico di ogni warp)
 
-float invoke_kernel_csr(CSR_matrix *csr_matrix, double *x, double *z)
+float invoke_kernel_csr_1(CSR_matrix *csr_matrix, double *x, double *z)
 {
     CSR_matrix d_A;
     double *d_x, *d_y;
