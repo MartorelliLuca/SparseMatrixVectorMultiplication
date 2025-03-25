@@ -9,7 +9,8 @@ extern "C"
 {
 #endif
 
-    float invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z);
+    float invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z, int num_threads);
+    float invoke_kernel_2(HLL_matrix *hll_matrix, double *x, double *z, int num_threads);
 
 #ifdef __cplusplus
 }

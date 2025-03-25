@@ -365,10 +365,6 @@ void print_cuda_hll_kernel_performance(struct performance *node)
     printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato HLL con CUDA!\n");
     switch (node->computation)
     {
-    case CUDA_HLL_KERNEL_0:
-        printf("CUDA HLL Kernel 0\n");
-        break;
-
     case CUDA_HLL_KERNEL_1:
         printf("CUDA HLL Kernel 1\n");
         break;
@@ -391,6 +387,10 @@ void print_cuda_hll_kernel_performance(struct performance *node)
 
     case CUDA_HLL_KERNEL_6:
         printf("CUDA HLL Kernel 6\n");
+        break;
+
+    case CUDA_HLL_KERNEL_7:
+        printf("CUDA HLL Kernel 7\n");
         break;
     }
 

@@ -41,6 +41,18 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
         {
         case 1:
             time = invoke_kernel_csr_1(csr_matrix, x, z);
+            reset_node(node);
+            compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_1, 8, csr_matrix->non_zero_values);
+            add_node_performance(head, tail, node);
+
+            if (!compute_norm(effective_results, z, csr_matrix->M, 1e-6))
+            {
+                printf("Errore nel controllo per %s dopo il CUDA CSR kernel %d\n", csr_matrix->name, i);
+                sleep(3);
+            }
+            sleep(2);
+            print_cuda_csr_kernel_performance(node);
+            sleep(2);
             break;
 
         case 2:
@@ -63,18 +75,5 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
             //     time = invoke_kernel_csr_7(csr_matrix, x, z);
             //     break;
         }
-
-        reset_node(node);
-        compute_cuda_csr_kernel_results(node, (double)time, CUDA_HLL_KERNEL_0, 8, csr_matrix->non_zero_values);
-        add_node_performance(head, tail, node);
-
-        if (!compute_norm(effective_results, z, csr_matrix->M, 1e-6))
-        {
-            printf("Errore nel controllo per %s dopo il CUDA CSR kernel %d\n", csr_matrix->name, i);
-            sleep(3);
-        }
-        sleep(2);
-        print_cuda_csr_kernel_performance(node);
-        sleep(2);
     }
 }

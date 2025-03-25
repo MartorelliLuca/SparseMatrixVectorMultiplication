@@ -15,6 +15,8 @@
 #include "../utils_header/computation_type.h"
 #include "../../CUDA_include/cudahll.h"
 
+#define NUM_KERNEL 6
+
 void compute_cuda_hll_kernel_results(struct performance *node, double time, computation_time type, int threads_used, int non_zero_values)
 {
     double flops = (2.0 * non_zero_values) / time;
@@ -32,21 +34,43 @@ void compute_cuda_hll_kernel_results(struct performance *node, double time, comp
 
 void invoke_cuda_hll_kernels(HLL_matrix *hll_matrix, double *x, double *z, double *effective_results, struct performance *head, struct performance *tail, struct performance *node)
 {
-    float time = invoke_kernel_1(hll_matrix, x, z);
-
-    printf("QUI\n");
-
-    reset_node(node);
-
-    compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_0, 256, hll_matrix->data_num);
-
-    add_node_performance(head, tail, node);
-
-    if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+    for (int i = 1; i <= NUM_KERNEL; i++)
     {
-        printf("Errore nel controllo per %s dopo il CUDA hll kernel 0\n", hll_matrix->name);
-        sleep(3);
-    }
+        float time;
+        switch (i)
+        {
+        case 1:
+            time = invoke_kernel_1(hll_matrix, x, z, 32);
+            reset_node(node);
 
-    print_cuda_hll_kernel_performance(node);
+            compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_1, 32, hll_matrix->data_num);
+
+            add_node_performance(head, tail, node);
+
+            if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+            {
+                printf("Errore nel controllo per %s dopo il CUDA hll kernel 0\n", hll_matrix->name);
+                sleep(3);
+            }
+
+            print_cuda_hll_kernel_performance(node);
+            break;
+        case 2:
+            time = invoke_kernel_2(hll_matrix, x, z, 32);
+            reset_node(node);
+
+            compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_2, 32, hll_matrix->data_num);
+
+            add_node_performance(head, tail, node);
+
+            if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+            {
+                printf("Errore nel controllo per %s dopo il CUDA hll kernel 0\n", hll_matrix->name);
+                sleep(3);
+            }
+
+            print_cuda_hll_kernel_performance(node);
+            break;
+        }
+    }
 }

@@ -43,6 +43,7 @@ double *initialize_y_vector(int size)
         printf("Error occour in malloc for the y vector!\n Error code: %d\n", errno);
         exit(EXIT_FAILURE);
     }
+    return y;
 }
 
 void re_initialize_y_vector(int size, double *y)

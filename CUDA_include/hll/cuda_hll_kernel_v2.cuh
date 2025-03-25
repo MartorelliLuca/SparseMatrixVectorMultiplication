@@ -5,17 +5,9 @@
 
 #include "../../src/data_structures/hll_matrix.h"
 
-/*
-*****************************************************
-*                                                   *
-* First implementation of kernel: 1 thread for hack *
-*                                                   *
-*                                                   *
-*****************************************************
-*/
-
-__global__ void cuda_kernel_1(double *res, int hack_size, int hacks_num, double *data, int *offsets, int *col_index, int *max_nzr, double *x, int M)
+__global__ void cuda_kernel_2(double *__restrict__ res, int hack_size, int hacks_num, double *__restrict__ data, int *__restrict__ offsets, int *__restrict__ col_index, int *__restrict__ max_nzr, double *__restrict__ x, int M)
 {
+    extern __shared__ double x_shared[];
     int h = blockIdx.x * blockDim.x + threadIdx.x;
     if (h >= hacks_num)
         return;
@@ -29,12 +21,13 @@ __global__ void cuda_kernel_1(double *res, int hack_size, int hacks_num, double 
         int max_nzr_h = max_nzr[h];
         int offset = offsets[h] + (r - start_row) * max_nzr_h;
 
-        for (int j = 0; j < max_nzr_h; ++j)
+        for (int j = threadIdx.x; j < max_nzr_h; j += blockDim.x)
         {
             int col = col_index[offset + j];
             double val = data[offset + j];
             sum += val * x[col];
         }
-        res[r] = sum;
+
+        atomicAdd(&res[r], sum); // Uso di atomicAdd per evitare race conditions
     }
 }
