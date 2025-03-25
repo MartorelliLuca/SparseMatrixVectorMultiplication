@@ -362,7 +362,7 @@ void print_parallel_hll_result(struct performance *node)
 
 void print_cuda_hll_kernel_performance(struct performance *node)
 {
-    printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato hll con CUDA!\n");
+    printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato HLL con CUDA!\n");
     switch (node->computation)
     {
     case CUDA_HLL_KERNEL_0:
@@ -406,32 +406,32 @@ void print_cuda_csr_kernel_performance(struct performance *node)
     printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato CSR con CUDA!\n");
     switch (node->computation)
     {
-    case CUDA_HLL_KERNEL_0:
-        printf("CUDA CSR Kernel 0\n");
-        break;
-
-    case CUDA_HLL_KERNEL_1:
+    case CUDA_CSR_KERNEL_1:
         printf("CUDA CSR Kernel 1\n");
         break;
 
-    case CUDA_HLL_KERNEL_2:
+    case CUDA_CSR_KERNEL_2:
         printf("CUDA CSR Kernel 2\n");
         break;
 
-    case CUDA_HLL_KERNEL_3:
+    case CUDA_CSR_KERNEL_3:
         printf("CUDA CSR Kernel 3\n");
         break;
 
-    case CUDA_HLL_KERNEL_4:
+    case CUDA_CSR_KERNEL_4:
         printf("CUDA CSR Kernel 4\n");
         break;
 
-    case CUDA_HLL_KERNEL_5:
+    case CUDA_CSR_KERNEL_5:
         printf("CUDA CSR Kernel 5\n");
         break;
 
-    case CUDA_HLL_KERNEL_6:
+    case CUDA_CSR_KERNEL_6:
         printf("CUDA CSR Kernel 6\n");
+        break;
+
+    case CUDA_CSR_KERNEL_7:
+        printf("CUDA CSR Kernel 7\n");
         break;
     }
 

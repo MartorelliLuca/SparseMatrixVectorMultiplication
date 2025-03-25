@@ -23,40 +23,40 @@
  ******************************************************************************************************************/
 
 #define WARP_SIZE 32
-
-__global__ void csr_matvec_warp_shmem(CSR_matrix d_A, double *d_x, double *d_y)
+__global__ void csr_matvec_warp_shmem(CSR_matrix d_mat, const double *x, double *y)
 {
+    int row = blockIdx.x * blockDim.y + threadIdx.y;
+    int lane = threadIdx.x;
+    extern __shared__ double shared_sum[];
 
-    int tid = blockIdx.x * blockDim.x + threadIdx.x; // ID del thread globale
-    int warp_id = tid / WARP_SIZE;
-    int lane = tid % WARP_SIZE;
-
-    if (warp_id >= d_A.M)
-        return;
-
-    __shared__ double shared_vals[WARP_SIZE]; // Setto la shared memory per riduzione
-    double sum = 0.0;
-    int row_start = d_A.IRP[warp_id];
-    int row_end = d_A.IRP[warp_id + 1];
-    for (int i = row_start + lane; i < row_end; i += WARP_SIZE)
+    if (row < d_mat.M)
     {
-        sum += d_A.AS[i] * d_x[d_A.JA[i]];
-    }
+        double sum = 0.0;
+        int row_start = d_mat.IRP[row];
+        int row_end = d_mat.IRP[row + 1];
 
-    shared_vals[lane] = sum; // Salvo la somma parziale nella memoria condivisa
-    __syncthreads();
+        for (int j = row_start + lane; j < row_end; j += WARP_SIZE)
+            sum += d_mat.AS[j] * x[d_mat.JA[j]];
 
-    for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2) // Riduzione in memoria condivisa
-    {
-        if (lane < offset)
-        {
-            shared_vals[lane] += shared_vals[lane + offset];
-        }
+        shared_sum[lane + threadIdx.y * WARP_SIZE] = sum;
         __syncthreads();
-    }
 
-    if (lane == 0) // Il primo thread del warp scrive il risultato nella memoria globale
-    {
-        d_y[warp_id] = shared_vals[0];
+        for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2)
+        {
+            if (lane < offset)
+            {
+                shared_sum[lane + threadIdx.y * WARP_SIZE] += shared_sum[lane + threadIdx.y * WARP_SIZE + offset];
+            }
+            __syncthreads();
+        }
+
+        // Riduzione tra warps (se hai più warps per blocco)
+        if (threadIdx.y == 0)
+        {
+            if (lane == 0)
+            {
+                y[row] = shared_sum[0];
+            }
+        }
     }
 }

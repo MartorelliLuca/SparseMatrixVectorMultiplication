@@ -6,10 +6,10 @@
 #include "../../src/data_structures/csr_matrix.h"
 
 /*********************************************************************************************************
-    Kernel CUDA per il prodotto matrice-vettore (SpMV) in formato CSR.
-    Ogni thread elabora una riga della matrice: legge gli indici non nulli (JA),
-    moltiplica i valori corrispondenti (AS) con gli elementi del vettore x e accumula il risultato in y.
-*********************************************************************************************************/
+ * Primo Kernel CUDA elaborato. Esso calcola il prodotto matrice-vettore (SpMV) in formato CSR.
+ * Ogni thread elabora una riga della matrice: legge gli indici non nulli (JA),
+ * moltiplica i valori corrispondenti (AS) con gli elementi del vettore x e accumula il risultato in y.
+ *********************************************************************************************************/
 
 __global__ void csr_matvec_kernel(CSR_matrix d_A, double *d_x, double *d_y)
 {

@@ -65,12 +65,12 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
         }
 
         reset_node(node);
-        compute_cuda_csr_kernel_results(node, (double)time, CUDA_HLL_KERNEL_0, 256, csr_matrix->non_zero_values);
+        compute_cuda_csr_kernel_results(node, (double)time, CUDA_HLL_KERNEL_0, 8, csr_matrix->non_zero_values);
         add_node_performance(head, tail, node);
 
         if (!compute_norm(effective_results, z, csr_matrix->M, 1e-6))
         {
-            printf("Errore nel controllo per %s dopo il CUDA CSR kernel 0\n", csr_matrix->name);
+            printf("Errore nel controllo per %s dopo il CUDA CSR kernel %d\n", csr_matrix->name, i);
             sleep(3);
         }
         sleep(2);

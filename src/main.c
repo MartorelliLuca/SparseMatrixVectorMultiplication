@@ -192,7 +192,7 @@ int main()
         matvec_parallel_hll(hll_matrix, x, z, node, thread_numbers, head, tail, matrix->number_of_non_zeoroes_values, y);
 
         // HERE STARTS CUDA IMPLEMENTATION
-        // TODO MO DEVI FA LA PER LA CHIAMATA AL KERNEL CUDA
+        // TODO MO DEVI FA LA PER LA CHIAMATA AI KERNEL CUDA
         invoke_cuda_csr_kernels(csr_matrix, x, z, y, head, tail, node);
         invoke_cuda_hll_kernels(hll_matrix, x, z, y, head, tail, node);
 
