@@ -42,35 +42,36 @@ void invoke_cuda_hll_kernels(HLL_matrix *hll_matrix, double *x, double *z, doubl
         case 1:
             time = invoke_kernel_1(hll_matrix, x, z, 32);
             reset_node(node);
-
             compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_1, 32, hll_matrix->data_num);
-
-            add_node_performance(head, tail, node);
-
             if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
             {
-                printf("Errore nel controllo per %s dopo il CUDA hll kernel 0\n", hll_matrix->name);
+                printf("Errore nel controllo per %s dopo il CUDA hll kernel 1\n", hll_matrix->name);
                 sleep(3);
             }
-
-            print_cuda_hll_kernel_performance(node);
             break;
         case 2:
             time = invoke_kernel_2(hll_matrix, x, z, 32);
             reset_node(node);
-
             compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_2, 32, hll_matrix->data_num);
-
-            add_node_performance(head, tail, node);
-
             if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
             {
-                printf("Errore nel controllo per %s dopo il CUDA hll kernel 0\n", hll_matrix->name);
+                printf("Errore nel controllo per %s dopo il CUDA hll kernel 2\n", hll_matrix->name);
                 sleep(3);
             }
-
-            print_cuda_hll_kernel_performance(node);
             break;
         }
+        // case 3:
+        //     time = invoke_kernel_3(hll_matrix, x, z, 32);
+        //     reset_node(node);
+        //     compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_2, 32, hll_matrix->data_num);
+        //     if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+        //     {
+        //         printf("Errore nel controllo per %s dopo il CUDA hll kernel 3\n", hll_matrix->name);
+        //         sleep(3);
+        //     }
+        //     break;
+        // }
+        add_node_performance(head, tail, node);
+        print_cuda_hll_kernel_performance(node);
     }
 }

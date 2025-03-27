@@ -5,29 +5,33 @@
 
 #include "../../src/data_structures/hll_matrix.h"
 
-__global__ void cuda_kernel_2(double *__restrict__ res, int hack_size, int hacks_num, double *__restrict__ data, int *__restrict__ offsets, int *__restrict__ col_index, int *__restrict__ max_nzr, double *__restrict__ x, int M)
+/*
+******************************************************
+*                                                    *
+* Second implementation of kernel: 1 thread for rows *
+*                                                    *
+******************************************************
+*/
+
+__global__ void cuda_hll_kernel_v2(double *y, int hack_size, int hacks_num, double *data, int *offsets, int *col_index, int *max_nzr, double *v, int N)
 {
-    extern __shared__ double x_shared[];
-    int h = blockIdx.x * blockDim.x + threadIdx.x;
-    if (h >= hacks_num)
+
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (index >= N)
         return;
 
-    int start_row = h * hack_size;
-    int end_row = min(start_row + hack_size, M);
+    int hack = index / hack_size;
+    int local_row = index % hack_size;
 
-    for (int r = start_row; r < end_row; ++r)
+    int row_start = offsets[hack] + local_row * max_nzr[hack];
+    int row_end = row_start + max_nzr[hack];
+
+    double sum = 0.0;
+    for (int j = row_start; j < row_end; ++j)
     {
-        double sum = 0.0;
-        int max_nzr_h = max_nzr[h];
-        int offset = offsets[h] + (r - start_row) * max_nzr_h;
-
-        for (int j = threadIdx.x; j < max_nzr_h; j += blockDim.x)
-        {
-            int col = col_index[offset + j];
-            double val = data[offset + j];
-            sum += val * x[col];
-        }
-
-        atomicAdd(&res[r], sum); // Uso di atomicAdd per evitare race conditions
+        sum += data[j] * v[col_index[j]];
     }
+
+    y[index] = sum;
 }

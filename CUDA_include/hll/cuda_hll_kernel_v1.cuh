@@ -10,31 +10,31 @@
 *                                                   *
 * First implementation of kernel: 1 thread for hack *
 *                                                   *
-*                                                   *
 *****************************************************
 */
 
-__global__ void cuda_kernel_1(double *res, int hack_size, int hacks_num, double *data, int *offsets, int *col_index, int *max_nzr, double *x, int M)
+__global__ void cuda_hll_kernel_v1(double *y, int hack_size, int hacks_num, double *data, int *offsets, int *col_index, int *max_nzr, double *x, int M)
 {
-    int h = blockIdx.x * blockDim.x + threadIdx.x;
-    if (h >= hacks_num)
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (index >= hacks_num)
         return;
 
-    int start_row = h * hack_size;
+    int start_row = index * hack_size;
     int end_row = min(start_row + hack_size, M);
+    int max_nzr_h = max_nzr[index];
+    int base_offset = offsets[index];
 
-    for (int r = start_row; r < end_row; ++r)
+    for (int row_index = start_row; row_index < end_row; ++row_index)
     {
         double sum = 0.0;
-        int max_nzr_h = max_nzr[h];
-        int offset = offsets[h] + (r - start_row) * max_nzr_h;
+        int row_offset = base_offset + (row_index - start_row) * max_nzr_h;
 
         for (int j = 0; j < max_nzr_h; ++j)
         {
-            int col = col_index[offset + j];
-            double val = data[offset + j];
-            sum += val * x[col];
+            sum += data[row_offset + j] * x[col_index[row_offset + j]];
         }
-        res[r] = sum;
+
+        y[row_index] = sum;
     }
 }
