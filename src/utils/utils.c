@@ -362,9 +362,13 @@ void print_parallel_hll_result(struct performance *node)
 
 void print_cuda_hll_kernel_performance(struct performance *node)
 {
-    printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato HLL con CUDA!\n");
+    printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato hll con CUDA!\n");
     switch (node->computation)
     {
+    case CUDA_HLL_KERNEL_0:
+        printf("CUDA HLL Kernel 0\n");
+        break;
+
     case CUDA_HLL_KERNEL_1:
         printf("CUDA HLL Kernel 1\n");
         break;
@@ -387,10 +391,6 @@ void print_cuda_hll_kernel_performance(struct performance *node)
 
     case CUDA_HLL_KERNEL_6:
         printf("CUDA HLL Kernel 6\n");
-        break;
-
-    case CUDA_HLL_KERNEL_7:
-        printf("CUDA HLL Kernel 7\n");
         break;
     }
 
@@ -425,17 +425,9 @@ void print_cuda_csr_kernel_performance(struct performance *node)
     case CUDA_CSR_KERNEL_5:
         printf("CUDA CSR Kernel 5\n");
         break;
-
-    case CUDA_CSR_KERNEL_6:
-        printf("CUDA CSR Kernel 6\n");
-        break;
-
-    case CUDA_CSR_KERNEL_7:
-        printf("CUDA CSR Kernel 7\n");
-        break;
     }
 
-    printf("\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
+    printf("\nPerformance for %s with %d threads:", node->matrix, node->number_of_threads_used);
     printf("Time used for dot-product:      %.16lf\n", node->time_used);
     printf("FLOPS:                          %.16lf\n", node->flops);
     printf("MFLOPS:                         %.16lf\n", node->mflops);

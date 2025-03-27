@@ -12,10 +12,11 @@
 #include "../data_structures/performance.h"
 #include "../headers/csr_headers.h"
 #include "../utils_header/utils.h"
+#include "../utils_header/initialization.h"
 #include "../utils_header/computation_type.h"
 #include "../../CUDA_include/cudacsr.h"
 
-#define NUM_KERNELS 2
+#define NUM_KERNELS 5
 
 void compute_cuda_csr_kernel_results(struct performance *node, double time, computation_time type, int threads_used, int non_zero_values)
 {
@@ -34,46 +35,54 @@ void compute_cuda_csr_kernel_results(struct performance *node, double time, comp
 
 void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, double *effective_results, struct performance *head, struct performance *tail, struct performance *node)
 {
-    for (int i = 1; i <= NUM_KERNELS; i++) // TODO per ora ho messo 2 kernel, ma dobbiamo metterne 7
+    for (int i = 1; i <= NUM_KERNELS; i++) // TODO attento al numero
     {
         float time;
         switch (i)
         {
         case 1:
+            re_initialize_y_vector(csr_matrix->M, z);
+            verify_empty_vector(csr_matrix->M, z);
             time = invoke_kernel_csr_1(csr_matrix, x, z);
-            reset_node(node);
             compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_1, 8, csr_matrix->non_zero_values);
-            add_node_performance(head, tail, node);
-
-            if (!compute_norm(effective_results, z, csr_matrix->M, 1e-6))
-            {
-                printf("Errore nel controllo per %s dopo il CUDA CSR kernel %d\n", csr_matrix->name, i);
-                sleep(3);
-            }
-            sleep(2);
-            print_cuda_csr_kernel_performance(node);
-            sleep(2);
             break;
 
         case 2:
+            re_initialize_y_vector(csr_matrix->M, z);
+            verify_empty_vector(csr_matrix->M, z);
             time = invoke_kernel_csr_2(csr_matrix, x, z);
+            reset_node(node);
+            compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_2, 4, csr_matrix->non_zero_values);
             break;
 
-            // case 3:
-            //     time = invoke_kernel_csr_3(csr_matrix, x, z);
-            //     break;
-            // case 4:
-            //     time = invoke_kernel_csr_4(csr_matrix, x, z);
-            //     break;
+        case 3:
+            re_initialize_y_vector(csr_matrix->M, z);
+            verify_empty_vector(csr_matrix->M, z);
+            time = invoke_kernel_csr_3(csr_matrix, x, z);
+            reset_node(node);
+            compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_3, 4, csr_matrix->non_zero_values);
+            break;
+
+        case 4:
+            re_initialize_y_vector(csr_matrix->M, z);
+            verify_empty_vector(csr_matrix->M, z);
+            time = invoke_kernel_csr_4(csr_matrix, x, z);
+            reset_node(node);
+            compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_4, 8, csr_matrix->non_zero_values);
+            break;
+
             // case 5:
             //     time = invoke_kernel_csr_5(csr_matrix, x, z);
             //     break;
-            // case 6:
-            //     time = invoke_kernel_csr_6(csr_matrix, x, z);
-            //     break;
-            // case 7:
-            //     time = invoke_kernel_csr_7(csr_matrix, x, z);
-            //     break;
+
         }
+
+        add_node_performance(head, tail, node);
+        if (!compute_norm(effective_results, z, csr_matrix->M, 1e-6))
+        {
+            printf("Errore nel controllo per %s dopo il CUDA CSR kernel %d\n", csr_matrix->name, i);
+            sleep(2);
+        }
+        print_cuda_csr_kernel_performance(node);
     }
 }

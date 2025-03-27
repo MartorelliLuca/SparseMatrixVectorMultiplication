@@ -21,42 +21,31 @@
  * Svantaggi:
  * - Aumento di latenza dovuta dalla scrittura sulla shared memory.
  ******************************************************************************************************************/
-
 #define WARP_SIZE 32
+
 __global__ void csr_matvec_warp_shmem(CSR_matrix d_mat, const double *x, double *y)
 {
     int row = blockIdx.x * blockDim.y + threadIdx.y;
     int lane = threadIdx.x;
-    extern __shared__ double shared_sum[];
-
     if (row < d_mat.M)
     {
         double sum = 0.0;
-        int row_start = d_mat.IRP[row];
-        int row_end = d_mat.IRP[row + 1];
+        int start_row = d_mat.IRP[row];
+        int end_row = d_mat.IRP[row + 1];
 
-        for (int j = row_start + lane; j < row_end; j += WARP_SIZE)
-            sum += d_mat.AS[j] * x[d_mat.JA[j]];
-
-        shared_sum[lane + threadIdx.y * WARP_SIZE] = sum;
-        __syncthreads();
+        for (int j = start_row + lane; j < end_row; j += WARP_SIZE)
+        {
+            sum += d_mat.AS[j] * x[d_mat.JA[j]]; // Ogni thread processa elementi della riga
+        }
 
         for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2)
         {
-            if (lane < offset)
-            {
-                shared_sum[lane + threadIdx.y * WARP_SIZE] += shared_sum[lane + threadIdx.y * WARP_SIZE + offset];
-            }
-            __syncthreads();
+            sum += __shfl_sync(0xFFFFFFFF, sum, lane - offset); // Riduzione warp-level usando __shfl_sync
         }
 
-        // Riduzione tra warps (se hai più warps per blocco)
-        if (threadIdx.y == 0)
-        {
-            if (lane == 0)
-            {
-                y[row] = shared_sum[0];
-            }
+        if (lane == 0)
+        { // Solo il primo thread del warp scrive il risultato finale
+            y[row] = sum;
         }
     }
 }
