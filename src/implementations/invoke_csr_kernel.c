@@ -42,14 +42,12 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
         {
         case 1:
             re_initialize_y_vector(csr_matrix->M, z);
-            verify_empty_vector(csr_matrix->M, z);
             time = invoke_kernel_csr_1(csr_matrix, x, z);
             compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_1, 8, csr_matrix->non_zero_values);
             break;
 
         case 2:
             re_initialize_y_vector(csr_matrix->M, z);
-            verify_empty_vector(csr_matrix->M, z);
             time = invoke_kernel_csr_2(csr_matrix, x, z);
             reset_node(node);
             compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_2, 4, csr_matrix->non_zero_values);
@@ -57,7 +55,6 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
 
         case 3:
             re_initialize_y_vector(csr_matrix->M, z);
-            verify_empty_vector(csr_matrix->M, z);
             time = invoke_kernel_csr_3(csr_matrix, x, z);
             reset_node(node);
             compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_3, 4, csr_matrix->non_zero_values);
@@ -65,7 +62,6 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
 
         case 4:
             re_initialize_y_vector(csr_matrix->M, z);
-            verify_empty_vector(csr_matrix->M, z);
             time = invoke_kernel_csr_4(csr_matrix, x, z);
             reset_node(node);
             compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_4, 8, csr_matrix->non_zero_values);
@@ -74,7 +70,6 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
             // case 5:
             //     time = invoke_kernel_csr_5(csr_matrix, x, z);
             //     break;
-
         }
 
         add_node_performance(head, tail, node);
