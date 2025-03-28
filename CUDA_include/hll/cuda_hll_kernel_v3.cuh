@@ -5,47 +5,43 @@
 
 #include "../../src/data_structures/hll_matrix.h"
 
-__global__ void cuda_hll_kernel_v3(double *y, int hack_size, int hacks_num, double *data, int *offsets, int *col_index, int *max_nzr, double *v, int N)
+/*
+******************************************************
+*                                                    *
+* Third implementation of kernel: shared memory      *
+*                                                    *
+******************************************************
+*/
+
+__global__ void cuda_hll_kernel_v3(double *y, int hack_size, int hacks_num, double *data, int *offsets, int *col_index, int *max_nzr, double *x, int N)
 {
 
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    extern __shared__ double shared_x[];
 
-    if (index >= N)
-        return;
+    int index = blockDim.x * blockIdx.x + threadIdx.x;
 
-    int hack = index / hack_size;
-    int local_row = index % hack_size;
+    if (threadIdx.x < N)
+        shared_x[threadIdx.x] = x[threadIdx.x];
 
-    __shared__ int shared_max_nzr;
-    __shared__ int shared_offset;
-
-    if (threadIdx.x == 0)
+    if (index < N)
     {
-        shared_max_nzr = max_nzr[hack];
-        shared_offset = offsets[hack];
+        int hack = index / hack_size;
+        int row_start = (index % hack_size) * max_nzr[hack] + offsets[hack];
+        int row_end = row_start + max_nzr[hack];
+        double sum = 0.0;
+
+        for (int j = row_start; j < row_end; j++)
+        {
+            if (col_index[j] < 32)
+            {
+                sum += data[j] * shared_x[col_index[j]];
+            }
+            else
+            {
+                sum += data[j] * x[col_index[j]];
+            }
+        }
+
+        y[index] = sum;
     }
-
-    __syncthreads();
-
-    int row_start = shared_offset + local_row * shared_max_nzr;
-    int row_end = row_start + shared_max_nzr;
-
-    extern __shared__ double shared_data[];
-    int *shared_col_index = (int *)&shared_data[shared_max_nzr];
-
-    for (int j = threadIdx.x; j < shared_max_nzr; j += blockDim.x)
-    {
-        shared_col_index[j] = col_index[row_start + j];
-        shared_data[j] = data[row_start + j];
-    }
-
-    __syncthreads();
-
-    double sum = 0.0;
-    for (int j = 0; j < shared_max_nzr; ++j)
-    {
-        sum += shared_data[j] * v[shared_col_index[j]];
-    }
-
-    y[index] = sum;
 }

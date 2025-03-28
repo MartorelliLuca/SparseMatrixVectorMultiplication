@@ -13,7 +13,7 @@
 ******************************************************
 */
 
-__global__ void cuda_hll_kernel_v2(double *y, int hack_size, int hacks_num, double *data, int *offsets, int *col_index, int *max_nzr, double *v, int N)
+__global__ void cuda_hll_kernel_v2(double *y, int hack_size, int hacks_num, double *data, int *offsets, int *col_index, int *max_nzr, double *x, int N)
 {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -30,7 +30,7 @@ __global__ void cuda_hll_kernel_v2(double *y, int hack_size, int hacks_num, doub
     double sum = 0.0;
     for (int j = row_start; j < row_end; ++j)
     {
-        sum += data[j] * v[col_index[j]];
+        sum += data[j] * x[col_index[j]];
     }
 
     y[index] = sum;

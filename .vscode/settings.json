@@ -19,6 +19,7 @@
         "cudahll.cuh": "c",
         "cudacsr.h": "c",
         "invoke_hll_kernel.h": "c",
-        "invoke_csr_kernel.h": "c"
+        "invoke_csr_kernel.h": "c",
+        "iostream": "cpp"
     }
 }
