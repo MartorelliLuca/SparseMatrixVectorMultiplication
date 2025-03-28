@@ -18,8 +18,7 @@ typedef enum
     CUDA_CSR_KERNEL_1,
     CUDA_CSR_KERNEL_2,
     CUDA_CSR_KERNEL_3,
-    CUDA_CSR_KERNEL_4,
-    CUDA_CSR_KERNEL_5
+    CUDA_CSR_KERNEL_4
 } computation_time;
 
 #endif

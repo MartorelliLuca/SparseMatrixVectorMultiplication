@@ -13,19 +13,19 @@
  * valori corrispondenti (AS) con gli elementi del vettore x e accumula il risultato in y.
  *********************************************************************************************************/
 
-__global__ void csr_matvec_kernel(CSR_matrix d_A, double *d_x, double *d_y)
+__global__ void csr_matvec_kernel(int *d_IRP, int *d_JA, double *d_AS, int rows, double *d_x, double *d_y)
 {
     int row = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (row < d_A.M)
+    if (row < rows)
     {
         double sum = 0.0;
-        int start = d_A.IRP[row];
-        int end = d_A.IRP[row + 1];
+        int start = d_IRP[row];
+        int end = d_IRP[row + 1];
         for (int i = start; i < end; i++)
         {
-            int col = d_A.JA[i];
-            double val = d_A.AS[i];
+            int col = d_JA[i];
+            double val = d_AS[i];
             sum += val * d_x[col];
         }
         d_y[row] = sum;

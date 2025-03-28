@@ -243,6 +243,7 @@ void mtx_cleanup(matrix_format *matrix)
 double compute_norm(double *z, double *y, int n, double esp)
 {
     double s = 0.0;
+
     for (int i = 0; i < n; i++)
     {
         double d = fabs(z[i] - y[i]);
@@ -420,10 +421,6 @@ void print_cuda_csr_kernel_performance(struct performance *node)
 
     case CUDA_CSR_KERNEL_4:
         printf("CUDA CSR Kernel 4\n");
-        break;
-
-    case CUDA_CSR_KERNEL_5:
-        printf("CUDA CSR Kernel 5\n");
         break;
     }
 

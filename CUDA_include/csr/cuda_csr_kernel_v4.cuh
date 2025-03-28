@@ -7,8 +7,6 @@
 
 #define WARP_SIZE 32
 
-//TODO da ricontrollare bene
-
 /******************************************************************************************************************
  * Kernel4: Prodotto matrice-vettore per matrici sparse in formato CSR
  *
@@ -27,34 +25,36 @@
  *   - L’uso della riduzione con __shfl_sync può introdurre errori numerici nel formato double.
  ******************************************************************************************************************/
 
-__global__ void csr_matvec_warp_cacheL2(CSR_matrix d_Mat, double *x, double *y)
+#define WARP_SIZE 32
+
+__global__ void csr_matvec_warp_cacheL2(CSR_matrix d_Mat, int M, double *x, double *y)
 {
-    // Identificazione del thread e warp
     int row = blockIdx.x * blockDim.y + threadIdx.y;
     int lane = threadIdx.x;
 
-    if (row < d_Mat.M)
+    if (row < M)
     {
         double sum = 0.0;
         int start_row = d_Mat.IRP[row];
         int end_row = d_Mat.IRP[row + 1];
 
-        // Accesso ai dati tramite Cache L2 (memoria globale con caching implicito)
-        for (int j = start_row + lane; j < end_row; j += WARP_SIZE)
+        // Utilizzo di un puntatore per migliorare l'efficienza degli accessi a memoria
+        double *AS_ptr = d_Mat.AS + start_row;
+        int *JA_ptr = d_Mat.JA + start_row;
+
+        for (int j = lane; j < (end_row - start_row); j += WARP_SIZE)
         {
-            // Accesso ai dati: il valore viene prelevato dalla Cache L2 se disponibile
-            double a_val = __ldg(&d_Mat.AS[j]);
-            int col_index = __ldg(&d_Mat.JA[j]);
-            sum += a_val * __ldg(&x[col_index]); // Moltiplicazione e accumulo
+            double a_val = __ldg(&AS_ptr[j]);
+            int col_index = __ldg(&JA_ptr[j]);
+            sum += a_val * __ldg(&x[col_index]);
         }
 
-        // Riduzione con __shfl_sync
+        // Alternativa alla riduzione con __shfl_down_sync, usando operazioni XOR per migliorare parallelismo
         for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2)
         {
-            sum += __shfl_down_sync(0xFFFFFFFF, sum, offset);
+            sum += __shfl_xor_sync(0xFFFFFFFF, sum, offset);
         }
 
-        // ➤ Solo il primo thread del warp scrive il risultato finale
         if (lane == 0)
         {
             y[row] = sum;
@@ -63,8 +63,6 @@ __global__ void csr_matvec_warp_cacheL2(CSR_matrix d_Mat, double *x, double *y)
 }
 
 /* L2 non aumenta le prestazione quando:
-
-
 1. Accesso ai dati non ripetuto spesso
 
     La Cache L2 è utile se gli stessi dati vengono riutilizzati più volte.
@@ -87,6 +85,4 @@ __global__ void csr_matvec_warp_cacheL2(CSR_matrix d_Mat, double *x, double *y)
 5 Dipendenza dall'architettura GPU
 
     Alcune GPU hanno cache L2 più piccole o meno efficienti, quindi il miglioramento può variare tra modelli diversi.
-
-
 */

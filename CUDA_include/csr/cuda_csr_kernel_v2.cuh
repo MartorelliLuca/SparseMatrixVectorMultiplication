@@ -6,28 +6,21 @@
 #include "../../src/data_structures/csr_matrix.h"
 
 /******************************************************************************************************************
- * Calcola il prodotto matrice-vettore (SpMV) per una matrice sparsa in formato CSR,
- * utilizzando parallelismo a livello di warp e memoria condivisa per ottimizzare l'accesso ai dati.
- *
- * Ogni warp è responsabile di una riga della matrice. I thread all'interno del warp calcolano i prodotti parziali
- * dei valori non nulli della riga e li accumulano in memoria condivisa. Viene poi eseguita una riduzione parallela
- * per ottenere la somma finale della riga, che viene scritta nel vettore di output.
- *
- * Vantaggi:
- * - Migliore coalescenza nella lettura della memoria
- * - Riduzione delle latenze grazie alla shared memory e al parallelismo warp-level.
- * - Riduzione del numero di accessi alla memoria globale.
- *
- * Svantaggi:
- * - Aumento di latenza dovuta dalla scrittura sulla shared memory.
+ * Ogni warp è responsabile del calcolo di una singola riga della matrice.
+ * - Utilizzo di shared memory (memoria condivisa) per garantire un accesso più efficiente ai dati:
+ *       1) L'uso della shared memory assicura che gli accessi alla memoria siano coalescenti, migliorando le performance.
+ * - Implementazione di una riduzione per sommare i risultati, utilizzando la funzione __shfl_sync:
+ *       1) La funzione __shfl_sync permette una comunicazione diretta tra i thread di uno stesso warp.
+ *       2) Utilizzare __shfl_sync riduce il bisogno di sincronizzare la memoria globale, migliorando l'efficienza.
+ *       3) L'uso di __shfl_sync con variabili di tipo double può introdurre piccoli errori di accumulo nei calcoli a causa della precisione numerica limitata.
  ******************************************************************************************************************/
 #define WARP_SIZE 32
 
-__global__ void csr_matvec_warp_shmem(CSR_matrix d_mat, const double *x, double *y)
+__global__ void csr_matvec_shfl_reduction(CSR_matrix d_mat, int M, const double *x, double *y)
 {
     int row = blockIdx.x * blockDim.y + threadIdx.y;
     int lane = threadIdx.x;
-    if (row < d_mat.M)
+    if (row < M)
     {
         double sum = 0.0;
         int start_row = d_mat.IRP[row];
