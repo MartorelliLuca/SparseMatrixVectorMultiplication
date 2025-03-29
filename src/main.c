@@ -33,14 +33,10 @@ int main()
     // Variables to collect statistics
     struct performance *head = NULL, *tail = NULL, *node = NULL;
     double time_used, start, end;
-    double flops, mflops, gflops;
-    float time = 15.0;
 
     const char *dir_name = "../matrici";
     // Matrix filename
     char matrix_filename[256];
-    // Buffer to full path of the matrix file to open
-    char matrix_fullpath[256];
     DIR *dir;
     struct dirent *entry;
     FILE *matrix_file;
@@ -169,8 +165,6 @@ int main()
         //
 
         printf("Prestazioni ottenute con OpenMP eseguendo il calcolo in parallelo!\n");
-        // re_initialize_y_vector(csr_matrix->M, y);
-        // re_initialize_y_vector(csr_matrix->M, z);
 
         reset_node(node);
 
@@ -194,6 +188,9 @@ int main()
         // HERE STARTS CUDA IMPLEMENTATION
         invoke_cuda_csr_kernels(csr_matrix, x, z, y, head, tail, node);
         invoke_cuda_hll_kernels(hll_matrix, x, z, y, head, tail, node);
+
+        printf("\n\nSTAMPO LA LISTA PER %s\n\n", csr_matrix->name);
+        print_list(head);
 
         node = NULL;
         destroy_HLL_matrix(hll_matrix);

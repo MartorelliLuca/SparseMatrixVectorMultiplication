@@ -24,6 +24,8 @@ void print_parallel_hll_result(struct performance *node);
 void print_cuda_hll_kernel_performance(struct performance *node);
 void print_cuda_csr_kernel_performance(struct performance *node);
 
+void print_list(struct performance *head);
+
 void *reset_node(struct performance *node);
 void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values);
 

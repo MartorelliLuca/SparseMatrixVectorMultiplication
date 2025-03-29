@@ -16,11 +16,23 @@
 
 #define WARP_SIZE 32
 
+#define CHECK_CUDA(call) check_cuda((call), __FILE__, __LINE__)
+
 void print_error(cudaError_t *error, int kernel_index)
 {
     if (*error != cudaSuccess)
     {
         printf("Error occour in invoke kernel %d\nError: %s\n", kernel_index, cudaGetErrorString(*error));
+        exit(EXIT_FAILURE);
+    }
+}
+
+inline void check_cuda(cudaError_t err, const char *file, int line)
+{
+    if (err != cudaSuccess)
+    {
+        fprintf(stderr, "CUDA Error: %s (file %s, line %d)\n",
+                cudaGetErrorString(err), file, line);
         exit(EXIT_FAILURE);
     }
 }
@@ -33,89 +45,52 @@ float invoke_kernel_1(HLL_matrix *hll_matrix, double *x, double *z, int num_thre
     double *d_data, *d_x, *d_y;
     int *d_col_index, *d_max_nzr, *d_offsets;
     cudaEvent_t start, stop;
-    cudaError_t error;
 
-    error = cudaMalloc(&d_data, hll_matrix->data_num * sizeof(double));
-    print_error(&error, 1);
+    // Memory allocation
+    CHECK_CUDA(cudaMalloc(&d_data, hll_matrix->data_num * sizeof(double)));
+    CHECK_CUDA(cudaMalloc(&d_col_index, hll_matrix->data_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_max_nzr, hll_matrix->hacks_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_offsets, hll_matrix->offsets_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_x, hll_matrix->N * sizeof(double)));
+    CHECK_CUDA(cudaMalloc(&d_y, hll_matrix->M * sizeof(double)));
 
-    error = cudaMalloc(&d_col_index, hll_matrix->data_num * sizeof(int));
-    print_error(&error, 1);
+    // Copying data
+    CHECK_CUDA(cudaMemcpy(d_data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice));
 
-    error = cudaMalloc(&d_max_nzr, hll_matrix->hacks_num * sizeof(int));
-    print_error(&error, 1);
+    // Creating and starting events
+    CHECK_CUDA(cudaEventCreate(&start));
+    CHECK_CUDA(cudaEventCreate(&stop));
+    CHECK_CUDA(cudaEventRecord(start));
 
-    error = cudaMalloc(&d_offsets, hll_matrix->offsets_num * sizeof(int));
-    print_error(&error, 1);
+    // Kernel Execution
+    cuda_hll_kernel_v1<<<grid_dim, num_threads>>>(d_y, hll_matrix->hack_size, hll_matrix->hacks_num,
+                                                  d_data, d_offsets, d_col_index, d_max_nzr, d_x, hll_matrix->M);
 
-    error = cudaMalloc(&d_x, hll_matrix->N * sizeof(double));
-    print_error(&error, 1);
+    CHECK_CUDA(cudaEventRecord(stop));
+    CHECK_CUDA(cudaEventSynchronize(stop));
 
-    error = cudaMalloc(&d_y, hll_matrix->M * sizeof(double));
-    print_error(&error, 1);
-
-    error = cudaMemcpy(d_data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice);
-    print_error(&error, 1);
-
-    error = cudaMemcpy(d_col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 1);
-
-    error = cudaMemcpy(d_max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 1);
-
-    error = cudaMemcpy(d_offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 1);
-
-    error = cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice);
-    print_error(&error, 1);
-
-    error = cudaEventCreate(&start);
-    print_error(&error, 1);
-
-    error = cudaEventCreate(&stop);
-    print_error(&error, 1);
-
-    error = cudaEventRecord(start);
-    print_error(&error, 1);
-
-    cuda_hll_kernel_v1<<<grid_dim, num_threads>>>(d_y, hll_matrix->hack_size, hll_matrix->hacks_num, d_data, d_offsets, d_col_index,
-                                                  d_max_nzr, d_x, hll_matrix->M);
-
-    error = cudaEventRecord(stop);
-    print_error(&error, 1);
-
-    error = cudaEventSynchronize(stop);
-    print_error(&error, 1);
-
+    // Time calculation
     float milliseconds = 0;
-    error = cudaEventElapsedTime(&milliseconds, start, stop);
-    print_error(&error, 1);
+    CHECK_CUDA(cudaEventElapsedTime(&milliseconds, start, stop));
 
-    error = cudaMemcpy(z, d_y, hll_matrix->M * sizeof(double), cudaMemcpyDeviceToHost);
-    print_error(&error, 1);
+    // Copy of the result
+    CHECK_CUDA(cudaMemcpy(z, d_y, hll_matrix->M * sizeof(double), cudaMemcpyDeviceToHost));
 
-    error = cudaFree(d_data);
-    print_error(&error, 1);
+    // Memory Deallocation
+    CHECK_CUDA(cudaFree(d_data));
+    CHECK_CUDA(cudaFree(d_col_index));
+    CHECK_CUDA(cudaFree(d_max_nzr));
+    CHECK_CUDA(cudaFree(d_offsets));
+    CHECK_CUDA(cudaFree(d_x));
+    CHECK_CUDA(cudaFree(d_y));
 
-    error = cudaFree(d_col_index);
-    print_error(&error, 1);
-
-    error = cudaFree(d_max_nzr);
-    print_error(&error, 1);
-
-    error = cudaFree(d_offsets);
-    print_error(&error, 1);
-
-    error = cudaFree(d_x);
-    print_error(&error, 1);
-
-    error = cudaFree(d_y);
-    print_error(&error, 1);
-
-    error = cudaEventDestroy(start);
-    print_error(&error, 1);
-
-    error = cudaEventDestroy(stop);
-    print_error(&error, 1);
+    // Destruction of events
+    CHECK_CUDA(cudaEventDestroy(start));
+    CHECK_CUDA(cudaEventDestroy(stop));
 
     return milliseconds / 1000.0;
 }
@@ -128,89 +103,52 @@ float invoke_kernel_2(HLL_matrix *hll_matrix, double *x, double *z, int num_thre
     double *d_data, *d_x, *d_y;
     int *d_col_index, *d_max_nzr, *d_offsets;
     cudaEvent_t start, stop;
-    cudaError_t error;
 
-    error = cudaMalloc(&d_data, hll_matrix->data_num * sizeof(double));
-    print_error(&error, 2);
+    // Memory allocation
+    CHECK_CUDA(cudaMalloc(&d_data, hll_matrix->data_num * sizeof(double)));
+    CHECK_CUDA(cudaMalloc(&d_col_index, hll_matrix->data_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_max_nzr, hll_matrix->hacks_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_offsets, hll_matrix->offsets_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_x, hll_matrix->N * sizeof(double)));
+    CHECK_CUDA(cudaMalloc(&d_y, hll_matrix->N * sizeof(double)));
 
-    error = cudaMalloc(&d_col_index, hll_matrix->data_num * sizeof(int));
-    print_error(&error, 2);
+    // Copying data
+    CHECK_CUDA(cudaMemcpy(d_data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice));
 
-    error = cudaMalloc(&d_max_nzr, hll_matrix->hacks_num * sizeof(int));
-    print_error(&error, 2);
+    // Creating and starting events
+    CHECK_CUDA(cudaEventCreate(&start));
+    CHECK_CUDA(cudaEventCreate(&stop));
+    CHECK_CUDA(cudaEventRecord(start));
 
-    error = cudaMalloc(&d_offsets, hll_matrix->offsets_num * sizeof(int));
-    print_error(&error, 2);
-
-    error = cudaMalloc(&d_x, hll_matrix->N * sizeof(double));
-    print_error(&error, 2);
-
-    error = cudaMalloc(&d_y, hll_matrix->N * sizeof(double));
-    print_error(&error, 2);
-
-    error = cudaMemcpy(d_data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice);
-    print_error(&error, 2);
-
-    error = cudaMemcpy(d_col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 2);
-
-    error = cudaMemcpy(d_max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 2);
-
-    error = cudaMemcpy(d_offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 2);
-
-    error = cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice);
-    print_error(&error, 2);
-
-    error = cudaEventCreate(&start);
-    print_error(&error, 2);
-
-    error = cudaEventCreate(&stop);
-    print_error(&error, 2);
-
-    error = cudaEventRecord(start);
-    print_error(&error, 2);
-
+    // Kernel Execution
     cuda_hll_kernel_v2<<<grid_dim, num_threads>>>(d_y, hll_matrix->hack_size, hll_matrix->hacks_num, d_data, d_offsets,
                                                   d_col_index, d_max_nzr, d_x, hll_matrix->M);
 
-    error = cudaEventRecord(stop);
-    print_error(&error, 2);
+    CHECK_CUDA(cudaEventRecord(stop));
+    CHECK_CUDA(cudaEventSynchronize(stop));
 
-    error = cudaEventSynchronize(stop);
-    print_error(&error, 2);
-
+    // Time calculation
     float milliseconds = 0;
-    error = cudaEventElapsedTime(&milliseconds, start, stop);
-    print_error(&error, 2);
+    CHECK_CUDA(cudaEventElapsedTime(&milliseconds, start, stop));
 
-    error = cudaMemcpy(z, d_y, hll_matrix->M * sizeof(double), cudaMemcpyDeviceToHost);
-    print_error(&error, 2);
+    // Copy of the result
+    CHECK_CUDA(cudaMemcpy(z, d_y, hll_matrix->M * sizeof(double), cudaMemcpyDeviceToHost));
 
-    error = cudaFree(d_data);
-    print_error(&error, 2);
+    // Memory Deallocation
+    CHECK_CUDA(cudaFree(d_data));
+    CHECK_CUDA(cudaFree(d_col_index));
+    CHECK_CUDA(cudaFree(d_max_nzr));
+    CHECK_CUDA(cudaFree(d_offsets));
+    CHECK_CUDA(cudaFree(d_x));
+    CHECK_CUDA(cudaFree(d_y));
 
-    error = cudaFree(d_col_index);
-    print_error(&error, 2);
-
-    error = cudaFree(d_max_nzr);
-    print_error(&error, 2);
-
-    error = cudaFree(d_offsets);
-    print_error(&error, 2);
-
-    error = cudaFree(d_x);
-    print_error(&error, 2);
-
-    error = cudaFree(d_y);
-    print_error(&error, 2);
-
-    error = cudaEventDestroy(start);
-    print_error(&error, 2);
-
-    error = cudaEventDestroy(stop);
-    print_error(&error, 2);
+    // Destruction of events
+    CHECK_CUDA(cudaEventDestroy(start));
+    CHECK_CUDA(cudaEventDestroy(stop));
 
     return milliseconds / 1000.0;
 }
@@ -223,91 +161,54 @@ float invoke_kernel_3(HLL_matrix *hll_matrix, double *x, double *z, int num_thre
     double *d_data, *d_x, *d_y;
     int *d_col_index, *d_max_nzr, *d_offsets;
     cudaEvent_t start, stop;
-    cudaError_t error;
 
-    error = cudaMalloc(&d_data, hll_matrix->data_num * sizeof(double));
-    print_error(&error, 3);
+    // Memory allocation
+    CHECK_CUDA(cudaMalloc(&d_data, hll_matrix->data_num * sizeof(double)));
+    CHECK_CUDA(cudaMalloc(&d_col_index, hll_matrix->data_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_max_nzr, hll_matrix->hacks_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_offsets, hll_matrix->offsets_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_x, hll_matrix->N * sizeof(double)));
+    CHECK_CUDA(cudaMalloc(&d_y, hll_matrix->N * sizeof(double)));
 
-    error = cudaMalloc(&d_col_index, hll_matrix->data_num * sizeof(int));
-    print_error(&error, 3);
+    // Copying data
+    CHECK_CUDA(cudaMemcpy(d_data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice));
 
-    error = cudaMalloc(&d_max_nzr, hll_matrix->hacks_num * sizeof(int));
-    print_error(&error, 3);
+    // Creating and starting events
+    CHECK_CUDA(cudaEventCreate(&start));
+    CHECK_CUDA(cudaEventCreate(&stop));
+    CHECK_CUDA(cudaEventRecord(start));
 
-    error = cudaMalloc(&d_offsets, hll_matrix->offsets_num * sizeof(int));
-    print_error(&error, 3);
-
-    error = cudaMalloc(&d_x, hll_matrix->N * sizeof(double));
-    print_error(&error, 3);
-
-    error = cudaMalloc(&d_y, hll_matrix->N * sizeof(double));
-    print_error(&error, 3);
-
-    error = cudaMemcpy(d_data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice);
-    print_error(&error, 3);
-
-    error = cudaMemcpy(d_col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 3);
-
-    error = cudaMemcpy(d_max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 3);
-
-    error = cudaMemcpy(d_offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 3);
-
-    error = cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice);
-    print_error(&error, 3);
-
-    error = cudaEventCreate(&start);
-    print_error(&error, 3);
-
-    error = cudaEventCreate(&stop);
-    print_error(&error, 3);
-
-    error = cudaEventRecord(start);
-    print_error(&error, 3);
-
+    // Kernel Execution
     int shared_mem_size = 1024 * sizeof(double);
     cuda_hll_kernel_v3<<<grid_dim, num_threads, shared_mem_size>>>(d_y, hll_matrix->hack_size, hll_matrix->hacks_num,
                                                                    d_data, d_offsets, d_col_index, d_max_nzr, d_x,
                                                                    hll_matrix->M);
 
-    error = cudaEventRecord(stop);
-    print_error(&error, 3);
+    CHECK_CUDA(cudaEventRecord(stop));
+    CHECK_CUDA(cudaEventSynchronize(stop));
 
-    error = cudaEventSynchronize(stop);
-    print_error(&error, 3);
-
+    // Time calculation
     float milliseconds = 0;
-    error = cudaEventElapsedTime(&milliseconds, start, stop);
-    print_error(&error, 3);
+    CHECK_CUDA(cudaEventElapsedTime(&milliseconds, start, stop));
 
-    error = cudaMemcpy(z, d_y, hll_matrix->N * sizeof(double), cudaMemcpyDeviceToHost);
-    print_error(&error, 3);
+    // Copy of the result
+    CHECK_CUDA(cudaMemcpy(z, d_y, hll_matrix->N * sizeof(double), cudaMemcpyDeviceToHost));
 
-    error = cudaFree(d_data);
-    print_error(&error, 3);
+    // Memory Deallocation
+    CHECK_CUDA(cudaFree(d_data));
+    CHECK_CUDA(cudaFree(d_col_index));
+    CHECK_CUDA(cudaFree(d_max_nzr));
+    CHECK_CUDA(cudaFree(d_offsets));
+    CHECK_CUDA(cudaFree(d_x));
+    CHECK_CUDA(cudaFree(d_y));
 
-    error = cudaFree(d_col_index);
-    print_error(&error, 3);
-
-    error = cudaFree(d_max_nzr);
-    print_error(&error, 3);
-
-    error = cudaFree(d_offsets);
-    print_error(&error, 3);
-
-    error = cudaFree(d_x);
-    print_error(&error, 3);
-
-    error = cudaFree(d_y);
-    print_error(&error, 3);
-
-    error = cudaEventDestroy(start);
-    print_error(&error, 3);
-
-    error = cudaEventDestroy(stop);
-    print_error(&error, 3);
+    // Destruction of events
+    CHECK_CUDA(cudaEventDestroy(start));
+    CHECK_CUDA(cudaEventDestroy(stop));
 
     return milliseconds / 1000.0;
 }
@@ -319,90 +220,53 @@ float invoke_kernel_4(HLL_matrix *hll_matrix, double *x, double *z, int num_thre
     double *d_data, *d_x, *d_y;
     int *d_col_index, *d_max_nzr, *d_offsets;
     cudaEvent_t start, stop;
-    cudaError_t error;
 
-    error = cudaMalloc(&d_data, hll_matrix->data_num * sizeof(double));
-    print_error(&error, 4);
+    // Memory allocation
+    CHECK_CUDA(cudaMalloc(&d_data, hll_matrix->data_num * sizeof(double)));
+    CHECK_CUDA(cudaMalloc(&d_col_index, hll_matrix->data_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_max_nzr, hll_matrix->hacks_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_offsets, hll_matrix->offsets_num * sizeof(int)));
+    CHECK_CUDA(cudaMalloc(&d_x, hll_matrix->N * sizeof(double)));
+    CHECK_CUDA(cudaMalloc(&d_y, hll_matrix->N * sizeof(double)));
 
-    error = cudaMalloc(&d_col_index, hll_matrix->data_num * sizeof(int));
-    print_error(&error, 4);
+    // Copying data
+    CHECK_CUDA(cudaMemcpy(d_data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice));
 
-    error = cudaMalloc(&d_max_nzr, hll_matrix->hacks_num * sizeof(int));
-    print_error(&error, 4);
+    // Creating and starting events
+    CHECK_CUDA(cudaEventCreate(&start));
+    CHECK_CUDA(cudaEventCreate(&stop));
+    CHECK_CUDA(cudaEventRecord(start));
 
-    error = cudaMalloc(&d_offsets, hll_matrix->offsets_num * sizeof(int));
-    print_error(&error, 4);
-
-    error = cudaMalloc(&d_x, hll_matrix->N * sizeof(double));
-    print_error(&error, 4);
-
-    error = cudaMalloc(&d_y, hll_matrix->N * sizeof(double));
-    print_error(&error, 4);
-
-    error = cudaMemcpy(d_data, hll_matrix->data, hll_matrix->data_num * sizeof(double), cudaMemcpyHostToDevice);
-    print_error(&error, 4);
-
-    error = cudaMemcpy(d_col_index, hll_matrix->col_index, hll_matrix->data_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 4);
-
-    error = cudaMemcpy(d_max_nzr, hll_matrix->max_nzr, hll_matrix->hacks_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 4);
-
-    error = cudaMemcpy(d_offsets, hll_matrix->offsets, hll_matrix->offsets_num * sizeof(int), cudaMemcpyHostToDevice);
-    print_error(&error, 4);
-
-    error = cudaMemcpy(d_x, x, hll_matrix->N * sizeof(double), cudaMemcpyHostToDevice);
-    print_error(&error, 4);
-
-    error = cudaEventCreate(&start);
-    print_error(&error, 4);
-
-    error = cudaEventCreate(&stop);
-    print_error(&error, 4);
-
-    error = cudaEventRecord(start);
-    print_error(&error, 4);
-
+    // Kernel Execution
     cuda_hll_kernel_v4<<<block_num, num_threads>>>(d_y, hll_matrix->hack_size, hll_matrix->hacks_num,
                                                    d_data, d_offsets, d_col_index, d_max_nzr, d_x,
                                                    hll_matrix->M);
 
-    error = cudaEventRecord(stop);
-    print_error(&error, 4);
+    CHECK_CUDA(cudaEventRecord(stop));
+    CHECK_CUDA(cudaEventSynchronize(stop));
 
-    error = cudaEventSynchronize(stop);
-    print_error(&error, 4);
-
+    // Time calculation
     float milliseconds = 0;
-    error = cudaEventElapsedTime(&milliseconds, start, stop);
-    print_error(&error, 4);
+    CHECK_CUDA(cudaEventElapsedTime(&milliseconds, start, stop));
 
-    error = cudaMemcpy(z, d_y, hll_matrix->N * sizeof(double), cudaMemcpyDeviceToHost);
-    print_error(&error, 4);
+    // Copy of the result
+    CHECK_CUDA(cudaMemcpy(z, d_y, hll_matrix->N * sizeof(double), cudaMemcpyDeviceToHost));
 
-    error = cudaFree(d_data);
-    print_error(&error, 4);
+    // Memory Deallocation
+    CHECK_CUDA(cudaFree(d_data));
+    CHECK_CUDA(cudaFree(d_col_index));
+    CHECK_CUDA(cudaFree(d_max_nzr));
+    CHECK_CUDA(cudaFree(d_offsets));
+    CHECK_CUDA(cudaFree(d_x));
+    CHECK_CUDA(cudaFree(d_y));
 
-    error = cudaFree(d_col_index);
-    print_error(&error, 4);
-
-    error = cudaFree(d_max_nzr);
-    print_error(&error, 4);
-
-    error = cudaFree(d_offsets);
-    print_error(&error, 4);
-
-    error = cudaFree(d_x);
-    print_error(&error, 4);
-
-    error = cudaFree(d_y);
-    print_error(&error, 4);
-
-    error = cudaEventDestroy(start);
-    print_error(&error, 4);
-
-    error = cudaEventDestroy(stop);
-    print_error(&error, 4);
+    // Destruction of events
+    CHECK_CUDA(cudaEventDestroy(start));
+    CHECK_CUDA(cudaEventDestroy(stop));
 
     return milliseconds / 1000.0;
 }

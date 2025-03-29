@@ -298,6 +298,7 @@ void add_node_performance(struct performance *head, struct performance *tail, st
         tail = node;
     }
 }
+
 void *reset_node(struct performance *node)
 {
     node = NULL;
@@ -366,10 +367,6 @@ void print_cuda_hll_kernel_performance(struct performance *node)
     printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato hll con CUDA!\n");
     switch (node->computation)
     {
-    case CUDA_HLL_KERNEL_0:
-        printf("CUDA HLL Kernel 0\n");
-        break;
-
     case CUDA_HLL_KERNEL_1:
         printf("CUDA HLL Kernel 1\n");
         break;
@@ -384,14 +381,6 @@ void print_cuda_hll_kernel_performance(struct performance *node)
 
     case CUDA_HLL_KERNEL_4:
         printf("CUDA HLL Kernel 4\n");
-        break;
-
-    case CUDA_HLL_KERNEL_5:
-        printf("CUDA HLL Kernel 5\n");
-        break;
-
-    case CUDA_HLL_KERNEL_6:
-        printf("CUDA HLL Kernel 6\n");
         break;
     }
 
@@ -429,4 +418,68 @@ void print_cuda_csr_kernel_performance(struct performance *node)
     printf("FLOPS:                          %.16lf\n", node->flops);
     printf("MFLOPS:                         %.16lf\n", node->mflops);
     printf("GFLOPS:                         %.16lf\n\n", node->gflops);
+}
+
+void print_list(struct performance *head)
+{
+    while (head != NULL)
+    {
+
+        printf("Numero di thread:           %d\n", head->number_of_threads_used);
+        switch (head->computation)
+        {
+        case SERIAL_CSR:
+            printf("Serial CSR\n");
+            break;
+
+        case SERIAL_HHL:
+            printf("Serial HLL\n");
+            break;
+
+        case PARALLEL_OPEN_MP_CSR:
+            printf("Parallel OPEN MP CSR\n");
+            break;
+
+        case PARALLEL_OPEN_MP_HLL:
+            printf("Parallel OPEN MP CSR\n");
+            break;
+
+        case CUDA_CSR_KERNEL_1:
+            printf("CUDA CSR KERNEL 1\n");
+            break;
+
+        case CUDA_CSR_KERNEL_2:
+            printf("CUDA CSR KERNEL 2\n");
+            break;
+
+        case CUDA_CSR_KERNEL_3:
+            printf("CUDA CSR KERNEL 3\n");
+            break;
+
+        case CUDA_CSR_KERNEL_4:
+            printf("CUDA CSR KERNEL 4\n");
+            break;
+
+        case CUDA_HLL_KERNEL_1:
+            printf("CUDA HLL KERNEL 1\n");
+            break;
+
+        case CUDA_HLL_KERNEL_2:
+            printf("CUDA HLL KERNEL 2\n");
+            break;
+
+        case CUDA_HLL_KERNEL_3:
+            printf("CUDA HLL KERNEL 3\n");
+            break;
+
+        case CUDA_HLL_KERNEL_4:
+            printf("CUDA HLL KERNEL 4\n");
+            break;
+        }
+        printf("Time Used:                  %.16lf\n", head->time_used);
+        printf("Flops:                      %.16lf\n", head->flops);
+        printf("MFLOPS:                     %.16lf\n", head->mflops);
+        printf("GFLOPS:                     %.16lf\n", head->gflops);
+        head = head->next_node;
+    }
 }

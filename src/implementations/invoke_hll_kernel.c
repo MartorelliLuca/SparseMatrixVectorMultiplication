@@ -35,60 +35,79 @@ void compute_cuda_hll_kernel_results(struct performance *node, double time, comp
 
 void invoke_cuda_hll_kernels(HLL_matrix *hll_matrix, double *x, double *z, double *effective_results, struct performance *head, struct performance *tail, struct performance *node)
 {
+    int threads_number[5] = {32, 64, 96, 128, 160};
     for (int i = 1; i <= NUM_KERNEL; i++)
     {
         float time;
         switch (i)
         {
         case 1:
-            time = invoke_kernel_1(hll_matrix, x, z, 32);
-            reset_node(node);
-            compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_1, 32, hll_matrix->data_num);
-            if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+            for (int j = 0; j < 5; j++)
             {
-                printf("Errore nel controllo per %s dopo il CUDA hll kernel 1\n", hll_matrix->name);
-                sleep(3);
+                time = invoke_kernel_1(hll_matrix, x, z, threads_number[j]);
+                reset_node(node);
+                compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_1, threads_number[j], hll_matrix->data_num);
+                if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+                {
+                    printf("Errore nel controllo per %s dopo il CUDA hll kernel 1\n", hll_matrix->name);
+                    sleep(3);
+                }
+                re_initialize_y_vector(hll_matrix->N, z);
+                add_node_performance(head, tail, node);
+                print_cuda_hll_kernel_performance(node);
             }
-            re_initialize_y_vector(hll_matrix->N, z);
             break;
 
         case 2:
-            time = invoke_kernel_2(hll_matrix, x, z, 32);
-            reset_node(node);
-            compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_2, 32, hll_matrix->data_num);
-            if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+            for (int j = 0; j < 5; j++)
             {
-                printf("Errore nel controllo per %s dopo il CUDA hll kernel 2\n", hll_matrix->name);
-                sleep(3);
+                time = invoke_kernel_2(hll_matrix, x, z, threads_number[j]);
+                reset_node(node);
+                compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_2, threads_number[j], hll_matrix->data_num);
+                if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+                {
+                    printf("Errore nel controllo per %s dopo il CUDA hll kernel 2\n", hll_matrix->name);
+                    sleep(3);
+                }
+                re_initialize_y_vector(hll_matrix->N, z);
+                add_node_performance(head, tail, node);
+                print_cuda_hll_kernel_performance(node);
             }
-            re_initialize_y_vector(hll_matrix->N, z);
             break;
 
         case 3:
-            time = invoke_kernel_3(hll_matrix, x, z, 32);
-            reset_node(node);
-            compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_3, 32, hll_matrix->data_num);
-            if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+            for (int j = 0; j < 5; j++)
             {
-                printf("Errore nel controllo per %s dopo il CUDA hll kernel 3\n", hll_matrix->name);
-                sleep(3);
+                time = invoke_kernel_3(hll_matrix, x, z, threads_number[j]);
+                reset_node(node);
+                compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_3, threads_number[j], hll_matrix->data_num);
+                if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+                {
+                    printf("Errore nel controllo per %s dopo il CUDA hll kernel 3\n", hll_matrix->name);
+                    sleep(3);
+                }
+                re_initialize_y_vector(hll_matrix->N, z);
+                add_node_performance(head, tail, node);
+                print_cuda_hll_kernel_performance(node);
             }
-            re_initialize_y_vector(hll_matrix->N, z);
             break;
 
         case 4:
-            time = invoke_kernel_4(hll_matrix, x, z, 32);
-            reset_node(node);
-            compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_4, 32, hll_matrix->data_num);
-            if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+            for (int j = 0; j < 5; j++)
             {
-                printf("Errore nel controllo per %s dopo il CUDA hll kernel 4\n", hll_matrix->name);
-                sleep(3);
+                time = invoke_kernel_4(hll_matrix, x, z, threads_number[j]);
+                reset_node(node);
+                compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_4, threads_number[j], hll_matrix->data_num);
+                if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+                {
+                    printf("Errore nel controllo per %s dopo il CUDA hll kernel 4\n", hll_matrix->name);
+                    sleep(3);
+                }
+                re_initialize_y_vector(hll_matrix->N, z);
+                add_node_performance(head, tail, node);
+                print_cuda_hll_kernel_performance(node);
             }
-            re_initialize_y_vector(hll_matrix->N, z);
             break;
         }
-        add_node_performance(head, tail, node);
-        print_cuda_hll_kernel_performance(node);
     }
 }
