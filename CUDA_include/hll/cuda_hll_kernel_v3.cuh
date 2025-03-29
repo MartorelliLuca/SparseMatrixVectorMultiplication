@@ -17,31 +17,28 @@ __global__ void cuda_hll_kernel_v3(double *y, int hack_size, int hacks_num, doub
 {
 
     extern __shared__ double shared_x[];
+    int tid = threadIdx.x;
+    int global_idx = blockIdx.x * blockDim.x + tid;
 
-    int index = blockDim.x * blockIdx.x + threadIdx.x;
+    // Caricamento in memoria condivisa
+    if (tid < N)
+        shared_x[tid] = x[tid];
+    __syncthreads();
 
-    if (threadIdx.x < N)
-        shared_x[threadIdx.x] = x[threadIdx.x];
-
-    if (index < N)
+    if (global_idx < N)
     {
-        int hack = index / hack_size;
-        int row_start = (index % hack_size) * max_nzr[hack] + offsets[hack];
-        int row_end = row_start + max_nzr[hack];
-        double sum = 0.0;
+        int hack = global_idx / hack_size;
+        int local_offset = (global_idx % hack_size) * max_nzr[hack] + offsets[hack];
+        double acc = 0.0;
 
-        for (int j = row_start; j < row_end; j++)
+        for (int j = 0; j < max_nzr[hack]; j++)
         {
-            if (col_index[j] < 32)
-            {
-                sum += data[j] * shared_x[col_index[j]];
-            }
-            else
-            {
-                sum += data[j] * x[col_index[j]];
-            }
+            int col = col_index[local_offset + j];
+            double value = data[local_offset + j];
+
+            acc += value * (col < 32 ? shared_x[col] : x[col]);
         }
 
-        y[index] = sum;
+        y[global_idx] = acc;
     }
 }

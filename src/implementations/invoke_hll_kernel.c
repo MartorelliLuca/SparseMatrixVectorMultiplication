@@ -16,7 +16,7 @@
 #include "../utils_header/initialization.h"
 #include "../../CUDA_include/cudahll.h"
 
-#define NUM_KERNEL 6
+#define NUM_KERNEL 4
 
 void compute_cuda_hll_kernel_results(struct performance *node, double time, computation_time type, int threads_used, int non_zero_values)
 {
@@ -71,6 +71,18 @@ void invoke_cuda_hll_kernels(HLL_matrix *hll_matrix, double *x, double *z, doubl
             if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
             {
                 printf("Errore nel controllo per %s dopo il CUDA hll kernel 3\n", hll_matrix->name);
+                sleep(3);
+            }
+            re_initialize_y_vector(hll_matrix->N, z);
+            break;
+
+        case 4:
+            time = invoke_kernel_4(hll_matrix, x, z, 32);
+            reset_node(node);
+            compute_cuda_hll_kernel_results(node, (double)time, CUDA_HLL_KERNEL_4, 32, hll_matrix->data_num);
+            if (!compute_norm(effective_results, z, hll_matrix->M, 1e-6))
+            {
+                printf("Errore nel controllo per %s dopo il CUDA hll kernel 4\n", hll_matrix->name);
                 sleep(3);
             }
             re_initialize_y_vector(hll_matrix->N, z);
