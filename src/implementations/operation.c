@@ -124,10 +124,15 @@ void compute_parallel_performance(struct performance *node, double *time_used, i
     printf("node->time_used = %.16lf\n", node->time_used);
 }
 
-void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
+void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance **head, struct performance **tail, int new_non_zero_values, double *effective_results)
 {
 
+    // printf("LISTA APPENA DENTRO CSR MAT VEC PARALLELO\n");
+    // print_list(*head);
+    // printf("head = %p, tail = %p\n", *head, *tail);
+
     double time_used, time_used2;
+
     for (int index = 0; index < NUM_THREADS; index++)
     {
         int num_threads = thread_numbers[index];
@@ -168,8 +173,17 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
 
         print_parallel_csr_result(node);
 
+        re_initialize_y_vector(csr_matrix->M, y);
+
+        node = NULL;
+        node = reset_node();
+        strcpy(node->matrix, csr_matrix->name);
         // fai il prodotto scalare tra la riga i-esima e il vettore x
     }
+
+    // printf("\n\nLISTA APPENA FINITO CSR MAT VEC PARALLELO\n");
+    // print_list(*head);
+    // printf("head = %p, tail = %p\n", *head, *tail);
 }
 
 static inline int num_of_rows(HLL_matrix *hll, int h)
@@ -260,6 +274,10 @@ void compute_hll_parallel_performance(struct performance *node, int new_non_zero
 // Matrix-vector parallel dot product in HLL format
 void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
 {
+    // printf("LISTA APPENA DENTRO HLL MAT VEC PARALLELO\n");
+    // print_list(head);
+    // printf("head = %p, tail = %p\n", head, tail);
+
     double time_used, start, end;
     for (int index = 0; index < NUM_THREADS; index++)
     {
@@ -273,11 +291,7 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
         }
 
         hll_parallel_product(hll_matrix, x, y, num_threads, &time_used);
-
         compute_hll_parallel_performance(node, new_non_zero_values, time_used, num_threads);
-
-        add_node_performance(head, tail, node);
-
         print_parallel_hll_result(node);
 
         if (!compute_norm(y, effective_results, hll_matrix->M, 1e-6))
@@ -286,6 +300,16 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
             sleep(3);
         }
 
+        add_node_performance(&head, &tail, node);
+
         re_initialize_y_vector(hll_matrix->M, y);
+
+        node = NULL;
+        node = reset_node();
+        strcpy(node->matrix, hll_matrix->name);
     }
+
+    // printf("LISTA APPENA FUORI HLL MAT VEC PARALLELO\n");
+    // print_list(head);
+    // printf("head = %p, tail = %p\n", head, tail);
 }

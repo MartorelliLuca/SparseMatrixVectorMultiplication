@@ -273,41 +273,37 @@ double *unit_vector(int size)
     return x;
 }
 
-void add_node_performance(struct performance *head, struct performance *tail, struct performance *node)
+void add_node_performance(struct performance **head, struct performance **tail, struct performance *node)
 {
-    if (head == NULL)
-    {
-        head = (struct performance *)calloc(1, sizeof(struct performance));
-        if (head == NULL)
-        {
-            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-        }
-        tail = (struct performance *)calloc(1, sizeof(struct performance));
-        if (tail == NULL)
-        {
-            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-        }
+    if (node == NULL)
+        return; // Evita problemi se il nodo passato è NULL
 
-        head = node;
-        tail = node;
-    }
-    else
+    node->next_node = NULL;
+    node->prev_node = NULL;
+
+    if (*head == NULL) // Lista vuota
     {
-        tail->next_node = node;
-        node->prev_node = tail;
-        tail = node;
+        *head = node;
+        *tail = node;
+    }
+    else // Lista già popolata
+    {
+        (*tail)->next_node = node;
+        node->prev_node = *tail;
+        *tail = node;
     }
 }
 
-void *reset_node(struct performance *node)
+struct performance *reset_node()
 {
-    node = NULL;
+    struct performance *node = NULL;
     node = (struct performance *)calloc(1, sizeof(struct performance));
     if (node == NULL)
     {
         printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
         exit(EXIT_FAILURE);
     }
+    return node;
 }
 
 void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values)
@@ -422,11 +418,12 @@ void print_cuda_csr_kernel_performance(struct performance *node)
 
 void print_list(struct performance *head)
 {
-    while (head != NULL)
+    struct performance *current = head;
+    while (current != NULL)
     {
-
-        printf("Numero di thread:           %d\n", head->number_of_threads_used);
-        switch (head->computation)
+        printf("Matrice:                    %s\n", current->matrix);
+        printf("Numero di thread:           %d\n", current->number_of_threads_used);
+        switch (current->computation)
         {
         case SERIAL_CSR:
             printf("Serial CSR\n");
@@ -441,7 +438,7 @@ void print_list(struct performance *head)
             break;
 
         case PARALLEL_OPEN_MP_HLL:
-            printf("Parallel OPEN MP CSR\n");
+            printf("Parallel OPEN MP HLL\n");
             break;
 
         case CUDA_CSR_KERNEL_1:
@@ -476,10 +473,11 @@ void print_list(struct performance *head)
             printf("CUDA HLL KERNEL 4\n");
             break;
         }
-        printf("Time Used:                  %.16lf\n", head->time_used);
-        printf("Flops:                      %.16lf\n", head->flops);
-        printf("MFLOPS:                     %.16lf\n", head->mflops);
-        printf("GFLOPS:                     %.16lf\n", head->gflops);
-        head = head->next_node;
+        printf("Time Used:                  %.16lf\n", current->time_used);
+        printf("Flops:                      %.16lf\n", current->flops);
+        printf("MFLOPS:                     %.16lf\n", current->mflops);
+        printf("GFLOPS:                     %.16lf\n", current->gflops);
+        puts("");
+        current = current->next_node;
     }
 }

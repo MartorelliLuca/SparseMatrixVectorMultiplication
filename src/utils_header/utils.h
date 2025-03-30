@@ -14,7 +14,7 @@ void mtx_cleanup(matrix_format *matrix);
 double compute_norm(double *z, double *y, int n, double esp);
 double *unit_vector(int size);
 
-void add_node_performance(struct performance *head, struct performance *tail, struct performance *node);
+void add_node_performance(struct performance **head, struct performance **tail, struct performance *node);
 void print_serial_csr_result(struct performance *node);
 void print_serial_hll_result(struct performance *node);
 
@@ -26,7 +26,7 @@ void print_cuda_csr_kernel_performance(struct performance *node);
 
 void print_list(struct performance *head);
 
-void *reset_node(struct performance *node);
+struct performance *reset_node();
 void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values);
 
 #endif
