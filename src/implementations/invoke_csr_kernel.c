@@ -18,9 +18,9 @@
 
 #define NUM_KERNELS 4
 
-void continue_execution(struct performance *node, struct performance *head, struct performance *tail, double *effective_results, double *z, CSR_matrix *csr_matrix, int i)
+void continue_execution(struct performance *node, struct performance **head, struct performance **tail, double *effective_results, double *z, CSR_matrix *csr_matrix, int i)
 {
-    add_node_performance(&head, &tail, node);
+    add_node_performance(head, tail, node);
 
     if (!compute_norm(effective_results, z, csr_matrix->M, 1e-6))
     {
@@ -45,7 +45,7 @@ void compute_cuda_csr_kernel_results(struct performance *node, double time, comp
     node->non_zeroes_values = non_zero_values;
 }
 
-void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, double *effective_results, struct performance *head, struct performance *tail, struct performance *node)
+void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, double *effective_results, struct performance **head, struct performance **tail, struct performance *node)
 {
     int num_thread_per_block[4] = {4, 8, 16, 32};
     for (int i = 1; i <= NUM_KERNELS; i++)
@@ -59,9 +59,10 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
                 // printf("STO A ENTRA IN INVOKE1, iterazione %d\n\n", j);
                 re_initialize_y_vector(csr_matrix->M, z);
                 time = invoke_kernel_csr_1(csr_matrix, x, z, num_thread_per_block[j - 1]);
-                reset_node(node);
                 compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_1, num_thread_per_block[j - 1], csr_matrix->non_zero_values);
                 continue_execution(node, head, tail, effective_results, z, csr_matrix, i);
+                node = NULL;
+                node = reset_node();
             }
             break;
 
@@ -71,9 +72,10 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
                 // printf("STO A ENTRA IN INVOKE2, iterazione %d\n\n", j);
                 re_initialize_y_vector(csr_matrix->M, z);
                 time = invoke_kernel_csr_2(csr_matrix, x, z, num_thread_per_block[j - 1]);
-                reset_node(node);
                 compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_2, num_thread_per_block[j - 1], csr_matrix->non_zero_values);
                 continue_execution(node, head, tail, effective_results, z, csr_matrix, i);
+                node = NULL;
+                node = reset_node();
             }
             break;
 
@@ -83,9 +85,10 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
                 // printf("STO A ENTRA IN INVOKE3, iterazione %d\n\n", j);
                 re_initialize_y_vector(csr_matrix->M, z);
                 time = invoke_kernel_csr_3(csr_matrix, x, z, num_thread_per_block[j - 1]);
-                reset_node(node);
                 compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_3, num_thread_per_block[j - 1], csr_matrix->non_zero_values);
                 continue_execution(node, head, tail, effective_results, z, csr_matrix, i);
+                node = NULL;
+                node = reset_node();
             }
             break;
 
@@ -95,9 +98,10 @@ void invoke_cuda_csr_kernels(CSR_matrix *csr_matrix, double *x, double *z, doubl
                 re_initialize_y_vector(csr_matrix->M, z);
                 // printf("STO A ENTRA IN INVOKE4, iterazione %d\n\n", j);
                 time = invoke_kernel_csr_4(csr_matrix, x, z, num_thread_per_block[j - 1]);
-                reset_node(node);
                 compute_cuda_csr_kernel_results(node, (double)time, CUDA_CSR_KERNEL_4, num_thread_per_block[j - 1], csr_matrix->non_zero_values);
                 continue_execution(node, head, tail, effective_results, z, csr_matrix, i);
+                node = NULL;
+                node = reset_node();
             }
             break;
         }

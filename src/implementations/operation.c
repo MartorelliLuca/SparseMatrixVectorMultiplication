@@ -272,7 +272,7 @@ void compute_hll_parallel_performance(struct performance *node, int new_non_zero
 }
 
 // Matrix-vector parallel dot product in HLL format
-void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
+void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance **head, struct performance **tail, int new_non_zero_values, double *effective_results)
 {
     // printf("LISTA APPENA DENTRO HLL MAT VEC PARALLELO\n");
     // print_list(head);
@@ -300,7 +300,7 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
             sleep(3);
         }
 
-        add_node_performance(&head, &tail, node);
+        add_node_performance(head, tail, node);
 
         re_initialize_y_vector(hll_matrix->M, y);
 

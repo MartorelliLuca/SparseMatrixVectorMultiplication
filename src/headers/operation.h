@@ -10,7 +10,7 @@ void matvec_serial_csr(CSR_matrix *csr_matrix, double *x, double *y);
 void matvec_serial_hll(HLL_matrix *ellpack_matrix, double *x, double *y);
 
 void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance **head, struct performance **tail, int new_non_zero_values, double *effective_results);
-void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results);
+void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance **head, struct performance **tail, int new_non_zero_values, double *effective_results);
 void compute_parallel_performance(struct performance *node, double time_used, int new_non_zero_values, int thread_numbers);
 
 #endif

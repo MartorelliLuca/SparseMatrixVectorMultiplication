@@ -199,16 +199,22 @@ int main()
 
         re_initialize_y_vector(csr_matrix->M, z);
 
-        matvec_parallel_hll(hll_matrix, x, z, node, thread_numbers, head, tail, matrix->number_of_non_zeoroes_values, y);
+        matvec_parallel_hll(hll_matrix, x, z, node, thread_numbers, &head, &tail, matrix->number_of_non_zeoroes_values, y);
 
         // printf("PRINTO LA LISTA DOPO HLL PARALLELO\n");
         // print_list(head);
 
         sleep(3);
 
+        node = NULL;
+        node = reset_node();
+
         // HERE STARTS CUDA IMPLEMENTATION
-        invoke_cuda_csr_kernels(csr_matrix, x, z, y, head, tail, node);
-        invoke_cuda_hll_kernels(hll_matrix, x, z, y, head, tail, node);
+        invoke_cuda_csr_kernels(csr_matrix, x, z, y, &head, &tail, node);
+
+        node = NULL;
+        node = reset_node();
+        invoke_cuda_hll_kernels(hll_matrix, x, z, y, &head, &tail, node);
 
         printf("\n\nSTAMPO LA LISTA PER %s\n\n", csr_matrix->name);
         print_list(head);
