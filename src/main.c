@@ -210,14 +210,18 @@ int main()
         node = reset_node();
 
         // HERE STARTS CUDA IMPLEMENTATION
-        invoke_cuda_csr_kernels(csr_matrix, x, z, y, &head, &tail, node);
+        // invoke_cuda_csr_kernels(csr_matrix, x, z, y, &head, &tail, node);
 
         node = NULL;
         node = reset_node();
-        invoke_cuda_hll_kernels(hll_matrix, x, z, y, &head, &tail, node);
+        // invoke_cuda_hll_kernels(hll_matrix, x, z, y, &head, &tail, node);
 
-        printf("\n\nSTAMPO LA LISTA PER %s\n\n", csr_matrix->name);
-        print_list(head);
+        // printf("\n\nSTAMPO LA LISTA PER %s\n\n", csr_matrix->name);
+        // print_list(head);
+
+        save_performance_to_csv(head);
+
+        free_performance_list(&head);
 
         node = NULL;
         destroy_HLL_matrix(hll_matrix);

@@ -29,4 +29,7 @@ void print_list(struct performance *head);
 struct performance *reset_node();
 void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values);
 
+void save_performance_to_csv(struct performance *head);
+void free_performance_list(struct performance **head);
+
 #endif
