@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 dir_csv = os.path.join(os.path.dirname(__file__), "../data")  # Percorso relativo alla posizione dello script
 
 # Directory di destinazione per i grafici generati
-output_dir = os.path.join(os.path.dirname(__file__), "../output_graphs")  # Modifica questa variabile come preferisci
+output_dir = os.path.join(os.path.dirname(__file__), "../output_graphs")
 if not os.path.exists(output_dir):
-    os.makedirs(output_dir)  # Crea la directory se non esiste
+    os.makedirs(output_dir)
 
 # Lista di tutti i file CSV nella directory data
 csv_files = glob.glob(os.path.join(dir_csv, "*.csv"))
@@ -21,16 +21,14 @@ for file_name in os.listdir(dir_csv):
     if file_name.endswith(".csv"):
         file_path = os.path.join(dir_csv, file_name)
         df = pd.read_csv(file_path)
+        
+        # Aggiungi il nome della matrice come colonna
+        df["nameMatrix"] = os.path.splitext(file_name)[0]
 
-        # Verifica che la colonna "threads_used" esista nel file CSV
-        if "threads_used" not in df.columns:
-            print(f"Attenzione: Il file '{file_name}' non contiene la colonna 'threads_used', ignorato.")
-            continue  # Salta il file se manca la colonna
-
-        # Verifica che la colonna "computation_type" esista nel file CSV
-        if "computation_type" not in df.columns:
-            print(f"Attenzione: Il file '{file_name}' non contiene la colonna 'computation_type', ignorato.")
-            continue  # Salta il file se manca la colonna
+        # Verifica che le colonne necessarie esistano
+        if "threads_used" not in df.columns or "computation_type" not in df.columns:
+            print(f"Attenzione: Il file '{file_name}' manca di colonne richieste, ignorato.")
+            continue
 
         df["threads_used"] = df["threads_used"].astype(int)  # Assicurati che sia un intero
         dati.append(df)
@@ -47,11 +45,11 @@ computazioni_cuda_csr = ['cuda_csr_kernel_1', 'cuda_csr_kernel_2', 'cuda_csr_ker
 computazioni_cuda_hll = ['cuda_hll_kernel_1', 'cuda_hll_kernel_2', 'cuda_hll_kernel_3', 'cuda_hll_kernel_4']
 
 # Funzione per generare e salvare il grafico
-def genera_grafico(titolo, computazioni_tipo, matrice_nome):
+def genera_grafico(titolo, computazioni_tipo, matrice_nome, dati_matrice):
     plt.figure(figsize=(10, 6))
     
     for tipo in computazioni_tipo:
-        valori = dati[dati['computation_type'] == tipo]
+        valori = dati_matrice[dati_matrice['computation_type'] == tipo]
 
         # Raggruppa i dati per numero di thread
         thread_values = sorted(set(valori['threads_used']))
@@ -68,8 +66,6 @@ def genera_grafico(titolo, computazioni_tipo, matrice_nome):
     plt.title(titolo)
     plt.xlabel("Numero di Thread")
     plt.ylabel("Prestazioni (GFLOPS)")
-
-    # Posiziona la legenda fuori dal grafico
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.grid(True)
     plt.tight_layout()
@@ -79,19 +75,12 @@ def genera_grafico(titolo, computazioni_tipo, matrice_nome):
     plt.savefig(output_path)
     plt.close()
 
-# Genera e salva i grafici per ogni matrice e tipo di computazione
-for file_name in os.listdir(dir_csv):
-    if file_name.endswith(".csv"):
-        # Estrai il nome della matrice (senza estensione .csv)
-        matrice_nome = os.path.splitext(file_name)[0]
+# Genera e salva i grafici per ogni matrice trovata nel DataFrame
+for matrice_nome in dati["nameMatrix"].unique():
+    dati_matrice = dati[dati["nameMatrix"] == matrice_nome]
 
-        # Filtra i dati per il file corrente (matrice)
-        dati_matrice = dati[dati['nameMatrix'] == matrice_nome]
+    genera_grafico(f"Prestazioni OpenMP {matrice_nome} (CSR e HLL) vs. Numero di Thread", computazioni_openmp, matrice_nome, dati_matrice)
+    genera_grafico(f"Prestazioni CUDA CSR {matrice_nome} vs. Numero di Thread", computazioni_cuda_csr, matrice_nome, dati_matrice)
+    genera_grafico(f"Prestazioni CUDA HLL {matrice_nome} vs. Numero di Thread", computazioni_cuda_hll, matrice_nome, dati_matrice)
 
-        # Genera i grafici per ciascun tipo di computazione
-        genera_grafico(f"Prestazioni OpenMP {matrice_nome} (CSR e HLL) vs. Numero di Thread", computazioni_openmp, matrice_nome)
-        genera_grafico(f"Prestazioni CUDA CSR {matrice_nome} vs. Numero di Thread", computazioni_cuda_csr, matrice_nome)
-        genera_grafico(f"Prestazioni CUDA HLL {matrice_nome} vs. Numero di Thread", computazioni_cuda_hll, matrice_nome)
-
-# Messaggio di completamento
 print(f"I grafici sono stati salvati nella cartella '{output_dir}'.")
