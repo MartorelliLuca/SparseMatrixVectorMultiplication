@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 dir_csv = os.path.join(os.path.dirname(__file__), "../data")  # Percorso relativo alla posizione dello script
 
 # Directory di destinazione per i grafici generati
-output_dir = os.path.join(os.path.dirname(__file__), "../output_graphs")
+output_dir = os.path.join(os.path.dirname(__file__), "../charts/performance/single_performance_plot")
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 

@@ -4,14 +4,19 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Percorso corretto della directory contenente i file CSV
-dir_csv = os.path.join(os.path.dirname(__file__), "data")  # Percorso relativo alla posizione dello script
+#per calcolare l'efficienza fai il rapporto fra speedup e numero di thread
 
-# Lista di tutti i file CSV nella directory data
+
+# Percorso della directory contenente i file CSV
+dir_csv = os.path.join(os.path.dirname(__file__), "../data")  
+
+# Lista di tutti i file CSV nella directory
 csv_files = glob.glob(os.path.join(dir_csv, "*.csv"))
+if not csv_files:
+    print("Errore: Nessun file CSV trovato nella directory!")
+    exit()
 
-
-# Definizione delle soglie di nonzeri
+# Soglie di nonzeri
 soglie_nonzeri = [10000, 100000, 500000, 1e6, 2.5e6, 1e7]
 etichette_soglie = [
     "Nonzeri <10000",
@@ -24,22 +29,28 @@ etichette_soglie = [
 ]
 colori = ['b', 'orange', 'g', 'r', 'purple', 'brown', 'pink']
 
-# Dizionari per memorizzare i dati
+# Dizionari per i dati
 dati_serial = {}
 dati_parallel = {}
 num_nonzeri = {}
 
-# Caricare i dati dai file CSV
+# Caricamento dati dai CSV
 for file_path in csv_files:
     df = pd.read_csv(file_path)
-    
+
+    # Debug: Controlliamo che le colonne esistano
+    expected_columns = {"computation_type", "non_zero_values", "threads_used", "time_used"}
+    if not expected_columns.issubset(df.columns):
+        print(f"Errore: Colonne mancanti nel file {file_path}. Trovate: {df.columns}")
+        continue
+
     for _, row in df.iterrows():
         name_matrix = row["computation_type"]
         nonzeros = row["non_zero_values"]
         num_threads = row["threads_used"]
         time_used = row["time_used"]
-        
-        num_nonzeri[name_matrix] = nonzeros
+
+        num_nonzeri[name_matrix] = nonzeros  # Salviamo il numero di nonzeri
 
         # Dati seriali
         if "serial" in name_matrix:
@@ -53,6 +64,10 @@ for file_path in csv_files:
                 dati_parallel[name_matrix] = {}
             dati_parallel[name_matrix][num_threads] = time_used
 
+# Debug: Verifica che i dati seriali e paralleli siano stati caricati
+print(f"Dati seriali caricati: {dati_serial}")
+print(f"Dati paralleli caricati: {dati_parallel}")
+
 # Calcolo dell'efficienza
 matrici_efficiency = {}
 for matrix_name in dati_serial:
@@ -62,16 +77,30 @@ for matrix_name in dati_serial:
             if num_thread in dati_serial[matrix_name]:
                 serial_time = dati_serial[matrix_name][num_thread]
                 parallel_time = dati_parallel[matrix_name][num_thread]
-                if parallel_time > 0:
-                    efficiency = serial_time / (parallel_time * num_thread)
-                    matrici_efficiency[matrix_name][num_thread] = efficiency
 
-# Raggruppare gli efficiency medi per soglie di nonzeri
+                if parallel_time <= 0:
+                    print(f"Attenzione! Tempo di esecuzione parallelo zero o negativo per {matrix_name} con {num_thread} thread.")
+                    continue
+
+                efficiency = serial_time / (parallel_time * num_thread)
+                matrici_efficiency[matrix_name][num_thread] = efficiency
+            else:
+                print(f"Errore: Numero di thread {num_thread} non trovato in dati seriali per {matrix_name}.")
+    else:
+        print(f"Errore: Nessun dato parallelo trovato per {matrix_name}.")
+
+# Debug: Verifica che ci siano efficienze calcolate
+print(f"Efficienze calcolate: {matrici_efficiency}")
+
+# Raggruppamento per soglia di nonzeri
 gruppi_efficiency = {s: {} for s in soglie_nonzeri}
 
 for matrix_name, efficiencies in matrici_efficiency.items():
-    nonzeros = num_nonzeri[matrix_name]
-    
+    nonzeros = num_nonzeri.get(matrix_name, None)
+    if nonzeros is None:
+        print(f"Attenzione! Matrice {matrix_name} non ha un numero di nonzeri definito.")
+        continue
+
     for i, soglia in enumerate(soglie_nonzeri):
         if nonzeros <= soglia:
             for num_thread, efficiency in efficiencies.items():
@@ -86,7 +115,7 @@ for matrix_name, efficiencies in matrici_efficiency.items():
                 gruppi_efficiency[soglia][num_thread] = []
             gruppi_efficiency[soglia][num_thread].append(efficiency)
 
-# Calcolare lo efficiency medio per ogni intervallo di nonzeri
+# Calcolare efficienza media
 efficiency_medio = {}
 for soglia, efficiency_threads in gruppi_efficiency.items():
     efficiency_medio[soglia] = {
@@ -94,7 +123,13 @@ for soglia, efficiency_threads in gruppi_efficiency.items():
         for num_thread, valori_efficiency in efficiency_threads.items() if valori_efficiency
     }
 
-# Creare il grafico
+# Debug: Verifica se ci sono dati validi per il plot
+print(f"Efficienza media per soglia: {efficiency_medio}")
+if not any(efficiency_medio.values()):
+    print("Errore: Nessun dato di efficienza calcolato, impossibile plottare!")
+    exit()
+
+# Creazione del grafico
 plt.figure(figsize=(12, 7))
 for i, (soglia, efficiencies) in enumerate(efficiency_medio.items()):
     if efficiencies:
