@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 # Percorso della directory contenente i file CSV
-dir_csv = os.path.join(os.path.dirname(__file__), "../data")  
+dir_csv = os.path.join(os.path.dirname(__file__), "../../data")  
 
 # Lista di tutti i file CSV nella directory
 csv_files = glob.glob(os.path.join(dir_csv, "*.csv"))
