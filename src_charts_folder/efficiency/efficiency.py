@@ -1,147 +1,128 @@
 import os
-import glob
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
-#per calcolare l'efficienza fai il rapporto fra speedup e numero di thread
+# Percorso del file CSV generato
+speedup_csv_path = os.path.join(os.path.dirname(__file__), "../../data/speedup_single_csv/speedup_results.csv")
 
+# Percorso della directory di output per i grafici
+dir_plots = os.path.join(os.path.dirname(__file__), "../../charts/efficiency/single_efficiency_plot")
+os.makedirs(dir_plots, exist_ok=True)
 
-# Percorso della directory contenente i file CSV
-dir_csv = os.path.join(os.path.dirname(__file__), "../../data")  
+# Caricare il CSV
+df = pd.read_csv(speedup_csv_path)
 
-# Lista di tutti i file CSV nella directory
-csv_files = glob.glob(os.path.join(dir_csv, "*.csv"))
-if not csv_files:
-    print("Errore: Nessun file CSV trovato nella directory!")
-    exit()
+# Calcolare l'efficienza
+df["efficiency"] = df["speedup"] / df["num_threads"]
 
-# Soglie di nonzeri
-soglie_nonzeri = [10000, 100000, 500000, 1e6, 2.5e6, 1e7]
+# Ottenere le matrici uniche
+matrices = df["name_matrix"].unique()
+
+# Generare e salvare i plot per ogni matrice
+for matrix in matrices:
+    matrix_df = df[df["name_matrix"] == matrix]
+    
+    plt.figure(figsize=(10, 6))
+    for comp_type in matrix_df["computation_type"].unique():
+        subset = matrix_df[matrix_df["computation_type"] == comp_type]
+        plt.plot(subset["num_threads"], subset["efficiency"], marker='o', linestyle='-', label=comp_type)
+    
+    plt.xlabel("Numero di Thread")
+    plt.ylabel("Efficienza")
+    plt.title(f"Efficienza per {matrix}")
+    plt.legend()
+    plt.grid(True)
+    
+    # Salvare il grafico
+    plot_path = os.path.join(dir_plots, f"{matrix}_efficiency.png")
+    plt.savefig(plot_path)
+    plt.close()
+    
+    print(f"Grafico salvato: {plot_path}")
+
+# Generare e salvare i plot delle medie generali
+mean_plots = {
+    "parallel_open_mp": ["parallel_open_mp_csr", "parallel_open_mp_hll"],
+    "cuda_csr": ["cuda_csr_kernel_1", "cuda_csr_kernel_2", "cuda_csr_kernel_3", "cuda_csr_kernel_4"],
+    "cuda_hll": ["cuda_hll_kernel_1", "cuda_hll_kernel_2", "cuda_hll_kernel_3", "cuda_hll_kernel_4"]
+}
+
+dir_plots2 = os.path.join(os.path.dirname(__file__), "../../charts/efficiency/mean_efficiency")
+os.makedirs(dir_plots2, exist_ok=True)
+
+for plot_name, computation_types in mean_plots.items():
+    plt.figure(figsize=(10, 6))
+    mean_df = df[df["computation_type"].isin(computation_types)]
+    mean_efficiency = mean_df.groupby(["num_threads", "computation_type"])["efficiency"].mean().unstack()
+    
+    for comp_type in computation_types:
+        if comp_type in mean_efficiency:
+            plt.plot(mean_efficiency.index, mean_efficiency[comp_type], marker='o', linestyle='-', label=comp_type)
+    
+    plt.xlabel("Numero di Thread")
+    plt.ylabel("Efficienza Media")
+    plt.title(f"Efficienza Media per {plot_name}")
+    plt.legend()
+    plt.grid(True)
+    
+    # Salvare il grafico
+    plot_path = os.path.join(dir_plots2, f"{plot_name}_mean_efficiency.png")
+    plt.savefig(plot_path)
+    plt.close()
+    
+    print(f"Grafico salvato: {plot_path}")
+
+# ---------------------------- NUOVA FUNZIONALITÀ ----------------------------
+
+# Directory per i nuovi plot basati su non_zero_values
+dir_plots3 = os.path.join(os.path.dirname(__file__), "../../charts/efficiency/non_zero_charts")
+os.makedirs(dir_plots3, exist_ok=True)
+
+# Definizione degli intervalli di non_zero_values
+soglie = [0, 10000, 100000, 500000, 1000000, 2500000, 10000000, float('inf')]
 etichette_soglie = [
-    "Nonzeri <10000",
-    "Nonzeri 10000-100000",
-    "Nonzeri 100000-500000",
-    "Nonzeri 500000-1000000",
-    "Nonzeri 1000000-2500000",
-    "Nonzeri 2500000-10000000",
-    "Nonzeri >=10000000"
+    "non_zero_values <10000",
+    "non_zero_values 10000-100000",
+    "non_zero_values 100000-500000",
+    "non_zero_values 500000-1000000",
+    "non_zero_values 1000000-2500000",
+    "non_zero_values 2500000-10000000",
+    "non_zero_values >=10000000"
 ]
-colori = ['b', 'orange', 'g', 'r', 'purple', 'brown', 'pink']
 
-# Dizionari per i dati
-dati_serial = {}
-dati_parallel = {}
-num_nonzeri = {}
+# Lista dei formati per cui generare i plot
+formati = [
+    "parallel_open_mp_csr", "parallel_open_mp_hll",
+    "cuda_csr_kernel_1", "cuda_csr_kernel_2", "cuda_csr_kernel_3", "cuda_csr_kernel_4",
+    "cuda_hll_kernel_1", "cuda_hll_kernel_2", "cuda_hll_kernel_3", "cuda_hll_kernel_4"
+]
 
-# Caricamento dati dai CSV
-for file_path in csv_files:
-    df = pd.read_csv(file_path)
+# Aggiungere una nuova colonna per categorizzare le matrici nei vari intervalli
+df["non_zero_category"] = pd.cut(df["non_zero_values"], bins=soglie, labels=etichette_soglie, right=False)
 
-    # Debug: Controlliamo che le colonne esistano
-    expected_columns = {"computation_type", "non_zero_values", "threads_used", "time_used"}
-    if not expected_columns.issubset(df.columns):
-        print(f"Errore: Colonne mancanti nel file {file_path}. Trovate: {df.columns}")
-        continue
-
-    for _, row in df.iterrows():
-        name_matrix = row["computation_type"]
-        nonzeros = row["non_zero_values"]
-        num_threads = row["threads_used"]
-        time_used = row["time_used"]
-
-        num_nonzeri[name_matrix] = nonzeros  # Salviamo il numero di nonzeri
-
-        # Dati seriali
-        if "serial" in name_matrix:
-            if name_matrix not in dati_serial:
-                dati_serial[name_matrix] = {}
-            dati_serial[name_matrix][num_threads] = time_used
-
-        # Dati paralleli
-        if "parallel" in name_matrix:
-            if name_matrix not in dati_parallel:
-                dati_parallel[name_matrix] = {}
-            dati_parallel[name_matrix][num_threads] = time_used
-
-# Debug: Verifica che i dati seriali e paralleli siano stati caricati
-print(f"Dati seriali caricati: {dati_serial}")
-print(f"Dati paralleli caricati: {dati_parallel}")
-
-# Calcolo dell'efficienza
-matrici_efficiency = {}
-for matrix_name in dati_serial:
-    if matrix_name in dati_parallel:
-        matrici_efficiency[matrix_name] = {}
-        for num_thread in dati_parallel[matrix_name]:
-            if num_thread in dati_serial[matrix_name]:
-                serial_time = dati_serial[matrix_name][num_thread]
-                parallel_time = dati_parallel[matrix_name][num_thread]
-
-                if parallel_time <= 0:
-                    print(f"Attenzione! Tempo di esecuzione parallelo zero o negativo per {matrix_name} con {num_thread} thread.")
-                    continue
-
-                efficiency = serial_time / (parallel_time * num_thread)
-                matrici_efficiency[matrix_name][num_thread] = efficiency
-            else:
-                print(f"Errore: Numero di thread {num_thread} non trovato in dati seriali per {matrix_name}.")
-    else:
-        print(f"Errore: Nessun dato parallelo trovato per {matrix_name}.")
-
-# Debug: Verifica che ci siano efficienze calcolate
-print(f"Efficienze calcolate: {matrici_efficiency}")
-
-# Raggruppamento per soglia di nonzeri
-gruppi_efficiency = {s: {} for s in soglie_nonzeri}
-
-for matrix_name, efficiencies in matrici_efficiency.items():
-    nonzeros = num_nonzeri.get(matrix_name, None)
-    if nonzeros is None:
-        print(f"Attenzione! Matrice {matrix_name} non ha un numero di nonzeri definito.")
-        continue
-
-    for i, soglia in enumerate(soglie_nonzeri):
-        if nonzeros <= soglia:
-            for num_thread, efficiency in efficiencies.items():
-                if num_thread not in gruppi_efficiency[soglia]:
-                    gruppi_efficiency[soglia][num_thread] = []
-                gruppi_efficiency[soglia][num_thread].append(efficiency)
-            break
-    else:
-        soglia = soglie_nonzeri[-1]
-        for num_thread, efficiency in efficiencies.items():
-            if num_thread not in gruppi_efficiency[soglia]:
-                gruppi_efficiency[soglia][num_thread] = []
-            gruppi_efficiency[soglia][num_thread].append(efficiency)
-
-# Calcolare efficienza media
-efficiency_medio = {}
-for soglia, efficiency_threads in gruppi_efficiency.items():
-    efficiency_medio[soglia] = {
-        num_thread: np.mean(valori_efficiency)
-        for num_thread, valori_efficiency in efficiency_threads.items() if valori_efficiency
-    }
-
-# Debug: Verifica se ci sono dati validi per il plot
-print(f"Efficienza media per soglia: {efficiency_medio}")
-if not any(efficiency_medio.values()):
-    print("Errore: Nessun dato di efficienza calcolato, impossibile plottare!")
-    exit()
-
-# Creazione del grafico
-plt.figure(figsize=(12, 7))
-for i, (soglia, efficiencies) in enumerate(efficiency_medio.items()):
-    if efficiencies:
-        thread_values = sorted(efficiencies.keys())
-        efficiency_values = [efficiencies[t] for t in thread_values]
-        plt.plot(thread_values, efficiency_values, linestyle='-', 
-                 color=colori[i], label=etichette_soglie[i])
-
-plt.title("Efficienza Media vs. Numero di Thread")
-plt.xlabel("Numero di Thread")
-plt.ylabel("Efficienza Media")
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.grid(True)
-plt.tight_layout()
-plt.show()
+# Generazione dei plot
+for formato in formati:
+    plt.figure(figsize=(12, 7))
+    
+    df_formato = df[df["computation_type"] == formato]
+    
+    # Calcolare la media dell'efficienza per ciascun intervallo e numero di thread
+    media_efficiency = df_formato.groupby(["num_threads", "non_zero_category"])["efficiency"].mean().unstack()
+    
+    for categoria in etichette_soglie:
+        if categoria in media_efficiency:
+            plt.plot(media_efficiency.index, media_efficiency[categoria], marker='o', linestyle='-', label=categoria)
+    
+    plt.xlabel("Numero di Thread")
+    plt.ylabel("Efficienza Media")
+    plt.title(f"Efficienza Media per {formato} in base a Non-Zero Values")
+    plt.legend(title="Intervalli di Non-Zero Values", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.grid(True)
+    plt.tight_layout()
+    
+    # Salvare il grafico
+    plot_path = os.path.join(dir_plots3, f"{formato}_non_zero_efficiency.png")
+    plt.savefig(plot_path)
+    plt.close()
+    
+    print(f"Grafico salvato: {plot_path}")
