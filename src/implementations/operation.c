@@ -25,73 +25,52 @@ void matvec(double **A, double *x, double *y, int M, int N)
             y[i] += A[i][j] * x[j];
 }
 
-// 1. Modifichi la firma della funzione aggiungendo un parametro
-//    (int *actual_num_threads). Ci scriverai dentro i thread realmente usati:
-int *matrix_partition(CSR_matrix *csr_matrix, int num_threads, int *actual_num_threads)
+void matrix_partition(CSR_matrix *csr_matrix, int num_threads, int *start_row_indices)
 {
-    int *row_non_zero_count = malloc(csr_matrix->M * sizeof(int));
+    int *row_non_zero_count = (int *)malloc(csr_matrix->M * sizeof(int));
+    int *workload_per_thread = (int *)calloc(num_threads, sizeof(int));
     double total_non_zero_elements = 0.0;
 
-    // Conta i non-zero per riga
     for (int row = 0; row < csr_matrix->M; row++)
     {
         row_non_zero_count[row] = csr_matrix->IRP[row + 1] - csr_matrix->IRP[row];
         total_non_zero_elements += row_non_zero_count[row];
     }
 
-    // Calcolo del carico target
     double target_workload_per_thread = total_non_zero_elements / num_threads;
-
-    // Alloca +1 per salvare anche la riga finale (M)
-    int *temp_start_row_indices = malloc((num_threads + 1) * sizeof(int));
-
     double current_thread_workload = 0.0;
     int current_thread_id = 0;
-
-    temp_start_row_indices[0] = 0;
+    start_row_indices[0] = 0;
 
     for (int row = 0; row < csr_matrix->M; row++)
     {
         current_thread_workload += row_non_zero_count[row];
+        workload_per_thread[current_thread_id] += row_non_zero_count[row];
 
-        if (current_thread_workload >= target_workload_per_thread &&
-            current_thread_id < num_threads - 1)
+        if (current_thread_workload >= target_workload_per_thread && current_thread_id < num_threads - 1)
         {
+            start_row_indices[current_thread_id + 1] = row + 1;
             current_thread_id++;
-            temp_start_row_indices[current_thread_id] = row + 1;
             current_thread_workload = 0.0;
         }
     }
 
-    // current_thread_id + 1 = numero di thread effettivamente usati
-    temp_start_row_indices[current_thread_id + 1] = csr_matrix->M;
-
-    // Esegui eventuale realloc se hai usato meno thread
-    int used_threads = current_thread_id + 1;
-    int new_size = used_threads + 1;
-    temp_start_row_indices = realloc(temp_start_row_indices, new_size * sizeof(int));
-    if (!temp_start_row_indices)
-    {
-        fprintf(stderr, "ERRORE REALLOC temp_start_row_indices\n");
-        exit(EXIT_FAILURE);
-    }
-
-    // 2. Salvi il numero effettivo di thread nel parametro passato dal main
-    *actual_num_threads = used_threads;
+    start_row_indices[num_threads] = csr_matrix->M;
 
     free(row_non_zero_count);
-
-    return temp_start_row_indices;
+    free(workload_per_thread);
 }
 
-void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector, int num_threads, double *execution_time, int *first_row)
+void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector, int num_threads, double *execution_time /*, double *times_vector*/)
 {
     double start_time = omp_get_wtime();
 
 #pragma omp parallel num_threads(num_threads)
     {
         int thread_id = omp_get_thread_num();
-        for (int row = first_row[thread_id]; row < first_row[thread_id + 1] - 1; row++)
+
+#pragma omp for schedule(dynamic, 32) // Bilanciamento del carico
+        for (int row = 0; row < csr_matrix->M; row++)
         {
             double sum = 0.0;
             for (int idx = csr_matrix->IRP[row]; idx < csr_matrix->IRP[row + 1]; idx++)
@@ -100,6 +79,9 @@ void product(CSR_matrix *csr_matrix, double *input_vector, double *output_vector
             }
             output_vector[row] = sum;
         }
+
+        // printf("Thread %d: started: %.16lf, ended: %.16lf and took this time: %.16lf\n", thread_id, local_start_time, local_end_time, local_end_time - local_start_time);
+        // times_vector[thread_id] = local_end_time - local_start_time;
     }
 
     double end_time = omp_get_wtime();
@@ -142,28 +124,47 @@ void compute_parallel_performance(struct performance *node, double *time_used, i
     printf("node->time_used = %.16lf\n", node->time_used);
 }
 
-void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
+void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance **head, struct performance **tail, int new_non_zero_values, double *effective_results)
 {
-    double time_used;
+
+    // printf("LISTA APPENA DENTRO CSR MAT VEC PARALLELO\n");
+    // print_list(*head);
+    // printf("head = %p, tail = %p\n", *head, *tail);
+
+    double time_used, time_used2;
+
     for (int index = 0; index < NUM_THREADS; index++)
     {
         int num_threads = thread_numbers[index];
-        int actual_threads;
 
-        int *first_row = (int *)calloc(num_threads + 1, sizeof(int));
+        // partiziona il lavoro tra i thread
+        int *first_row;
+
+        first_row = (int *)calloc(num_threads + 1, sizeof(int)); // Allocare num_threads + 1 elementi
         if (!first_row)
         {
             perror("Errore in calloc per first_row");
             exit(EXIT_FAILURE);
         }
 
-        first_row = matrix_partition(csr_matrix, num_threads, &actual_threads);
-        product(csr_matrix, x, y, actual_threads, &time_used, first_row);
+        double *times_vector = (double *)calloc(num_threads, sizeof(double));
+        if (!times_vector)
+        {
+            perror("Errore in calloc per times_vector");
+            exit(EXIT_FAILURE);
+        }
 
+        matrix_partition(csr_matrix, num_threads, first_row);
+
+        product(csr_matrix, x, y, num_threads, &time_used);
         compute_parallel_performance(node, &time_used, new_non_zero_values, num_threads);
-        printf("Tempo utilizzato per l'esecuzione con %d con csr parallelo = %.16lf\n", num_threads, node->time_used);
+        printf("Tempo utilizzato per l'esecuzione con %d con csr parallelo = %.lf\n", num_threads, node->time_used);
 
-        compute_norm(y, effective_results, csr_matrix->M, 1e-6);
+        if (!compute_norm(y, effective_results, csr_matrix->M, 1e-6))
+        {
+            printf("Errore nel controllo per %s dopo il csr parallelo\n", csr_matrix->name);
+            sleep(1);
+        }
 
         node->non_zeroes_values = new_non_zero_values;
         node->computation = PARALLEL_OPEN_MP_CSR;
@@ -171,7 +172,18 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
         add_node_performance(head, tail, node);
 
         print_parallel_csr_result(node);
+
+        re_initialize_y_vector(csr_matrix->M, y);
+
+        node = NULL;
+        node = reset_node();
+        strcpy(node->matrix, csr_matrix->name);
+        // fai il prodotto scalare tra la riga i-esima e il vettore x
     }
+
+    // printf("\n\nLISTA APPENA FINITO CSR MAT VEC PARALLELO\n");
+    // print_list(*head);
+    // printf("head = %p, tail = %p\n", *head, *tail);
 }
 
 static inline int num_of_rows(HLL_matrix *hll, int h)
@@ -260,8 +272,12 @@ void compute_hll_parallel_performance(struct performance *node, int new_non_zero
 }
 
 // Matrix-vector parallel dot product in HLL format
-void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance *head, struct performance *tail, int new_non_zero_values, double *effective_results)
+void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance **head, struct performance **tail, int new_non_zero_values, double *effective_results)
 {
+    // printf("LISTA APPENA DENTRO HLL MAT VEC PARALLELO\n");
+    // print_list(head);
+    // printf("head = %p, tail = %p\n", head, tail);
+
     double time_used, start, end;
     for (int index = 0; index < NUM_THREADS; index++)
     {
@@ -275,11 +291,7 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
         }
 
         hll_parallel_product(hll_matrix, x, y, num_threads, &time_used);
-
         compute_hll_parallel_performance(node, new_non_zero_values, time_used, num_threads);
-
-        add_node_performance(head, tail, node);
-
         print_parallel_hll_result(node);
 
         if (!compute_norm(y, effective_results, hll_matrix->M, 1e-6))
@@ -288,6 +300,16 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
             sleep(3);
         }
 
+        add_node_performance(head, tail, node);
+
         re_initialize_y_vector(hll_matrix->M, y);
+
+        node = NULL;
+        node = reset_node();
+        strcpy(node->matrix, hll_matrix->name);
     }
+
+    // printf("LISTA APPENA FUORI HLL MAT VEC PARALLELO\n");
+    // print_list(head);
+    // printf("head = %p, tail = %p\n", head, tail);
 }
