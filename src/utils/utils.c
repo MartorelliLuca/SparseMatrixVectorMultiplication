@@ -253,7 +253,7 @@ double compute_norm(double *z, double *y, int n, double esp)
         }
     }
     s /= n;
-    if (s > 0.0)
+    if (1)
         printf("error = %.16lf\n", s);
     return s > 0.0 ? 0 : 1;
 }
@@ -273,37 +273,40 @@ double *unit_vector(int size)
     return x;
 }
 
-void add_node_performance(struct performance **head, struct performance **tail, struct performance *node)
+void add_node_performance(struct performance *head, struct performance *tail, struct performance *node)
 {
-    if (node == NULL)
-        return; // Evita problemi se il nodo passato è NULL
-
-    node->next_node = NULL;
-    node->prev_node = NULL;
-
-    if (*head == NULL) // Lista vuota
+    if (head == NULL)
     {
-        *head = node;
-        *tail = node;
+        head = (struct performance *)calloc(1, sizeof(struct performance));
+        if (head == NULL)
+        {
+            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        }
+        tail = (struct performance *)calloc(1, sizeof(struct performance));
+        if (tail == NULL)
+        {
+            printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
+        }
+
+        head = node;
+        tail = node;
     }
-    else // Lista già popolata
+    else
     {
-        (*tail)->next_node = node;
-        node->prev_node = *tail;
-        *tail = node;
+        tail->next_node = node;
+        node->prev_node = tail;
+        tail = node;
     }
 }
-
-struct performance *reset_node()
+void *reset_node(struct performance *node)
 {
-    struct performance *node = NULL;
+    node = NULL;
     node = (struct performance *)calloc(1, sizeof(struct performance));
     if (node == NULL)
     {
         printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
         exit(EXIT_FAILURE);
     }
-    return node;
 }
 
 void compute_serial_performance(struct performance *node, double time_used, int new_non_zero_values)
@@ -363,6 +366,10 @@ void print_cuda_hll_kernel_performance(struct performance *node)
     printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato hll con CUDA!\n");
     switch (node->computation)
     {
+    case CUDA_HLL_KERNEL_0:
+        printf("CUDA HLL Kernel 0\n");
+        break;
+
     case CUDA_HLL_KERNEL_1:
         printf("CUDA HLL Kernel 1\n");
         break;
@@ -377,6 +384,14 @@ void print_cuda_hll_kernel_performance(struct performance *node)
 
     case CUDA_HLL_KERNEL_4:
         printf("CUDA HLL Kernel 4\n");
+        break;
+
+    case CUDA_HLL_KERNEL_5:
+        printf("CUDA HLL Kernel 5\n");
+        break;
+
+    case CUDA_HLL_KERNEL_6:
+        printf("CUDA HLL Kernel 6\n");
         break;
     }
 
@@ -414,222 +429,4 @@ void print_cuda_csr_kernel_performance(struct performance *node)
     printf("FLOPS:                          %.16lf\n", node->flops);
     printf("MFLOPS:                         %.16lf\n", node->mflops);
     printf("GFLOPS:                         %.16lf\n\n", node->gflops);
-}
-
-void print_list(struct performance *head)
-{
-    struct performance *current = head;
-    while (current != NULL)
-    {
-        printf("Matrice:                    %s\n", current->matrix);
-        printf("Numero di thread:           %d\n", current->number_of_threads_used);
-        switch (current->computation)
-        {
-        case SERIAL_CSR:
-            printf("Serial CSR\n");
-            break;
-
-        case SERIAL_HHL:
-            printf("Serial HLL\n");
-            break;
-
-        case PARALLEL_OPEN_MP_CSR:
-            printf("Parallel OPEN MP CSR\n");
-            break;
-
-        case PARALLEL_OPEN_MP_HLL:
-            printf("Parallel OPEN MP HLL\n");
-            break;
-
-        case CUDA_CSR_KERNEL_1:
-            printf("CUDA CSR KERNEL 1\n");
-            break;
-
-        case CUDA_CSR_KERNEL_2:
-            printf("CUDA CSR KERNEL 2\n");
-            break;
-
-        case CUDA_CSR_KERNEL_3:
-            printf("CUDA CSR KERNEL 3\n");
-            break;
-
-        case CUDA_CSR_KERNEL_4:
-            printf("CUDA CSR KERNEL 4\n");
-            break;
-
-        case CUDA_HLL_KERNEL_1:
-            printf("CUDA HLL KERNEL 1\n");
-            break;
-
-        case CUDA_HLL_KERNEL_2:
-            printf("CUDA HLL KERNEL 2\n");
-            break;
-
-        case CUDA_HLL_KERNEL_3:
-            printf("CUDA HLL KERNEL 3\n");
-            break;
-
-        case CUDA_HLL_KERNEL_4:
-            printf("CUDA HLL KERNEL 4\n");
-            break;
-        }
-        printf("Time Used:                  %.16lf\n", current->time_used);
-        printf("Flops:                      %.16lf\n", current->flops);
-        printf("MFLOPS:                     %.16lf\n", current->mflops);
-        printf("GFLOPS:                     %.16lf\n", current->gflops);
-        puts("");
-        current = current->next_node;
-    }
-}
-void remove_extension(char *filename)
-{
-    if (!filename)
-        return; // Protezione contro NULL
-    char *dot = strrchr(filename, '.');
-    if (dot && dot != filename)
-    {
-        *dot = '\0';
-    }
-}
-
-int create_directory_recursively(const char *path)
-{
-    char tmp[512];
-    char *pos = NULL;
-    size_t len;
-
-    // Copia del percorso completo per non modificare il parametro originale
-    snprintf(tmp, sizeof(tmp), "%s", path);
-    len = strlen(tmp);
-
-    // Aggiungi una barra finale per ogni parte della directory
-    for (pos = tmp + 1; *pos; ++pos)
-    {
-        if (*pos == '/')
-        {
-            *pos = '\0';
-            if (mkdir(tmp, 0700) == -1)
-            {
-                if (errno != EEXIST)
-                {
-                    perror("Errore nella creazione della cartella");
-                    return -1;
-                }
-            }
-            *pos = '/';
-        }
-    }
-
-    // Crea la cartella finale
-    if (mkdir(tmp, 0700) == -1)
-    {
-        if (errno != EEXIST)
-        {
-            perror("Errore nella creazione della cartella");
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
-void save_performance_to_csv(struct performance *head)
-{
-    if (!head)
-    {
-        printf("Empty list\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (create_directory_recursively("../data") != 0)
-    {
-        exit(EXIT_FAILURE);
-    }
-
-    char matrix_name[256];
-    strncpy(matrix_name, head->matrix, sizeof(matrix_name) - 1);
-    matrix_name[sizeof(matrix_name) - 1] = '\0';
-    remove_extension(matrix_name);
-
-    char filename[512];
-    snprintf(filename, sizeof(filename), "../data/%s.csv", matrix_name);
-
-    FILE *file = fopen(filename, "w");
-    if (!file)
-    {
-        printf("Error in fopen for %s\nError code: %d\n", filename, errno);
-        exit(EXIT_FAILURE);
-    }
-
-    fprintf(file, "threads_used,computation_type,non_zero_values,time_used,FLOPS,MFLOPS,GFLOPS\n");
-
-    struct performance *current = head;
-    while (current)
-    {
-        fprintf(file, "%d,", current->number_of_threads_used);
-
-        switch (current->computation)
-        {
-        case SERIAL_CSR:
-            fprintf(file, "serial_csr,");
-            break;
-        case SERIAL_HHL:
-            fprintf(file, "serial_hll,");
-            break;
-        case PARALLEL_OPEN_MP_CSR:
-            fprintf(file, "parallel_open_mp_csr,");
-            break;
-        case PARALLEL_OPEN_MP_HLL:
-            fprintf(file, "parallel_open_mp_hll,");
-            break;
-        case CUDA_CSR_KERNEL_1:
-            fprintf(file, "cuda_csr_kernel_1,");
-            break;
-        case CUDA_CSR_KERNEL_2:
-            fprintf(file, "cuda_csr_kernel_2,");
-            break;
-        case CUDA_CSR_KERNEL_3:
-            fprintf(file, "cuda_csr_kernel_3,");
-            break;
-        case CUDA_CSR_KERNEL_4:
-            fprintf(file, "cuda_csr_kernel_4,");
-            break;
-        case CUDA_HLL_KERNEL_1:
-            fprintf(file, "cuda_hll_kernel_1,");
-            break;
-        case CUDA_HLL_KERNEL_2:
-            fprintf(file, "cuda_hll_kernel_2,");
-            break;
-        case CUDA_HLL_KERNEL_3:
-            fprintf(file, "cuda_hll_kernel_3,");
-            break;
-        case CUDA_HLL_KERNEL_4:
-            fprintf(file, "cuda_hll_kernel_4,");
-            break;
-        }
-
-        fprintf(file, "%d,%.16f,%.16f,%.16f,%.16f\n",
-                current->non_zeroes_values,
-                current->time_used,
-                current->flops,
-                current->mflops,
-                current->gflops);
-
-        current = current->next_node;
-    }
-
-    fclose(file);
-    printf("File salvato con successo: %s\n", filename);
-}
-
-void free_performance_list(struct performance **head)
-{
-    struct performance *current = *head;
-    while (current)
-    {
-        struct performance *next = current->next_node;
-        free(current);
-        current = next;
-    }
-    *head = NULL;
 }
