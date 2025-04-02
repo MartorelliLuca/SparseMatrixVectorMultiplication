@@ -169,10 +169,9 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
 
         add_node_performance(head, tail, node);
 
+        print_parallel_csr_result(node);
         node = NULL;
         node = reset_node();
-
-        print_parallel_csr_result(node);
     }
 }
 
