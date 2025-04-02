@@ -25,7 +25,6 @@ void matvec(double **A, double *x, double *y, int M, int N)
             y[i] += A[i][j] * x[j];
 }
 
-
 //    (int *actual_num_threads). Ci scriverai dentro i thread realmente usati:
 int *matrix_partition(CSR_matrix *csr_matrix, int num_threads, int *actual_num_threads)
 {
@@ -169,6 +168,9 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
         node->computation = PARALLEL_OPEN_MP_CSR;
 
         add_node_performance(head, tail, node);
+
+        node = NULL;
+        node = reset_node();
 
         print_parallel_csr_result(node);
     }
