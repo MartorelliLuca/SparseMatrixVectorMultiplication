@@ -22,7 +22,7 @@ void print_error(cudaError_t *error, int kernel_index)
 {
     if (*error != cudaSuccess)
     {
-        printf("Error occour in invoke kernel %d\nError: %s\n", kernel_index, cudaGetErrorString(*error));
+        // printf("Error occour in invoke kernel %d\nError: %s\n", kernel_index, cudaGetErrorString(*error));
         exit(EXIT_FAILURE);
     }
 }
@@ -31,8 +31,7 @@ inline void check_cuda(cudaError_t err, const char *file, int line)
 {
     if (err != cudaSuccess)
     {
-        fprintf(stderr, "CUDA Error: %s (file %s, line %d)\n",
-                cudaGetErrorString(err), file, line);
+        // fprintf(stderr, "CUDA Error: %s (file %s, line %d)\n", cudaGetErrorString(err), file, line);
         exit(EXIT_FAILURE);
     }
 }
