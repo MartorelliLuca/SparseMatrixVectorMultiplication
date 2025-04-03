@@ -119,11 +119,10 @@ float invoke_kernel_csr_2(CSR_matrix *csr_matrix, double *x, double *z, int num_
     printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
     printf("blockDim2.y = %d\n", blockDim2.y);
     printf("gridDim2 = %d\n", gridDim2);
-    size_t sharedMemSize = blockDim2.y * WARP_SIZE * sizeof(double);
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     cudaEventRecord(start);
-    csr_matvec_shfl_reduction<<<gridDim2, blockDim2, sharedMemSize>>>(d_csr, csr_matrix->M, d_x, d_y);
+    csr_matvec_shfl_reduction<<<gridDim2, blockDim2>>>(d_csr, csr_matrix->M, d_x, d_y);
     // 32   -> 42.73
     // 16   -> 50.76
     // 8    -> 53.87
