@@ -41,17 +41,17 @@ float invoke_kernel_csr_1(CSR_matrix *csr_matrix, double *x, double *z, int num_
     CHECK_CUDA_ERROR(cudaMemcpy(d_x, x, csr_matrix->N * sizeof(double), cudaMemcpyHostToDevice));
     CHECK_CUDA_ERROR(cudaMemset(d_y, 0, csr_matrix->M * sizeof(double)));
 
-    printf("Configurazione kernel 1:\n");
-    printf("Matrice CSR: %s\n", csr_matrix->name);
-    printf("Dimensioni: M = %d, N = %d\n", csr_matrix->M, csr_matrix->N);
-    printf("Valori non zero: %d\n", csr_matrix->non_zero_values);
+    // printf("Configurazione kernel 1:\n");
+    // printf("Matrice CSR: %s\n", csr_matrix->name);
+    // printf("Dimensioni: M = %d, N = %d\n", csr_matrix->M, csr_matrix->N);
+    // printf("Valori non zero: %d\n", csr_matrix->non_zero_values);
 
     dim3 blockDim1(WARP_SIZE, num_threads_per_block);
     dim3 gridDim1((csr_matrix->M + blockDim1.y - 1) / blockDim1.y);
 
-    printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
-    printf("gridSize = %d\n", gridDim1);
-    printf("blockSize = %d\n", blockDim1.y);
+    // printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
+    // printf("gridSize = %d\n", gridDim1);
+    // printf("blockSize = %d\n", blockDim1.y);
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -75,7 +75,7 @@ float invoke_kernel_csr_1(CSR_matrix *csr_matrix, double *x, double *z, int num_
     cudaEventElapsedTime(&milliseconds, start, stop);
 
     cudaMemcpy(z, d_y, csr_matrix->M * sizeof(double), cudaMemcpyDeviceToHost);
-    printf("Milliseconds = %.16lf\n", milliseconds);
+    // printf("Milliseconds = %.16lf\n", milliseconds);
 
     time = milliseconds / 1000.0;
 
@@ -115,10 +115,10 @@ float invoke_kernel_csr_2(CSR_matrix *csr_matrix, double *x, double *z, int num_
     // Configurazione blocchi e griglia kernel
     dim3 blockDim2(WARP_SIZE, num_threads_per_block);
     dim3 gridDim2((csr_matrix->M + blockDim2.y - 1) / blockDim2.y);
-    printf("Configurazione kernel 2:\n");
-    printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
-    printf("blockDim2.y = %d\n", blockDim2.y);
-    printf("gridDim2 = %d\n", gridDim2);
+    // printf("Configurazione kernel 2:\n");
+    // printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
+    // printf("blockDim2.y = %d\n", blockDim2.y);
+    // printf("gridDim2 = %d\n", gridDim2);
     size_t sharedMemSize = blockDim2.y * WARP_SIZE * sizeof(double);
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -133,7 +133,7 @@ float invoke_kernel_csr_2(CSR_matrix *csr_matrix, double *x, double *z, int num_
     CHECK_CUDA_ERROR(cudaEventSynchronize(stop));
     CHECK_CUDA_ERROR(cudaEventElapsedTime(&elapsedTime, start, stop));
 
-    printf("\nTempo di esecuzione: %.10f ms\n", elapsedTime);
+    // printf("\nTempo di esecuzione: %.10f ms\n", elapsedTime);
 
     // Risultato da GPU a CPU
     CHECK_CUDA_ERROR(cudaMemcpy(z, d_y, csr_matrix->M * sizeof(double), cudaMemcpyDeviceToHost));
@@ -177,10 +177,10 @@ float invoke_kernel_csr_3(CSR_matrix *csr_matrix, double *x, double *z, int num_
     // 2. Definire il numero di blocchi e thread per blocco
     dim3 blockDim3(WARP_SIZE, num_threads_per_block);
     dim3 gridDim3((csr_matrix->M + blockDim3.y - 1) / blockDim3.y);
-    printf("Configurazione kernel 3:\n");
-    printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
-    printf("blockDim3.y = %d\n", blockDim3.y);
-    printf("gridDim3 = %d\n", gridDim3);
+    // printf("Configurazione kernel 3:\n");
+    // printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
+    // printf("blockDim3.y = %d\n", blockDim3.y);
+    // printf("gridDim3 = %d\n", gridDim3);
 
     // Allocazione memoria condivisa
     size_t shared_mem_size = num_threads_per_block * WARP_SIZE * sizeof(double);
@@ -208,7 +208,7 @@ float invoke_kernel_csr_3(CSR_matrix *csr_matrix, double *x, double *z, int num_
     // printf("\n\n");
     // print_vector4(z, 4, "z");
     // printf("\n\n");
-    printf("Milliseconds = %.16lf\n", milliseconds);
+    // printf("Milliseconds = %.16lf\n", milliseconds);
 
     elapsedTime = milliseconds / 1000.0;
     // 7. Deallocazione memoria GPU
@@ -246,10 +246,10 @@ float invoke_kernel_csr_4(CSR_matrix *csr_matrix, double *x, double *z, int num_
     // Configurazione blocchi e griglia kernel
     dim3 blockDim4(WARP_SIZE, num_threads_per_block);
     dim3 gridDim4((csr_matrix->M + blockDim4.y - 1) / blockDim4.y);
-    printf("Configurazione kernel 4:\n");
-    printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
-    printf("blockDim4.y = %d\n", blockDim4.y);
-    printf("gridDim4 = %d\n", gridDim4);
+    // printf("Configurazione kernel 4:\n");
+    // printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
+    // printf("blockDim4.y = %d\n", blockDim4.y);
+    // printf("gridDim4 = %d\n", gridDim4);
 
     // Creazione e avvio degli eventi CUDA con gestione errori
     cudaEventCreate(&start);
@@ -267,7 +267,7 @@ float invoke_kernel_csr_4(CSR_matrix *csr_matrix, double *x, double *z, int num_
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsedTime, start, stop);
-    printf("Tempo di esecuzione: %.10f ms\n", elapsedTime);
+    // printf("Tempo di esecuzione: %.10f ms\n", elapsedTime);
 
     // Copia risultato da GPU a CPU con gestione errori
     cudaMemcpy(z, d_y, csr_matrix->M * sizeof(double), cudaMemcpyDeviceToHost);

@@ -138,7 +138,7 @@ void compute_parallel_performance(struct performance *node, double *time_used, i
     node->mflops = mflops;
     node->gflops = gflops;
     node->time_used = *time_used;
-    printf("node->time_used = %.16lf\n", node->time_used);
+    // printf("node->time_used = %.16lf\n", node->time_used);
 }
 
 void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance **head, struct performance **tail, int new_non_zero_values, double *effective_results)
@@ -160,7 +160,7 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
         product(csr_matrix, x, y, actual_threads, &time_used, first_row);
 
         compute_parallel_performance(node, &time_used, new_non_zero_values, num_threads);
-        printf("Tempo utilizzato per l'esecuzione con %d con csr parallelo = %.16lf\n", num_threads, node->time_used);
+        // printf("Tempo utilizzato per l'esecuzione con %d con csr parallelo = %.16lf\n", num_threads, node->time_used);
 
         compute_norm(y, effective_results, csr_matrix->M, 1e-6);
 
@@ -169,7 +169,7 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
 
         add_node_performance(head, tail, node);
 
-        print_parallel_csr_result(node);
+        // print_parallel_csr_result(node);
         node = NULL;
         node = reset_node();
     }
@@ -281,7 +281,7 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
 
         hll_parallel_product(hll_matrix, x, y, num_threads, &time_used);
         compute_hll_parallel_performance(node, new_non_zero_values, time_used, num_threads);
-        print_parallel_hll_result(node);
+        // print_parallel_hll_result(node);
 
         if (!compute_norm(y, effective_results, hll_matrix->M, 1e-6))
         {

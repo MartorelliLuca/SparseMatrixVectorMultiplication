@@ -32,4 +32,7 @@ void compute_serial_performance(struct performance *node, double time_used, int 
 void save_performance_to_csv(struct performance *head);
 void free_performance_list(struct performance **head);
 
+void print_progress_bar(char *s, double part, double total, double oldPart);
+void print_title();
+
 #endif

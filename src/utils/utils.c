@@ -254,8 +254,8 @@ double compute_norm(double *z, double *y, int n, double esp)
     }
     s /= n;
     if (s > 0.0)
-        printf("error = %.16lf\n", s);
-    return s > 0.0 ? 0 : 1;
+        // printf("error = %.16lf\n", s);
+        return s > 0.0 ? 0 : 1;
 }
 
 double *unit_vector(int size)
@@ -619,7 +619,7 @@ void save_performance_to_csv(struct performance *head)
     }
 
     fclose(file);
-    printf("File salvato con successo: %s\n", filename);
+    // printf("File salvato con successo: %s\n", filename);
 }
 
 void free_performance_list(struct performance **head)
@@ -632,4 +632,46 @@ void free_performance_list(struct performance **head)
         current = next;
     }
     *head = NULL;
+}
+
+void print_progress_bar(char *s, double part, double total, double oldPart)
+{
+    double percentage = (part / total) * 100;
+    double oldPercentage = (oldPart / total) * 100;
+
+    if ((int)oldPercentage == (int)percentage && part != total)
+    {
+        return;
+    }
+
+    if (part == total)
+    {
+        percentage = 100;
+    }
+
+    printf("\r %s: |", s);
+
+    for (int i = 0; i <= percentage / 2; i++)
+    {
+        printf("█");
+        fflush(stdout);
+    }
+
+    for (int j = percentage / 2; j < 50; j++)
+    {
+        printf(" ");
+    }
+
+    printf("| %02.0f%%", percentage);
+
+    fflush(stdout);
+}
+
+void print_title()
+{
+    printf("███████ ██████  ███    ███ ██    ██  \n");
+    printf("██      ██   ██ ████  ████ ██    ██  \n");
+    printf("███████ ██████  ██ ████ ██ ██    ██  \n");
+    printf("     ██ ██      ██  ██  ██  ██  ██   \n");
+    printf("███████ ██      ██      ██   ████    \n");
 }

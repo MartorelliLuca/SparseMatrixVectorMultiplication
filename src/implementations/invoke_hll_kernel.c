@@ -53,7 +53,7 @@ void invoke_cuda_hll_kernels(HLL_matrix *hll_matrix, double *x, double *z, doubl
                 }
                 re_initialize_y_vector(hll_matrix->N, z);
                 add_node_performance(head, tail, node);
-                print_cuda_hll_kernel_performance(node);
+                // print_cuda_hll_kernel_performance(node);
                 node = NULL;
                 node = reset_node();
             }
@@ -71,7 +71,7 @@ void invoke_cuda_hll_kernels(HLL_matrix *hll_matrix, double *x, double *z, doubl
                 }
                 re_initialize_y_vector(hll_matrix->N, z);
                 add_node_performance(head, tail, node);
-                print_cuda_hll_kernel_performance(node);
+                // print_cuda_hll_kernel_performance(node);
                 node = NULL;
                 node = reset_node();
             }
@@ -89,7 +89,7 @@ void invoke_cuda_hll_kernels(HLL_matrix *hll_matrix, double *x, double *z, doubl
                 }
                 re_initialize_y_vector(hll_matrix->N, z);
                 add_node_performance(head, tail, node);
-                print_cuda_hll_kernel_performance(node);
+                // print_cuda_hll_kernel_performance(node);
                 node = NULL;
                 node = reset_node();
             }
@@ -107,7 +107,7 @@ void invoke_cuda_hll_kernels(HLL_matrix *hll_matrix, double *x, double *z, doubl
                 }
                 re_initialize_y_vector(hll_matrix->N, z);
                 add_node_performance(head, tail, node);
-                print_cuda_hll_kernel_performance(node);
+                // print_cuda_hll_kernel_performance(node);
                 node = NULL;
                 node = reset_node();
             }
