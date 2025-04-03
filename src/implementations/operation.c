@@ -245,7 +245,7 @@ void compute_hll_parallel_performance(struct performance *node, int new_non_zero
     node->non_zeroes_values = new_non_zero_values;
     node->computation = PARALLEL_OPEN_MP_HLL;
 
-    printf("Time used for dot-product: %.16lf\n", time_used);
+    // printf("Time used for dot-product: %.16lf\n", time_used);
 
     double flops = 2.0 * new_non_zero_values / time_used;
     double mflops = flops / 1e6;
@@ -257,7 +257,7 @@ void compute_hll_parallel_performance(struct performance *node, int new_non_zero
     node->gflops = gflops;
     node->time_used = time_used;
 
-    printf("Tempo utilizzato per hll parallelo utilizzando %d thread = %.16lf\n", num_threads, node->time_used);
+    // printf("Tempo utilizzato per hll parallelo utilizzando %d thread = %.16lf\n", num_threads, node->time_used);
 }
 
 // Matrix-vector parallel dot product in HLL format
@@ -285,8 +285,8 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
 
         if (!compute_norm(y, effective_results, hll_matrix->M, 1e-6))
         {
-            printf("Errore nel controllo per %s dopo il hll parallelo\n", hll_matrix->name);
-            sleep(3);
+            // printf("Errore nel controllo per %s dopo il hll parallelo\n", hll_matrix->name);
+            // sleep(3);
         }
 
         add_node_performance(head, tail, node);

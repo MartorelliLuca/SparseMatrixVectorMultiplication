@@ -10,16 +10,16 @@
 #include "../CUDA_include/csr/cuda_csr_kernel_v4.cuh"
 // #include "../CUDA_include/csr/cuda_csr_kernel_v5.cuh"
 
-#define CHECK_CUDA_ERROR(call)                                    \
-    do                                                            \
-    {                                                             \
-        cudaError_t err = call;                                   \
-        if (err != cudaSuccess)                                   \
-        {                                                         \
-            fprintf(stderr, "CUDA Error at %s:%d - %s\n",         \
-                    __FILE__, __LINE__, cudaGetErrorString(err)); \
-            exit(EXIT_FAILURE);                                   \
-        }                                                         \
+#define CHECK_CUDA_ERROR(call)                                      \
+    do                                                              \
+    {                                                               \
+        cudaError_t err = call;                                     \
+        if (err != cudaSuccess)                                     \
+        {                                                           \
+            /*fprintf(stderr, "CUDA Error at %s:%d - %s\n",         \
+                    __FILE__, __LINE__, cudaGetErrorString(err));*/ \
+            exit(EXIT_FAILURE);                                     \
+        }                                                           \
     } while (0)
 
 /*Kernel 1*/

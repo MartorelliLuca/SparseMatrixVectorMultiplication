@@ -25,7 +25,7 @@ void continue_execution(struct performance *node, struct performance **head, str
     if (!compute_norm(effective_results, z, csr_matrix->M, 1e-6))
     {
         // printf("Errore nel controllo per %s dopo il CUDA CSR kernel %d\n", csr_matrix->name, i);
-        sleep(2);
+        // sleep(2);
     }
     // print_cuda_csr_kernel_performance(node);
 }

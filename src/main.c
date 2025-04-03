@@ -160,7 +160,7 @@ int main()
         if (!compute_norm(y, z, csr_matrix->M, 1e-6))
         {
             // printf("Errore nel controllo per %s\n", csr_matrix->name);
-            sleep(3);
+            // sleep(3);
         }
 
         compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
@@ -207,7 +207,7 @@ int main()
 
         re_initialize_y_vector(csr_matrix->M, z);
 
-        // matvec_parallel_hll(hll_matrix, x, z, node, thread_numbers, &head, &tail, matrix->number_of_non_zeoroes_values, y);
+        matvec_parallel_hll(hll_matrix, x, z, node, thread_numbers, &head, &tail, matrix->number_of_non_zeoroes_values, y);
 
         // printf("PRINTO LA LISTA DOPO HLL PARALLELO\n");
         // print_list(head);
@@ -244,6 +244,8 @@ int main()
         old_processed_matrices = processed_matices;
     }
 
+    puts("");
+    puts("");
     closedir(dir);
     return 0;
 }
