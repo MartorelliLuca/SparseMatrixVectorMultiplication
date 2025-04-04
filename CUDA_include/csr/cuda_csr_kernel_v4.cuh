@@ -52,7 +52,7 @@ __global__ void csr_matvec_warp_cacheL2(CSR_matrix d_Mat, int M, double *x, doub
         // Alternativa alla riduzione con __shfl_down_sync, usando operazioni XOR per migliorare parallelismo
         for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2)
         {
-            sum += __shfl_xor_sync(0xFFFFFFFF, sum, offset);
+            sum += __shfl_sync(0xFFFFFFFF, sum, offset);
         }
 
         if (lane == 0)
