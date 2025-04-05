@@ -115,10 +115,10 @@ float invoke_kernel_csr_2(CSR_matrix *csr_matrix, double *x, double *z, int num_
     // Configurazione blocchi e griglia kernel
     dim3 blockDim2(WARP_SIZE, num_threads_per_block);
     dim3 gridDim2((csr_matrix->M + blockDim2.y - 1) / blockDim2.y);
-    printf("Configurazione kernel 2:\n");
-    printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
-    printf("blockDim2.y = %d\n", blockDim2.y);
-    printf("gridDim2 = %d\n", gridDim2);
+    // printf("Configurazione kernel 2:\n");
+    // printf("\ncsr_matrix->M = %d\n", csr_matrix->M);
+    // printf("blockDim2.y = %d\n", blockDim2.y);
+    // printf("gridDim2 = %d\n", gridDim2);
     size_t sharedMemSize = blockDim2.y * WARP_SIZE * sizeof(double);
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
