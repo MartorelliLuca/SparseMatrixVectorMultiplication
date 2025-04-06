@@ -2,11 +2,9 @@
 
 ## Problema
 Questo progetto riguarda la realizzazione di un nucleo di calcolo per il prodotto tra una matrice sparsa e un vettore, ovvero:
-$$
-y \leftarrow Ax
-$$
+\( y \leftarrow Ax \)
 
-dove $A$ è una matrice sparsa memorizzata nei formati:
+dove \( A \) è una matrice sparsa memorizzata nei formati:
 1. **CSR (Compressed Sparse Row)**
 2. **HLL (Hybrid Linear List)**
 
@@ -39,12 +37,12 @@ Ulteriori test possono essere eseguiti con altre matrici.
 Le misure di prestazione saranno ottenute ripetendo il calcolo del prodotto matrice-vettore più volte per ogni matrice, calcolando il tempo medio per esecuzione.
 
 La misura delle prestazioni in **MFLOPS** o **GFLOPS** sarà:
-$$ 
+\[
 FLOPS = \frac{2 \times NZ}{T}
-$$
+\]
 Dove:
-- $NZ$ è il numero di elementi non nulli nella matrice.
-- $T$ è il tempo medio di esecuzione.
+- \( NZ \) è il numero di elementi non nulli nella matrice.
+- \( T \) è il tempo medio di esecuzione.
 
 **Nota:**
 - Il tempo di preprocessamento, I/O e trasferimento dati su GPU **non** sarà incluso nella misura principale (ma può essere discusso separatamente).
@@ -54,7 +52,7 @@ Dove:
 
 ## Formati di Memorizzazione
 ### 1. CSR (Compressed Sparse Row)
-Memorizza una matrice $M \times N$ con $NZ$ elementi non nulli utilizzando:
+Memorizza una matrice \(M \times N\) con \( NZ \) elementi non nulli utilizzando:
 - **M**: Numero di righe
 - **N**: Numero di colonne
 - **IRP(1:M+1)**: Puntatori all'inizio di ciascuna riga
@@ -83,7 +81,7 @@ AS =  [11, 12, 22, 23, 33, 43, 44]
 - Ogni blocco è memorizzato in formato **ELLPACK**.
 
 ### 3. ELLPACK
-Memorizza una matrice $M \times N$ con un massimo di $MAXNZ$ non-zeri per riga usando:
+Memorizza una matrice  \(M \times N\) con un massimo di \( MAXNZ \) non-zeri per riga usando:
 - **M**: Numero di righe
 - **N**: Numero di colonne
 - **MAXNZ**: Massimo numero di non-zeri per riga
@@ -122,7 +120,8 @@ Il file 'run.sh' viene utilizzato per la compilazione e la successiva esecuzione
 
 ## Istruzioni per l'Esecuzione
 ### Compilazione ed Esecuzione
-Per la compilazione e la successiva esecuzione del progetto basta eseguire lo script sh 'run.sh'. È necessario aver installato una versione di CMake dalla 3.10 in poi e i driver NVIDA
+Per compilare ed eseguire il progetto, basta eseguire lo script `run.sh`.  
+È necessario aver installato una versione di **CMake ≥ 3.10** e i driver **NVIDIA**.
 
 
 ---
