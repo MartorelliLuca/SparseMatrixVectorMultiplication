@@ -66,7 +66,7 @@ static inline int qcmp(const void *a, const void *b)
     return lt((struct vec3d *)a, (struct vec3d *)b);
 }
 
-static int __parse_rows(FILE *f, matrix_format *matrix)
+static int parse_row(FILE *f, matrix_format *matrix)
 {
     int err;
     int is_symmetric = mm_is_symmetric(matrix->matrix_typecode);
@@ -159,25 +159,25 @@ no_items:
     return err;
 }
 
-static int parse_rows_sy(FILE *f, matrix_format *matrix)
+static int parse_rows_symmetric(FILE *f, matrix_format *matrix)
 {
-    return __parse_rows(f, matrix);
+    return parse_row(f, matrix);
 }
 
-static int parse_rows_ns(FILE *f, matrix_format *matrix)
+static int parse_rows_non_symmetric(FILE *f, matrix_format *matrix)
 {
-    return __parse_rows(f, matrix);
+    return parse_row(f, matrix);
 }
 
-static int parse_rows(FILE *f, matrix_format *matrix)
+static int get_row(FILE *f, matrix_format *matrix)
 {
     if (mm_is_symmetric(matrix->matrix_typecode))
     {
-        return parse_rows_sy(f, matrix);
+        return parse_rows_symmetric(f, matrix);
     }
     else
     {
-        return parse_rows_ns(f, matrix);
+        return parse_rows_non_symmetric(f, matrix);
     }
 }
 
@@ -207,7 +207,7 @@ int read_matrix(FILE *matrix_file, matrix_format *matrix)
     matrix->M = M;
     matrix->N = N;
     matrix->number_of_non_zeoroes_values = nz;
-    int ir = parse_rows(matrix_file, matrix);
+    int ir = get_row(matrix_file, matrix);
     fclose(matrix_file);
     return ir;
 }
