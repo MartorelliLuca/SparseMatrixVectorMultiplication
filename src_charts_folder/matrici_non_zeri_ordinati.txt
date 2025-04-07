@@ -1,0 +1,30 @@
+Cube_Coup_dt0.csv: 14 529 510 080
+nlpkkt80.csv: 3 277 745 152
+ML_Laplace.csv: 3 205 446 688
+af_1_k101.csv: 2 037 191 600
+thermal2.csv: 1 035 446 908
+PR02R.csv: 998 931 856
+webbase-1M.csv: 494 705 096
+cant.csv: 475 721 628
+roadNet-PA.csv: 387 508 256
+cop20k_A.csv: 314 404 736
+mac_econ_fwd500.csv: 214 872 704
+dc1.csv: 174 650 096
+amazon0302.csv: 144 759 292
+olafu.csv: 121 099 936
+thermomech_TK.csv: 85 126 888
+thermal1.csv: 69 401 768
+lung2.csv: 63 602 624
+af23560.csv: 54 079 008
+bcsstk17.csv: 52 541 000
+FEM_3D_thermal1.csv: 51 006 240
+raefsky2.csv: 34 415 456
+mhd4800a.csv: 12 982 912
+cavity10.csv: 10 290 156
+rdist2.csv: 9 088 664
+mcfe.csv: 3 191 652
+adder_dcop_32.csv: 2 033 016
+west2021.csv: 1 127 920
+mhda416.csv: 1 095 232
+olm1000.csv: 503 616
+cage4.csv: 5 784

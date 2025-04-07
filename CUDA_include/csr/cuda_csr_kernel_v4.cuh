@@ -21,7 +21,6 @@
  *   - La somma finale viene calcolata collaborativamente tra i thread del warp usando __shfl_sync.
  *
  * *Possibili svantaggi*:
- *   - La dipendenza dalla Cache L2 non garantisce sempre un miglioramento prestazionale.
  *   - L’uso della riduzione con __shfl_sync può introdurre errori numerici nel formato double.
  ******************************************************************************************************************/
 
