@@ -8,7 +8,7 @@
 /*
 ******************************************************
 *                                                    *
-* Fourth implementation of kernel:                   *
+* Fourth implementation of kernel: warp per rows     *
 *                                                    *
 ******************************************************
 */
@@ -34,7 +34,6 @@ __global__ void cuda_hll_kernel_v4(double *y, int hack_size, int hacks_num, doub
         }
 
         // Warp-wide reduction using shuffle instructions
-
         for (int offset = warpSize >> 1; offset > 0; offset >>= 1)
         {
             sum += __shfl_down_sync(0xFFFFFFFF, sum, offset);

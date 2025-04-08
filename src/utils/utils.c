@@ -276,17 +276,17 @@ double *unit_vector(int size)
 void add_node_performance(struct performance **head, struct performance **tail, struct performance *node)
 {
     if (node == NULL)
-        return; // Evita problemi se il nodo passato è NULL
+        return;
 
     node->next_node = NULL;
     node->prev_node = NULL;
 
-    if (*head == NULL) // Lista vuota
+    if (*head == NULL)
     {
         *head = node;
         *tail = node;
     }
-    else // Lista già popolata
+    else
     {
         (*tail)->next_node = node;
         node->prev_node = *tail;
@@ -484,7 +484,7 @@ void print_list(struct performance *head)
 void remove_extension(char *filename)
 {
     if (!filename)
-        return; // Protezione contro NULL
+        return;
     char *dot = strrchr(filename, '.');
     if (dot && dot != filename)
     {
@@ -498,11 +498,9 @@ int create_directory_recursively(const char *path)
     char *pos = NULL;
     size_t len;
 
-    // Copia del percorso completo per non modificare il parametro originale
     snprintf(tmp, sizeof(tmp), "%s", path);
     len = strlen(tmp);
 
-    // Aggiungi una barra finale per ogni parte della directory
     for (pos = tmp + 1; *pos; ++pos)
     {
         if (*pos == '/')
@@ -520,7 +518,6 @@ int create_directory_recursively(const char *path)
         }
     }
 
-    // Crea la cartella finale
     if (mkdir(tmp, 0700) == -1)
     {
         if (errno != EEXIST)

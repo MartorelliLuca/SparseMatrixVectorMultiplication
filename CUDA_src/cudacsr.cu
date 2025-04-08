@@ -8,7 +8,6 @@
 #include "../CUDA_include/csr/cuda_csr_kernel_v2.cuh"
 #include "../CUDA_include/csr/cuda_csr_kernel_v3.cuh"
 #include "../CUDA_include/csr/cuda_csr_kernel_v4.cuh"
-// #include "../CUDA_include/csr/cuda_csr_kernel_v5.cuh"
 
 #define CHECK_CUDA_ERROR(call)                                    \
     do                                                            \
@@ -63,10 +62,6 @@ float invoke_kernel_csr_1(CSR_matrix *csr_matrix, double *x, double *z, int num_
     // terzo parametro shared memory
 
     csr_matvec_kernel<<<gridDim1, num_threads_per_block>>>(d_IRP, d_JA, d_AS, csr_matrix->M, d_x, d_y);
-    // 32   -> 22.34
-    // 16   -> 42.55
-    // 8    -> 56.01
-    // 4    -> 36.28
     cudaDeviceSynchronize();
 
     cudaEventRecord(stop);
@@ -124,11 +119,7 @@ float invoke_kernel_csr_2(CSR_matrix *csr_matrix, double *x, double *z, int num_
     cudaEventCreate(&stop);
     cudaEventRecord(start);
     csr_matvec_shfl_reduction<<<gridDim2, blockDim2, sharedMemSize>>>(d_csr, csr_matrix->M, d_x, d_y);
-    // 32   -> 42.73
-    // 16   -> 50.76
-    // 8    -> 53.87
-    // 4    -> 58.54
-    cudaDeviceSynchronize(); // Assicura il completamento dell'esecuzione del kernel
+    cudaDeviceSynchronize();
     CHECK_CUDA_ERROR(cudaEventRecord(stop));
     CHECK_CUDA_ERROR(cudaEventSynchronize(stop));
     CHECK_CUDA_ERROR(cudaEventElapsedTime(&elapsedTime, start, stop));
@@ -147,7 +138,7 @@ float invoke_kernel_csr_2(CSR_matrix *csr_matrix, double *x, double *z, int num_
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 
-    return elapsedTime / 1000; // Converte ms in secondi
+    return elapsedTime / 1000;
 }
 
 /*Kernel 3*/
@@ -191,11 +182,6 @@ float invoke_kernel_csr_3(CSR_matrix *csr_matrix, double *x, double *z, int num_
     cudaEventRecord(start);
 
     csr_matvec_shared_memory<<<gridDim3, blockDim3, shared_mem_size>>>(d_csr, csr_matrix->M, d_x, d_y);
-
-    // 32   -> 36.43
-    // 16   -> 40.06
-    // 8    -> 47.91
-    // 4    -> 50.82
 
     cudaDeviceSynchronize();
 
@@ -257,12 +243,8 @@ float invoke_kernel_csr_4(CSR_matrix *csr_matrix, double *x, double *z, int num_
     cudaEventRecord(start);
 
     csr_matvec_warp_cacheL2<<<gridDim4, blockDim4>>>(d_csr, csr_matrix->M, d_x, d_y);
-    // 32   -> 41.90
-    // 16   -> 50.68
-    // 8    -> 53.63
-    // 4    -> 56.06
 
-    cudaDeviceSynchronize(); // Sincronizza GPU con CPU
+    cudaDeviceSynchronize();
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsedTime, start, stop);
@@ -280,5 +262,5 @@ float invoke_kernel_csr_4(CSR_matrix *csr_matrix, double *x, double *z, int num_
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 
-    return elapsedTime / 1000; // Converte ms in secondi
+    return elapsedTime / 1000;
 }
