@@ -66,7 +66,7 @@ static inline int qcmp(const void *a, const void *b)
     return lt((struct vec3d *)a, (struct vec3d *)b);
 }
 
-static int parse_row(FILE *f, matrix_format *matrix)
+static int __parse_rows(FILE *f, matrix_format *matrix)
 {
     int err;
     int is_symmetric = mm_is_symmetric(matrix->matrix_typecode);
@@ -159,25 +159,25 @@ no_items:
     return err;
 }
 
-static int parse_rows_symmetric(FILE *f, matrix_format *matrix)
+static int parse_rows_sy(FILE *f, matrix_format *matrix)
 {
-    return parse_row(f, matrix);
+    return __parse_rows(f, matrix);
 }
 
-static int parse_rows_non_symmetric(FILE *f, matrix_format *matrix)
+static int parse_rows_ns(FILE *f, matrix_format *matrix)
 {
-    return parse_row(f, matrix);
+    return __parse_rows(f, matrix);
 }
 
-static int get_row(FILE *f, matrix_format *matrix)
+static int parse_rows(FILE *f, matrix_format *matrix)
 {
     if (mm_is_symmetric(matrix->matrix_typecode))
     {
-        return parse_rows_symmetric(f, matrix);
+        return parse_rows_sy(f, matrix);
     }
     else
     {
-        return parse_rows_non_symmetric(f, matrix);
+        return parse_rows_ns(f, matrix);
     }
 }
 
@@ -207,7 +207,7 @@ int read_matrix(FILE *matrix_file, matrix_format *matrix)
     matrix->M = M;
     matrix->N = N;
     matrix->number_of_non_zeoroes_values = nz;
-    int ir = get_row(matrix_file, matrix);
+    int ir = parse_rows(matrix_file, matrix);
     fclose(matrix_file);
     return ir;
 }
@@ -254,8 +254,8 @@ double compute_norm(double *z, double *y, int n, double esp)
     }
     s /= n;
     if (s > 0.0)
-        // printf("error = %.16lf\n", s);
-        return s > 0.0 ? 0 : 1;
+        printf("error = %.16lf\n", s);
+    return s > 0.0 ? 0 : 1;
 }
 
 double *unit_vector(int size)
@@ -619,7 +619,7 @@ void save_performance_to_csv(struct performance *head)
     }
 
     fclose(file);
-    // printf("File salvato con successo: %s\n", filename);
+    printf("File salvato con successo: %s\n", filename);
 }
 
 void free_performance_list(struct performance **head)
@@ -632,47 +632,4 @@ void free_performance_list(struct performance **head)
         current = next;
     }
     *head = NULL;
-}
-
-void print_progress_bar(char *s, double part, double total, double oldPart)
-{
-    double percentage = (part / total) * 100;
-    double oldPercentage = (oldPart / total) * 100;
-
-    if ((int)oldPercentage == (int)percentage && part != total)
-    {
-        return;
-    }
-
-    if (part == total)
-    {
-        percentage = 100;
-    }
-
-    printf("\r %s: |", s);
-
-    for (int i = 0; i <= percentage / 2; i++)
-    {
-        printf("█");
-        fflush(stdout);
-    }
-
-    for (int j = percentage / 2; j < 50; j++)
-    {
-        printf(" ");
-    }
-
-    printf("| %02.0f%%", percentage);
-
-    fflush(stdout);
-}
-
-void print_title()
-{
-    printf("███████ ██████  ███    ███ ██    ██  \n");
-    printf("██      ██   ██ ████  ████ ██    ██  \n");
-    printf("███████ ██████  ██ ████ ██ ██    ██  \n");
-    printf("     ██ ██      ██  ██  ██  ██  ██   \n");
-    printf("███████ ██      ██      ██   ████    \n");
-    printf("\n\n");
 }

@@ -8,7 +8,7 @@
 /******************************************************************************************************************
  * Ogni warp è responsabile del calcolo di una singola riga della matrice.
  * - Utilizzo di shared memory (memoria condivisa) per garantire un accesso più efficiente ai dati:
- *       1) L'uso della shared memory permette accessi alla memoria coalescenti.
+ *       1) L'uso della shared memory assicura che gli accessi alla memoria siano coalescenti, migliorando le performance.
  * - Implementazione di una riduzione per sommare i risultati, utilizzando la funzione __shfl_sync:
  *       1) La funzione __shfl_sync permette una comunicazione diretta tra i thread di uno stesso warp.
  *       2) Utilizzare __shfl_sync riduce il bisogno di sincronizzare la memoria globale, migliorando l'efficienza.

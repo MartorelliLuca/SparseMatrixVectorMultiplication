@@ -21,6 +21,7 @@
  *   - La somma finale viene calcolata collaborativamente tra i thread del warp usando __shfl_sync.
  *
  * *Possibili svantaggi*:
+ *   - La dipendenza dalla Cache L2 non garantisce sempre un miglioramento prestazionale.
  *   - L’uso della riduzione con __shfl_sync può introdurre errori numerici nel formato double.
  ******************************************************************************************************************/
 
@@ -48,6 +49,7 @@ __global__ void csr_matvec_warp_cacheL2(CSR_matrix d_Mat, int M, double *x, doub
             sum += a_val * __ldg(&x[col_index]);
         }
 
+        // Alternativa alla riduzione con __shfl_down_sync, usando operazioni XOR per migliorare parallelismo
         for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2)
         {
             sum += __shfl_sync(0xFFFFFFFF, sum, offset);

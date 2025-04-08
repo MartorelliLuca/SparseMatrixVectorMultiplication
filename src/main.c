@@ -25,17 +25,17 @@
 #include "../CUDA_include/cudacsr.h"
 
 #define MATRIX_DIR = "../matrici"
-#define TOTAL_FILES 30
 
 int main()
 {
-    int matrix_counter = 0;
+    int matrix_counter = 0; // Number of matrices processed
 
+    // Variables to collect statistics
     struct performance *head = NULL, *tail = NULL, *node = NULL;
     double time_used, start, end;
 
     const char *dir_name = "../matrici";
-
+    // Matrix filename
     char matrix_filename[256];
     DIR *dir;
     struct dirent *entry;
@@ -45,9 +45,8 @@ int main()
     CSR_matrix *csr_matrix = NULL;
     HLL_matrix *hll_matrix = NULL;
 
+    // Number of threads used for calculations
     int *thread_numbers = initialize_threads_number();
-    int processed_matices = 0;
-    int old_processed_matrices = -1;
 
     double *x, *y, *z;
 
@@ -59,10 +58,9 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    print_title();
-    puts("");
-    puts("");
-
+    // Take one test matrix every time and transform it to csr and hll format
+    // Compute metrics for csr and hll format in serial, parallel with OpenMP and
+    // with CUDA library
     while ((entry = readdir(dir)) != NULL)
     {
 
@@ -79,6 +77,8 @@ int main()
 
         strcpy(matrix_filename, entry->d_name);
         strcpy(matrix->name, matrix_filename);
+
+        printf("Processing %s matrix\n", matrix->name);
         matrix_file = get_matrix_file(dir_name, matrix_filename);
 
         if (read_matrix(matrix_file, matrix) == 1)
@@ -87,6 +87,7 @@ int main()
             exit(EXIT_FAILURE);
         }
 
+        printf("Non zeroes values: %d\n", matrix->number_of_non_zeoroes_values);
         // Get matrix from matrix market format in csr format
         strcpy(csr_matrix->name, matrix_filename);
         read_CSR_matrix(matrix_file, csr_matrix, matrix);
@@ -106,7 +107,6 @@ int main()
         if (node == NULL)
         {
             printf("Error occour in calloc for performance node\nError Code: %d\n", errno);
-            exit(EXIT_FAILURE);
         }
 
         strcpy(node->matrix, csr_matrix->name);
@@ -115,12 +115,20 @@ int main()
 
         // Get statistics for the dot-product
         start = omp_get_wtime();
+        // Start dot-product
         matvec_serial_csr(csr_matrix, x, y);
+        // Get the time used for the dot-product
         end = omp_get_wtime();
+        // print_vector(y, csr_matrix->M);
+
         time_used = end - start;
+        printf("Tempo seriale csr:%.16lf\n", time_used);
 
         compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
         add_node_performance(&head, &tail, node);
+        print_serial_csr_result(node);
+
+        print_list(head);
 
         //
         // SERIAL EXECTUTION WITH HLL MATRIX FORMAT
@@ -133,14 +141,18 @@ int main()
 
         // Get statistics for the dot-product
         start = omp_get_wtime();
+        // Start dot-product
         matvec_serial_hll(hll_matrix, x, z);
+        // Get the time used for the dot-product
         end = omp_get_wtime();
 
         time_used = end - start;
+        printf("Tempo seriale hll %.16lf\n", time_used);
 
         if (!compute_norm(y, z, csr_matrix->M, 1e-6))
         {
             printf("Errore nel controllo per %s\n", csr_matrix->name);
+            sleep(3);
         }
 
         compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
@@ -151,9 +163,16 @@ int main()
 
         re_initialize_y_vector(csr_matrix->M, z);
 
+        print_serial_hll_result(node);
+
         //
         // OpenMP CSR Matrix Format PARALLEL EXECUTION
         //
+
+        // printf("PRINTO LA LISTA DOPO HLL SERIALE\n");
+        // print_list(head);
+
+        printf("Prestazioni ottenute con OpenMP eseguendo il calcolo in parallelo!\n");
 
         node = NULL;
         node = reset_node();
@@ -163,16 +182,29 @@ int main()
 
         matvec_parallel_csr(csr_matrix, x, z, node, thread_numbers, &head, &tail, matrix->number_of_non_zeoroes_values, y);
 
+        // printf("PRINTO LA LISTA DOPO CSR PARALLELO\n");
+        // print_list(head);
+
+        sleep(3);
+
         //
         // OpenMP HLL Matrix Format PARALLEL EXECUTION
         //
+
+        printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll in modalità parallela!\n");
 
         node = NULL;
         node = reset_node();
         strcpy(node->matrix, matrix_filename);
 
         re_initialize_y_vector(csr_matrix->M, z);
+
         matvec_parallel_hll(hll_matrix, x, z, node, thread_numbers, &head, &tail, matrix->number_of_non_zeoroes_values, y);
+
+        // printf("PRINTO LA LISTA DOPO HLL PARALLELO\n");
+        // print_list(head);
+
+        sleep(3);
 
         node = NULL;
         node = reset_node();
@@ -184,8 +216,13 @@ int main()
         node = reset_node();
         invoke_cuda_hll_kernels(hll_matrix, x, z, y, &head, &tail, node);
 
+        // printf("\n\nSTAMPO LA LISTA PER %s\n\n", csr_matrix->name);
+        // print_list(head);
+
         save_performance_to_csv(head);
+
         free_performance_list(&head);
+
         node = NULL;
         destroy_HLL_matrix(hll_matrix);
         destroy_CSR_matrix(csr_matrix);
@@ -193,13 +230,9 @@ int main()
         free(y);
         free(z);
 
-        processed_matices++;
-        print_progress_bar("Progress", processed_matices, TOTAL_FILES, old_processed_matrices);
-        old_processed_matrices = processed_matices;
+        sleep(3);
     }
 
-    puts("");
-    puts("");
     closedir(dir);
     return 0;
 }

@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Percorso della directory contenente i file CSV
-dir_csv = os.path.join(os.path.dirname(__file__), "../data2/data")  # Modifica se necessario
+dir_csv = os.path.join(os.path.dirname(__file__), "../data")  # Modifica se necessario
 
 # Directory di destinazione per i grafici
 output_dir_1 = os.path.join(os.path.dirname(__file__), "../charts/histogram/mean_histogram/")  # Flusso 1

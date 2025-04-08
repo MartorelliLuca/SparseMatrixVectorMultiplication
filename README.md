@@ -2,7 +2,8 @@
 
 ## Problema
 Questo progetto riguarda la realizzazione di un nucleo di calcolo per il prodotto tra una matrice sparsa e un vettore, ovvero:
-\( y \leftarrow Ax \)
+
+\[ y \leftarrow Ax \]
 
 dove \( A \) è una matrice sparsa memorizzata nei formati:
 1. **CSR (Compressed Sparse Row)**
@@ -37,10 +38,10 @@ Ulteriori test possono essere eseguiti con altre matrici.
 Le misure di prestazione saranno ottenute ripetendo il calcolo del prodotto matrice-vettore più volte per ogni matrice, calcolando il tempo medio per esecuzione.
 
 La misura delle prestazioni in **MFLOPS** o **GFLOPS** sarà:
-\[
-FLOPS = \frac{2 \times NZ}{T}
-\]
-Dove:
+
+\[ FLOPS = \frac{2 \times NZ}{T} \]
+
+dove:
 - \( NZ \) è il numero di elementi non nulli nella matrice.
 - \( T \) è il tempo medio di esecuzione.
 
@@ -52,7 +53,7 @@ Dove:
 
 ## Formati di Memorizzazione
 ### 1. CSR (Compressed Sparse Row)
-Memorizza una matrice \(M \times N\) con \( NZ \) elementi non nulli utilizzando:
+Memorizza una matrice \( M \times N \) con \( NZ \) elementi non nulli utilizzando:
 - **M**: Numero di righe
 - **N**: Numero di colonne
 - **IRP(1:M+1)**: Puntatori all'inizio di ciascuna riga
@@ -81,7 +82,7 @@ AS =  [11, 12, 22, 23, 33, 43, 44]
 - Ogni blocco è memorizzato in formato **ELLPACK**.
 
 ### 3. ELLPACK
-Memorizza una matrice  \(M \times N\) con un massimo di \( MAXNZ \) non-zeri per riga usando:
+Memorizza una matrice \( M \times N \) con un massimo di \( MAXNZ \) non-zeri per riga usando:
 - **M**: Numero di righe
 - **N**: Numero di colonne
 - **MAXNZ**: Massimo numero di non-zeri per riga
@@ -104,25 +105,40 @@ AS =
 ```
 Se una riga ha meno di **MAXNZ** valori, gli elementi rimanenti vengono riempiti con **zeri**.
 
+**TBD**
+
 ---
 
 ## Struttura del Progetto
-- `src/`: Codice sorgente C,
-- `CUDA_include/`: Codice dei Kernel Cuda e rispettivi header,
-- `CUDA_include/`: File '.cu' per l'invocazione dei kernel CUDA,
-- `data/`: Direcotry contente i dati raccolti dalle varie iterazioni,
-- `src_charts_folder`: Sorgenti python utilizzati per generare i grafici,
-- `charts/`: Direcotry contente i grafici generati.
+- `src/`: Codice sorgente in C e CUDA
+- `include/`: Header file
+- `tests/`: Script e file per la validazione
+- `docs/`: Documentazione del progetto
 
-Il file 'clear.sh' rimuove la cartella 'build' generata in fase di compilazione.
-Il file 'run.sh' viene utilizzato per la compilazione e la successiva esecuzione del progetto.
 ---
 
 ## Istruzioni per l'Esecuzione
-### Compilazione ed Esecuzione
-Per compilare ed eseguire il progetto, basta eseguire lo script `run.sh`.  
-È necessario aver installato una versione di **CMake ≥ 3.10** e i driver **NVIDIA**.
+### Compilazione
+Per compilare il progetto con OpenMP e CUDA:
+```bash
+make
+```
 
+### Esecuzione
+Esempio di esecuzione con OpenMP:
+```bash
+./spmv_openmp matrix.mtx
+```
+Esempio di esecuzione con CUDA:
+```bash
+./spmv_cuda matrix.mtx
+```
+
+### Test
+Per eseguire i test:
+```bash
+make test
+```
 
 ---
 
