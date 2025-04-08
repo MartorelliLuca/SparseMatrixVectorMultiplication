@@ -36,10 +36,10 @@ dati = pd.concat(dati_list, ignore_index=True)
 # === 2. Configurazioni richieste ===
 
 configurazioni = {
-    "cuda_csr_kernel_1 (8 thread)": ("cuda_csr_kernel_1", 16),
-    "cuda_csr_kernel_2 (128 thread)": ("cuda_csr_kernel_2", 4),
+    "cuda_csr_kernel_1 (128 thread)": ("cuda_csr_kernel_1", 3),
+    "cuda_csr_kernel_2 (128 thread)": ("cuda_csr_kernel_2", 3),
     "cuda_csr_kernel_3 (128 thread)": ("cuda_csr_kernel_3", 4),
-    "cuda_csr_kernel_4 (128 thread)": ("cuda_csr_kernel_4", 4),
+    "cuda_csr_kernel_4 (128 thread)": ("cuda_csr_kernel_4", 4)
 }
 
 # === 3. Calcolo GFLOPS medi ===

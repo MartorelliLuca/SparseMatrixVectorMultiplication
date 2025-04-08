@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Percorso corretto della directory contenente i file CSV
-dir_csv = os.path.join(os.path.dirname(__file__), "../../data")  # Percorso relativo alla posizione dello script
+dir_csv = os.path.join(os.path.dirname(__file__), "../../data2/data")  # Percorso relativo alla posizione dello script
 
 # Percorso della directory di output per i grafici
 output_dir = os.path.join(os.path.dirname(__file__), "../charts/performance/mean_performance_plot")
