@@ -68,20 +68,22 @@ static inline int qcmp(const void *a, const void *b)
 
 static int parse_rows(FILE *f, matrix_format *matrix)
 {
-    int err;
     int is_symmetric = mm_is_symmetric(matrix->matrix_typecode);
     struct vec3d *items = malloc((is_symmetric ? 2 : 1) * matrix->number_of_non_zeoroes_values * sizeof(struct vec3d));
-    if (!items)
+    if (items == NULL)
     {
-        err = -1;
-        goto no_items;
+        printf("Errore in malloc for items in parse_row\n");
+        return -1;
     }
+
     double *packed_data = malloc(matrix->number_of_non_zeoroes_values * sizeof(double));
-    if (!packed_data)
+    if (packed_data == NULL)
     {
-        err = -1;
-        goto no_pck_data;
+        printf("Error in malloc for packed_data in parse_row\n");
+        free(items);
+        return -1;
     }
+
     int real_nz = 0;
     int explicit_zeros = 0;
     for (int k = 0; k < matrix->number_of_non_zeoroes_values; k++)
@@ -91,42 +93,53 @@ static int parse_rows(FILE *f, matrix_format *matrix)
             int i = items[real_nz].row;
             int j = items[real_nz].col;
             items[real_nz].pos = k;
-            ++real_nz;
+            real_nz++;
             if (is_symmetric && i != j)
             {
                 items[real_nz].row = j;
                 items[real_nz].col = i;
                 items[real_nz].pos = k;
-                ++real_nz;
+                real_nz++;
             }
         }
         else
         {
-            ++explicit_zeros;
+            explicit_zeros++;
         }
     }
 
     qsort(items, real_nz, sizeof(struct vec3d), qcmp);
     int *rows = malloc(real_nz * sizeof(int));
-    if (!rows)
+    if (rows == NULL)
     {
-        err = -1;
-        goto no_rows;
+        printf("Error in mallor for rows in parse_row\n");
+        free(packed_data);
+        free(items);
+        return -1;
     }
-    int *cols = malloc(real_nz * sizeof(int));
-    if (!cols)
+
+    int *columns = malloc(real_nz * sizeof(int));
+    if (columns == NULL)
     {
-        err = -1;
-        goto no_cols;
+        printf("Error in malloc for columns in parse_row\n");
+        free(rows);
+        free(packed_data);
+        free(items);
+        return -1;
     }
+
     double *data;
     if (mm_is_symmetric(matrix->matrix_typecode))
     {
         data = malloc(real_nz * sizeof(double));
-        if (!data)
+        if (data == NULL)
         {
-            err = -1;
-            goto no_data;
+            printf("Error in malloc for data in parse_rows\n");
+            free(columns);
+            free(rows);
+            free(packed_data);
+            free(items);
+            return -1;
         }
         for (int i = 0; i < real_nz; ++i)
         {
@@ -137,26 +150,19 @@ static int parse_rows(FILE *f, matrix_format *matrix)
     {
         data = packed_data;
     }
+
     for (int i = 0; i < real_nz; ++i)
     {
         rows[i] = items[i].row;
-        cols[i] = items[i].col;
+        columns[i] = items[i].col;
     }
+
     matrix->rows = rows;
-    matrix->columns = cols;
+    matrix->columns = columns;
     matrix->values = data;
     matrix->number_of_non_zeoroes_values = real_nz;
+
     return 0;
-no_data:
-    free(cols);
-no_cols:
-    free(rows);
-no_rows:
-    free(packed_data);
-no_pck_data:
-    free(items);
-no_items:
-    return err;
 }
 
 static int parse_rows_symmetric(FILE *f, matrix_format *matrix)
@@ -322,7 +328,7 @@ void compute_serial_performance(struct performance *node, double time_used, int 
 
 void print_serial_csr_result(struct performance *node)
 {
-    printf("Prestazioni Ottenute con il prodotto utilizzando il formato csr!\n");
+    printf("Performance with serial product with csr!\n");
     printf("\n\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
     printf("Time used for dot-product:      %.16lf\n", node->time_used);
     printf("FLOPS:                          %.16lf\n", node->flops);
@@ -332,7 +338,7 @@ void print_serial_csr_result(struct performance *node)
 
 void print_serial_hll_result(struct performance *node)
 {
-    printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll in modalità seriale!\n");
+    printf("Performance with serial product with csr!\n");
     printf("\nPerformance for %s with %d threads:\n", node->matrix, node->number_of_threads_used);
     printf("Time used for dot-product:      %.16lf\n", node->time_used);
     printf("FLOPS:                          %.16lf\n", node->flops);
@@ -360,7 +366,7 @@ void print_parallel_hll_result(struct performance *node)
 
 void print_cuda_hll_kernel_performance(struct performance *node)
 {
-    printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato hll con CUDA!\n");
+    printf("\n\nPerformance of product hith hll in CUDA!\n");
     switch (node->computation)
     {
     case CUDA_HLL_KERNEL_1:
@@ -389,7 +395,7 @@ void print_cuda_hll_kernel_performance(struct performance *node)
 
 void print_cuda_csr_kernel_performance(struct performance *node)
 {
-    printf("\n\nPrestazioni Ottenute con il prodotto utilizzando il formato CSR con CUDA!\n");
+    printf("\n\nPerformance of product hith csr in CUDA!\n");
     switch (node->computation)
     {
     case CUDA_CSR_KERNEL_1:
@@ -421,8 +427,8 @@ void print_list(struct performance *head)
     struct performance *current = head;
     while (current != NULL)
     {
-        printf("Matrice:                    %s\n", current->matrix);
-        printf("Numero di thread:           %d\n", current->number_of_threads_used);
+        printf("Matrix:                     %s\n", current->matrix);
+        printf("Number of threads:          %d\n", current->number_of_threads_used);
         switch (current->computation)
         {
         case SERIAL_CSR:
@@ -510,7 +516,7 @@ int create_directory_recursively(const char *path)
             {
                 if (errno != EEXIST)
                 {
-                    perror("Errore nella creazione della cartella");
+                    printf("Error to create dir\n");
                     return -1;
                 }
             }
@@ -522,7 +528,7 @@ int create_directory_recursively(const char *path)
     {
         if (errno != EEXIST)
         {
-            perror("Errore nella creazione della cartella");
+            printf("Error to create dir\n");
             return -1;
         }
     }
@@ -616,7 +622,7 @@ void save_performance_to_csv(struct performance *head)
     }
 
     fclose(file);
-    printf("File salvato con successo: %s\n", filename);
+    printf("File saved: %s\n", filename);
 }
 
 void free_performance_list(struct performance **head)

@@ -17,6 +17,7 @@
 #include "../utils_header/computation_type.h"
 
 #define NUM_THREADS 39
+#define COMPUTATION 5
 
 void matvec(double **A, double *x, double *y, int M, int N)
 {
@@ -143,7 +144,7 @@ void compute_parallel_performance(struct performance *node, double *time_used, i
 
 void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance **head, struct performance **tail, int new_non_zero_values, double *effective_results)
 {
-    double time_used;
+    double time_used, time = 0.0;
     for (int index = 0; index < NUM_THREADS; index++)
     {
         int num_threads = thread_numbers[index];
@@ -152,17 +153,27 @@ void matvec_parallel_csr(CSR_matrix *csr_matrix, double *x, double *y, struct pe
         int *first_row = (int *)calloc(num_threads + 1, sizeof(int));
         if (!first_row)
         {
-            perror("Errore in calloc per first_row");
+            printf("Errore in calloc per first_row\n");
             exit(EXIT_FAILURE);
         }
 
         first_row = matrix_partition(csr_matrix, num_threads, &actual_threads);
-        product(csr_matrix, x, y, actual_threads, &time_used, first_row);
 
-        compute_parallel_performance(node, &time_used, new_non_zero_values, num_threads);
-        printf("Tempo utilizzato per l'esecuzione con %d con csr parallelo = %.16lf\n", num_threads, node->time_used);
+        for (int k = 0; k < COMPUTATION; k++)
+        {
+            product(csr_matrix, x, y, actual_threads, &time_used, first_row);
+            if (!compute_norm(y, effective_results, csr_matrix->M, 1e-4))
+            {
+                printf("Error in check for %s after parallel csr\n", csr_matrix->name);
+                sleep(3);
+            }
+            time += time_used;
+            re_initialize_y_vector(csr_matrix->M, y);
+        }
 
-        compute_norm(y, effective_results, csr_matrix->M, 1e-6);
+        time = time / COMPUTATION;
+        compute_parallel_performance(node, &time, new_non_zero_values, num_threads);
+        printf("Time used for execution for %d with csr with OpenMP = %.16lf\n", num_threads, node->time_used);
 
         node->non_zeroes_values = new_non_zero_values;
         node->computation = PARALLEL_OPEN_MP_CSR;
@@ -257,17 +268,13 @@ void compute_hll_parallel_performance(struct performance *node, int new_non_zero
     node->gflops = gflops;
     node->time_used = time_used;
 
-    printf("Tempo utilizzato per hll parallelo utilizzando %d thread = %.16lf\n", num_threads, node->time_used);
+    printf("Time used for hll with OpenMP with %d thread = %.16lf\n", num_threads, node->time_used);
 }
 
 // Matrix-vector parallel dot product in HLL format
 void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct performance *node, int *thread_numbers, struct performance **head, struct performance **tail, int new_non_zero_values, double *effective_results)
 {
-    // printf("LISTA APPENA DENTRO HLL MAT VEC PARALLELO\n");
-    // print_list(head);
-    // printf("head = %p, tail = %p\n", head, tail);
-
-    double time_used, start, end;
+    double time_used, time = 0.0, start, end;
     for (int index = 0; index < NUM_THREADS; index++)
     {
         int num_threads = thread_numbers[index];
@@ -275,19 +282,25 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
         double *times_vector = (double *)calloc(num_threads, sizeof(double));
         if (!times_vector)
         {
-            perror("Errore in calloc per times_vector");
+            perror("Error in calloc per times_vector");
             exit(EXIT_FAILURE);
         }
 
-        hll_parallel_product(hll_matrix, x, y, num_threads, &time_used);
-        compute_hll_parallel_performance(node, new_non_zero_values, time_used, num_threads);
-        print_parallel_hll_result(node);
-
-        if (!compute_norm(y, effective_results, hll_matrix->M, 1e-6))
+        for (int k = 0; k < COMPUTATION; k++)
         {
-            printf("Errore nel controllo per %s dopo il hll parallelo\n", hll_matrix->name);
-            sleep(3);
+            hll_parallel_product(hll_matrix, x, y, num_threads, &time_used);
+            if (!compute_norm(y, effective_results, hll_matrix->M, 1e-4))
+            {
+                printf("Error in check for %s after hll with OpenMP\n", hll_matrix->name);
+                sleep(3);
+            }
+            re_initialize_y_vector(hll_matrix->M, y);
+            time += time_used;
         }
+
+        time = time / COMPUTATION;
+        compute_hll_parallel_performance(node, new_non_zero_values, time, num_threads);
+        print_parallel_hll_result(node);
 
         add_node_performance(head, tail, node);
 
@@ -297,8 +310,4 @@ void matvec_parallel_hll(HLL_matrix *hll_matrix, double *x, double *y, struct pe
         node = reset_node();
         strcpy(node->matrix, hll_matrix->name);
     }
-
-    // printf("LISTA APPENA FUORI HLL MAT VEC PARALLELO\n");
-    // print_list(head);
-    // printf("head = %p, tail = %p\n", head, tail);
 }

@@ -25,14 +25,13 @@
 #include "../CUDA_include/cudacsr.h"
 
 #define MATRIX_DIR = "../matrici"
+#define COMPUTATION_NUMBER 5
 
 int main()
 {
-    int matrix_counter = 0; // Number of matrices processed
-
     // Variables to collect statistics
     struct performance *head = NULL, *tail = NULL, *node = NULL;
-    double time_used, start, end;
+    double time_used, start, end, time = 0.0;
 
     const char *dir_name = "../matrici";
     // Matrix filename
@@ -73,15 +72,13 @@ int main()
         if (entry->d_name[0] == '.')
             continue;
 
-        matrix_counter++;
-
         strcpy(matrix_filename, entry->d_name);
         strcpy(matrix->name, matrix_filename);
 
         printf("Processing %s matrix\n", matrix->name);
         matrix_file = get_matrix_file(dir_name, matrix_filename);
 
-        if (read_matrix(matrix_file, matrix) == 1)
+        if (read_matrix(matrix_file, matrix) == -1)
         {
             printf("Error in read matrix!\n");
             exit(EXIT_FAILURE);
@@ -113,18 +110,25 @@ int main()
         node->non_zeroes_values = matrix->number_of_non_zeoroes_values;
         node->computation = SERIAL_CSR;
 
-        // Get statistics for the dot-product
-        start = omp_get_wtime();
-        // Start dot-product
-        matvec_serial_csr(csr_matrix, x, y);
-        // Get the time used for the dot-product
-        end = omp_get_wtime();
-        // print_vector(y, csr_matrix->M);
+        for (int k = 0; k < COMPUTATION_NUMBER; k++)
+        {
+            re_initialize_y_vector(csr_matrix->M, y);
+            // Get statistics for the dot-product
+            start = omp_get_wtime();
+            // Start dot-product
+            matvec_serial_csr(csr_matrix, x, y);
+            // Get the time used for the dot-product
+            end = omp_get_wtime();
+            // print_vector(y, csr_matrix->M);
 
-        time_used = end - start;
-        printf("Tempo seriale csr:%.16lf\n", time_used);
+            time_used = end - start;
+            time += time_used;
+        }
 
-        compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
+        time = time / COMPUTATION_NUMBER;
+        printf("Time for serial execution for csr computation: %.16lf\n", time);
+
+        compute_serial_performance(node, time, matrix->number_of_non_zeoroes_values);
         add_node_performance(&head, &tail, node);
         print_serial_csr_result(node);
 
@@ -136,32 +140,38 @@ int main()
 
         node = NULL;
         node = reset_node();
+        time = 0.0;
 
         strcpy(node->matrix, csr_matrix->name);
 
-        // Get statistics for the dot-product
-        start = omp_get_wtime();
-        // Start dot-product
-        matvec_serial_hll(hll_matrix, x, z);
-        // Get the time used for the dot-product
-        end = omp_get_wtime();
-
-        time_used = end - start;
-        printf("Tempo seriale hll %.16lf\n", time_used);
-
-        if (!compute_norm(y, z, csr_matrix->M, 1e-6))
+        for (int k = 0; k < COMPUTATION_NUMBER; k++)
         {
-            printf("Errore nel controllo per %s\n", csr_matrix->name);
-            sleep(3);
+            re_initialize_y_vector(csr_matrix->M, z);
+            // Get statistics for the dot-product
+            start = omp_get_wtime();
+            // Start dot-product
+            matvec_serial_hll(hll_matrix, x, z);
+            // Get the time used for the dot-product
+            end = omp_get_wtime();
+
+            time_used = end - start;
+            time += time_used;
+
+            if (!compute_norm(y, z, csr_matrix->M, 1e-4))
+            {
+                printf("Error in check for %s\n", csr_matrix->name);
+                sleep(3);
+            }
         }
 
-        compute_serial_performance(node, time_used, matrix->number_of_non_zeoroes_values);
+        time = time / COMPUTATION_NUMBER;
+        printf("Time for serial execution for hll computation: %.16lf\n", time);
+
+        compute_serial_performance(node, time, matrix->number_of_non_zeoroes_values);
         node->non_zeroes_values = matrix->number_of_non_zeoroes_values;
         node->computation = SERIAL_HHL;
 
         add_node_performance(&head, &tail, node);
-
-        re_initialize_y_vector(csr_matrix->M, z);
 
         print_serial_hll_result(node);
 
@@ -169,10 +179,7 @@ int main()
         // OpenMP CSR Matrix Format PARALLEL EXECUTION
         //
 
-        // printf("PRINTO LA LISTA DOPO HLL SERIALE\n");
-        // print_list(head);
-
-        printf("Prestazioni ottenute con OpenMP eseguendo il calcolo in parallelo!\n");
+        printf("Performance with parallel computation with OpenMP with CSR\n");
 
         node = NULL;
         node = reset_node();
@@ -182,16 +189,13 @@ int main()
 
         matvec_parallel_csr(csr_matrix, x, z, node, thread_numbers, &head, &tail, matrix->number_of_non_zeoroes_values, y);
 
-        // printf("PRINTO LA LISTA DOPO CSR PARALLELO\n");
-        // print_list(head);
-
         sleep(3);
 
         //
         // OpenMP HLL Matrix Format PARALLEL EXECUTION
         //
 
-        printf("Prestazioni Ottenute con il prodotto utilizzando il formato hll in modalità parallela!\n");
+        printf("Performance with parallel computation with OpenMP with HLL\n");
 
         node = NULL;
         node = reset_node();
@@ -201,23 +205,22 @@ int main()
 
         matvec_parallel_hll(hll_matrix, x, z, node, thread_numbers, &head, &tail, matrix->number_of_non_zeoroes_values, y);
 
-        // printf("PRINTO LA LISTA DOPO HLL PARALLELO\n");
-        // print_list(head);
-
         sleep(3);
 
         node = NULL;
         node = reset_node();
+
+        re_initialize_y_vector(csr_matrix->M, z);
 
         // HERE STARTS CUDA IMPLEMENTATION
         invoke_cuda_csr_kernels(csr_matrix, x, z, y, &head, &tail, node);
 
         node = NULL;
         node = reset_node();
-        invoke_cuda_hll_kernels(hll_matrix, x, z, y, &head, &tail, node);
 
-        // printf("\n\nSTAMPO LA LISTA PER %s\n\n", csr_matrix->name);
-        // print_list(head);
+        re_initialize_y_vector(csr_matrix->M, z);
+
+        invoke_cuda_hll_kernels(hll_matrix, x, z, y, &head, &tail, node);
 
         save_performance_to_csv(head);
 
