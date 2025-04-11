@@ -3,9 +3,9 @@
 ## Problema
 Questo progetto riguarda la realizzazione di un nucleo di calcolo per il prodotto tra una matrice sparsa e un vettore, ovvero:
 
-\[ y \leftarrow Ax \]
+y ← Ax
 
-dove \( A \) è una matrice sparsa memorizzata nei formati:
+Dove A è una matrice sparsa memorizzata nei formati:
 1. **CSR (Compressed Sparse Row)**
 2. **HLL (Hybrid Linear List)**
 
@@ -39,11 +39,11 @@ Le misure di prestazione saranno ottenute ripetendo il calcolo del prodotto matr
 
 La misura delle prestazioni in **MFLOPS** o **GFLOPS** sarà:
 
-\[ FLOPS = \frac{2 \times NZ}{T} \]
+FLOPS = 2 * NZ / T
 
 dove:
-- \( NZ \) è il numero di elementi non nulli nella matrice.
-- \( T \) è il tempo medio di esecuzione.
+- NZ è il numero di elementi non nulli nella matrice;
+- T è il tempo medio di esecuzione.
 
 **Nota:**
 - Il tempo di preprocessamento, I/O e trasferimento dati su GPU **non** sarà incluso nella misura principale (ma può essere discusso separatamente).
@@ -105,41 +105,31 @@ AS =
 ```
 Se una riga ha meno di **MAXNZ** valori, gli elementi rimanenti vengono riempiti con **zeri**.
 
-**TBD**
+Nell'implementazione effettiva non è stata utilizzata una rappresentazione basata su array bidimensionali ma su array monodimensionali per evitare di avere troppo spreco in termini di accesso alla memoria e per avere un beneficio prestazionale in **CUDA**.
 
 ---
 
 ## Struttura del Progetto
-- `src/`: Codice sorgente in C e CUDA
-- `include/`: Header file
-- `tests/`: Script e file per la validazione
-- `docs/`: Documentazione del progetto
+- `src/`: Codice sorgente in C;
+- `CUDA_src/`: Codice dei kernel implementati considerando entrambi i formati;
+- `CUDA_src/`: Codice di invocazione per i kernel;
+- `src_charts_foldes/`: Script python per la generazione dei grafici.
 
 ---
 
 ## Istruzioni per l'Esecuzione
 ### Compilazione
-Per compilare il progetto con OpenMP e CUDA:
-```bash
-make
-```
+Per la compilazione è necessario aver installata una versione di CMake successiva alla 3.10, una versione di gcc e la possibilità di eseguire codice compatibile con CUDA.
 
-### Esecuzione
-Esempio di esecuzione con OpenMP:
+### Esecuzione e Compilazione
+Per l'esecuzione e la compilazione utilizzare il seguente script
 ```bash
-./spmv_openmp matrix.mtx
+./run.sh
 ```
-Esempio di esecuzione con CUDA:
+Per eliminare la build ottenuta e la directory in cui vengono creati i file csv con le prestazioni 
 ```bash
-./spmv_cuda matrix.mtx
+./clear.sh
 ```
-
-### Test
-Per eseguire i test:
-```bash
-make test
-```
-
 ---
 
 ## Autori
